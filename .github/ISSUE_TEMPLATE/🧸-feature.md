@@ -1,7 +1,7 @@
 ---
 name: "\U0001F9F8 FEATURE"
 about: 기능 관련 이슈입니다.
-title: ''
+title: "[FEAT] 이슈 제목"
 labels: ''
 assignees: suhyun113
 
