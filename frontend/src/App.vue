@@ -1,12 +1,21 @@
 <template>
   <div id="app">
-    <NavBar />
-    <router-view />
+    <header>
+      <NavBar @open-login="showLogin = true" />
+    </header>
+    <main>
+      <router-view />
+      <LoginModal v-if="showLogin" @close="showLogin = false" />
+    </main>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import NavBar from '@/components/NavBar.vue'
+import LoginModal from '@/components/LoginModal.vue'
+
+const showLogin = ref(false)
 </script>
 
 <style>

@@ -1,7 +1,7 @@
 <template>
   <header class="navbar">
     <div class="logo" @click="goHome">
-      <img src="@/assets/logo.png" alt="Mogwi Logo" />
+      <img src="@/assets/mogwi-character.png" alt="Mogwi Character" />
       <span>MOGWI</span>
     </div>
     <nav class="menu">
@@ -11,7 +11,7 @@
       <router-link to="/mypage">마이페이지</router-link>
     </nav>
     <div class="auth">
-      <router-link to="/login">로그인</router-link>
+      <button class="login-btn" @click="$emit('open-login')">로그인</button>
       <router-link to="/register">회원가입</router-link>
     </div>
   </header>
@@ -30,7 +30,7 @@ const goHome = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0f0f1c;
+  background-color: #1f1235;
   padding: 1rem 2rem;
   color: white;
 }
@@ -46,6 +46,12 @@ const goHome = () => {
   margin-right: 10px;
 }
 
+.logo span {
+  font-weight: bold;
+  font-size: 20px;
+  color: #ffe066;
+}
+
 .menu {
   display: flex;
   gap: 2rem;
@@ -59,11 +65,26 @@ const goHome = () => {
 }
 
 .menu a:hover, .auth a:hover {
-  color: #9b7edc;
+  color: #a471ff;
 }
 
 .auth {
   display: flex;
   gap: 1.5rem;
+}
+
+.login-btn {
+  background: none;
+  border: 1px solid #a471ff;
+  color: #a471ff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #a471ff;
+  color: white;
 }
 </style>
