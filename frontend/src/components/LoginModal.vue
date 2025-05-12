@@ -6,13 +6,16 @@
         <button class="close-btn" @click="close">×</button>
       </div>
       <form @submit.prevent="onLogin">
-        <input v-model="email" placeholder="이메일" />
+        <input v-model="userid" placeholder="아이디" />
         <input v-model="password" type="password" placeholder="비밀번호" />
         <div class="remember-container">
-            <input type="checkbox" v-model="remember" id="remember-checkbox" class="remember-checkbox" />
-            <label for="remember" class="remember-label">로그인 상태 유지</label>
+          <input type="checkbox" v-model="remember" id="remember-checkbox" class="remember-checkbox" />
+          <label for="remember" class="remember-label">로그인 상태 유지</label>
         </div>
         <button class="login-btn">로그인</button>
+        <div class="error-space">
+          <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+        </div>
       </form>
       <div class="links">
         <router-link to="/register" class="dimmed-link">회원가입</router-link>
@@ -29,19 +32,45 @@
 
 <script setup>
 import { ref } from 'vue'
-// eslint-disable-next-line no-undef
+import axios from 'axios'
+
+// eslint-disable-next-line
 const emit = defineEmits(['close'])
 
-const email = ref('')
+const userid = ref('')
 const password = ref('')
 const remember = ref(false)
+const errorMessage = ref('')
 
 const close = () => emit('close')
 
-const onLogin = () => {
-  if (email.value && password.value) {
-    alert('로그인 성공 (임시)')
-    close()
+const onLogin = async () => {
+  if (!userid.value && !password.value) {
+    errorMessage.value = '아이디와 비밀번호를 입력해주세요.'
+    return
+  } else if (!userid.value) {
+    errorMessage.value = '아이디를 입력해주세요.'
+    return
+  } else if (!password.value) {
+    errorMessage.value = '비밀번호를 입력해주세요.'
+    return
+  }
+
+  try {
+    const response = await axios.post('/api/login', {
+      userid: userid.value,
+      userpass: password.value
+    })
+    if (response.data === 'success') {
+      alert('로그인 성공')
+      errorMessage.value = ''
+      close()
+    } else {
+      errorMessage.value = '아이디 또는 비밀번호가 올바르지 않습니다.'
+    }
+  } catch (err) {
+    console.error(err)
+    errorMessage.value = '서버 오류가 발생했습니다.'
   }
 }
 </script>
@@ -105,6 +134,15 @@ input {
 .login-btn:hover {
   background: #854fe6;
 }
+.error-space {
+  height: 18px;
+  margin-top: 4px;
+}
+.error-msg {
+  color: #e74c3c;
+  font-size: 13px;
+  line-height: 1;
+}
 .remember-container {
   display: flex;
   justify-content: flex-end;
@@ -115,7 +153,6 @@ input {
   font-size: 14px;
   color: #333;
 }
-
 .remember-checkbox {
   appearance: none;
   width: 14px;
@@ -126,14 +163,12 @@ input {
   position: relative;
   cursor: pointer;
   display: inline-block;
-  vertical-align: middle; /* 핵심: 세로 정렬 */
+  vertical-align: middle;
 }
-
 .remember-checkbox:checked {
   background-color: #a471ff;
   border-color: #a471ff;
 }
-
 .remember-checkbox:checked::after {
   content: '✔';
   color: white;
@@ -144,14 +179,11 @@ input {
   transform: translate(-50%, -50%);
   line-height: 1;
 }
-
-
 .remember-label {
   font-size: 14px;
   color: #333;
   white-space: nowrap;
 }
-
 .links {
   margin-top: 1rem;
   font-size: 14px;
