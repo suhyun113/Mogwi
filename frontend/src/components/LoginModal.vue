@@ -7,7 +7,7 @@
       </div>
       <form @submit.prevent="onLogin">
         <input v-model="userid" placeholder="아이디" />
-        <input v-model="password" type="password" placeholder="비밀번호" />
+        <input v-model="userpass" type="password" placeholder="비밀번호" />
         <div class="remember-container">
           <input type="checkbox" v-model="remember" id="remember-checkbox" class="remember-checkbox" />
           <label for="remember" class="remember-label">로그인 상태 유지</label>
@@ -32,46 +32,54 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 // eslint-disable-next-line
 const emit = defineEmits(['close'])
+const store = useStore()
+const router = useRouter()
 
 const userid = ref('')
-const password = ref('')
+const userpass = ref('')
 const remember = ref(false)
 const errorMessage = ref('')
 
 const close = () => emit('close')
 
-const onLogin = async () => {
-  if (!userid.value && !password.value) {
+function onLogin() {
+  if (!userid.value && !userpass.value) {
     errorMessage.value = '아이디와 비밀번호를 입력해주세요.'
     return
   } else if (!userid.value) {
     errorMessage.value = '아이디를 입력해주세요.'
     return
-  } else if (!password.value) {
+  } else if (!userpass.value) {
     errorMessage.value = '비밀번호를 입력해주세요.'
     return
   }
 
-  try {
-    const response = await axios.post('/api/login', {
-      userid: userid.value,
-      userpass: password.value
-    })
-    if (response.data === 'success') {
+  axios.post('/api/login', {
+    userid: userid.value,
+    userpass: userpass.value
+  })
+  .then(response => {
+    if (response.data.status === 'OK') {
+      const userInfo = response.data.user
+      store.commit('setUserInfo', userInfo)
       alert('로그인 성공')
       errorMessage.value = ''
       close()
+      router.push('/mystudy')
     } else {
       errorMessage.value = '아이디 또는 비밀번호가 올바르지 않습니다.'
     }
-  } catch (err) {
+  })
+  .catch(err => {
     console.error(err)
     errorMessage.value = '서버 오류가 발생했습니다.'
-  }
+  })
 }
 </script>
 
