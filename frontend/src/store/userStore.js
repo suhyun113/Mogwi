@@ -16,7 +16,7 @@ export default createStore({
       state.store_userpass = payload.userpass;
       state.store_usermail = payload.usermail;
       state.store_username = payload.username;
-      state.store_create_at = payload.created_at;
+      state.store_created_at = payload.created_at;
 
       localStorage.setItem('local_userid', payload.userid)
       localStorage.setItem('local_userpass', payload.userpass)

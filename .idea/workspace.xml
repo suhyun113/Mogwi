@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 로그인 api 연동">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/LoginModal.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/LoginModal.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/store/userStore.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/store/userStore.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/MyStudyView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/MyStudyView.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/LoginController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,6 +155,8 @@
       <workItem from="1747227081852" duration="2069000" />
       <workItem from="1747235204266" duration="2555000" />
       <workItem from="1747245222379" duration="1412000" />
+      <workItem from="1747630928559" duration="303000" />
+      <workItem from="1747736720319" duration="317000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
