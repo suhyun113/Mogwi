@@ -52,6 +52,7 @@ const verifyCode = ref('')
 const verified = ref(false)
 const mailSent = ref(false)
 const errorMessage = ref('')
+const emailError = ref('')
 
 // Timer 관련
 const minutes = ref(3)
@@ -65,13 +66,16 @@ const validateEmail = () => {
   emailError.value = emailPattern.test(usermail.value) ? '' : '이메일 형식이 올바르지 않습니다.'
 }
 
+// 타이머머 시작
 const startTimer = () => {
   minutes.value = 3
   seconds.value = 0
+  timeExpired.value = false
   timer = setInterval(() => {
     if (seconds.value === 0) {
       if (minutes.value === 0) {
         clearInterval(timer)
+        timeExpired.value = true
         mailSent.value = false
         errorMessage.value = '인증 시간이 초과되었습니다. 다시 시도해주세요.'
       } else {
@@ -93,11 +97,15 @@ const close = () => {
   emit('close')
 }
 
+// 인증 코드 전송
 const sendCode = async () => {
+  validateEmail()
+  if (emailError.value) return
+
   try {
     const res = await axios.post('/api/send-email-code', { usermail: usermail.value })
     if (res.data.status === 'OK') {
-      verifyCode.value = res.data.code // 실제 서비스에서는 프론트엔드에서 제거
+      verifyCode.value = res.data.code // 실제 서비스에서는 제거
       mailSent.value = true
       errorMessage.value = ''
       startTimer()
@@ -112,6 +120,12 @@ const sendCode = async () => {
 }
 
 const checkCode = async () => {
+  if (timeExpired.value) {
+    errorMessage.value = '인증 시간이 만료되었습니다. 다시 시도해주세요.'
+    mailSent.value = false
+    return
+  }
+
   try {
     const res = await axios.post('/api/verify-email-code', {
       usermail: usermail.value,
