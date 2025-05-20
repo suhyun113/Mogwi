@@ -59,6 +59,12 @@ const seconds = ref(0)
 const timeExpired = ref(false)
 let timer = null
 
+// 이메일 유효성 검사
+const validateEmail = () => {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  emailError.value = emailPattern.test(usermail.value) ? '' : '이메일 형식이 올바르지 않습니다.'
+}
+
 const startTimer = () => {
   minutes.value = 3
   seconds.value = 0
