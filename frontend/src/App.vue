@@ -6,7 +6,7 @@
     </header>
     <main>
       <router-view />
-      <LoginModal v-if="showLogin" @close="showLogin = false" />
+      <LoginModal v-if="showLogin" @close="showLogin = false" @open-register="openRegisterFromLogin"/>
       <RegisterModal v-if="showRegister" @close="showRegister = false" />
     </main>
   </div>
@@ -20,6 +20,11 @@ import RegisterModal from '@/components/RegisterModal.vue'
 
 const showLogin = ref(false)
 const showRegister = ref(false)
+
+const openRegisterFromLogin = () => {
+  showLogin.value = false
+  showRegister.value = true
+}
 </script>
 
 <style>

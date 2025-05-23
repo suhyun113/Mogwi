@@ -18,7 +18,7 @@
         </div>
       </form>
       <div class="links">
-        <router-link to="/register" class="dimmed-link">회원가입</router-link>
+        <a href="#" class="dimmed-link" @click="$emit('open-register')">회원가입</a>
         <span class="dimmed-sep"> | </span>
         <a href="#" class="dimmed-link">아이디·비밀번호 찾기</a>
       </div>
