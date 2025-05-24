@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 로그인 api 연동">
-      <change afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/RegisterController.java" afterDir="false" />
+    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (backend): SMTP 설정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/RegisterModal.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/RegisterModal.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mogwi-system/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/build.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -167,7 +166,7 @@
       <workItem from="1747630928559" duration="303000" />
       <workItem from="1747736720319" duration="920000" />
       <workItem from="1747991904033" duration="1428000" />
-      <workItem from="1748085500749" duration="1884000" />
+      <workItem from="1748085500749" duration="2321000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
@@ -193,7 +192,23 @@
       <option name="project" value="LOCAL" />
       <updated>1747064616495</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Feat (backend): 이메일 인증코드 전송 api 구현">
+      <option name="closed" value="true" />
+      <created>1748090981113</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748090981113</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Feat (backend): SMTP 설정">
+      <option name="closed" value="true" />
+      <created>1748091224299</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748091224299</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -213,6 +228,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Feat (backend): 로그인 api 구현" />
     <MESSAGE value="Feat (frontend): 로그인 api 연동" />
-    <option name="LAST_COMMIT_MESSAGE" value="Feat (frontend): 로그인 api 연동" />
+    <MESSAGE value="Feat (backend): 이메일 인증코드 전송 api 구현" />
+    <MESSAGE value="Feat (backend): SMTP 설정" />
+    <option name="LAST_COMMIT_MESSAGE" value="Feat (backend): SMTP 설정" />
   </component>
 </project>
