@@ -49,6 +49,8 @@ public class RegisterController {
             return ResponseEntity.ok(Map.of("status", "OK"));
         } catch (Exception e) {
             log.error("메일 전송 실패)", e);
+            System.out.println("ENV USER: " + System.getenv("SPRING_MAIL_USERMAIL"));
+
             return ResponseEntity.ok(Map.of("status", "FAIL"));
         }
     }
