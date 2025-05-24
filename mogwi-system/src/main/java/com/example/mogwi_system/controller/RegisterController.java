@@ -76,5 +76,25 @@ public class RegisterController {
             this.expire = expire;
         }
     }
+
+    // 인증코드 확인
+    @PostMapping("/api/verify-email-code")
+    public ResponseEntity<?> verifyEmailCode(@RequestBody Map<String, String> body) {
+        String usermail = body.get("usermail");
+        String inputCode = body.get("code");
+
+        VerificationInfo info = verificationMap.get(usermail);
+        // 정보 비어있는 경우 또는 타이머 오버
+        if (info == null || LocalDateTime.now().isAfter(info.expire)) {
+            return ResponseEntity.ok(Map.of("status", "EXPIRED"));
+        }
+
+        // 사용자가 입력한 코드가 동일한 경우
+        if (info.code.equals(inputCode)) {
+            return ResponseEntity.ok(Map.of("status", "OK"));
+        } else {
+            return ResponseEntity.ok(Map.of("status", "FAIL"));
+        }
+    }
 }
 
