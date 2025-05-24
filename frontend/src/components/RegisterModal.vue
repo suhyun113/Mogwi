@@ -9,17 +9,17 @@
       <!-- 이메일 인증 영역 -->
       <div v-if="!verified" class="step">
         <div class="email-row">
-          <input v-model="usermail" type="email" placeholder="이메일" />
+          <input v-model="usermail" type="email" placeholder="이메일" class="email-input"/>
           <button @click="sendCode" class="sendCode-btn">인증코드 전송</button>
         </div>
         <p v-if="emailError" class="error-msg">{{ emailError }}</p>
 
-        <div v-if="mailSent">
-          <div class="verify-row">
+        <div v-if="mailSent" class="verify-section">
+          <div class="code-input-wrapper">
             <input v-model="verifyInput" placeholder="인증코드 입력" class="code-input" />
-            <span class="timer-text" v-if="!timeExpired">{{ minutes }}:{{ seconds.toString().padStart(2, '0')}}</span>
+            <span class="timer-inside" v-if="!timeExpired">{{ minutes }}:{{ seconds.toString().padStart(2, '0') }}</span>
           </div>
-          <button @click="checkCode" class="sendCode-btn">인증 확인</button>
+          <button @click="checkCode" class="checkCode-btn">인증 확인</button>
           <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
         </div>
       </div>
@@ -47,6 +47,7 @@ const usermail = ref('')
 const userid = ref('')
 const userpass = ref('')
 const username = ref('')
+const created_at = ref(new Date().toISOString().slice(0, 19).replace('T', ' '))
 const verifyInput = ref('')
 const verifyCode = ref('')
 const verified = ref(false)
@@ -119,6 +120,7 @@ const sendCode = async () => {
   }
 }
 
+// 인증 코드 확인
 const checkCode = async () => {
   if (timeExpired.value) {
     errorMessage.value = '인증 시간이 만료되었습니다. 다시 시도해주세요.'
@@ -145,6 +147,7 @@ const checkCode = async () => {
   }
 }
 
+// 회원가입입
 const onRegister = async () => {
   if (!userid.value || !userpass.value || !username.value) {
     errorMessage.value = '모든 정보를 입력해주세요.'
@@ -156,12 +159,15 @@ const onRegister = async () => {
       userid: userid.value,
       userpass: userpass.value,
       username: username.value,
-      usermail: usermail.value
+      usermail: usermail.value,
+      created_at: created_at.value
     })
 
     if (res.data.status === 'OK') {
       alert('회원가입 완료')
       emit('close')
+    } else if (res.data.status === 'DUPLICATE') {
+      errorMessage.value = '이미 존재하는 아이디입니다.'
     } else {
       errorMessage.value = '회원가입 실패'
     }
@@ -175,10 +181,14 @@ const onRegister = async () => {
 <style scoped>
 .overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background-color: rgba(0,0,0,0.5);
-  display: flex; justify-content: center; align-items: center;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 .modal {
@@ -187,7 +197,7 @@ const onRegister = async () => {
   width: 320px;
   border-radius: 0;
   position: relative;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   animation: popup 0.2s ease-out;
 }
 .modal-header {
@@ -197,21 +207,29 @@ const onRegister = async () => {
   margin-bottom: 1rem;
 }
 @keyframes popup {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .close-btn {
   font-size: 28px;
-  background: none; border: none;
+  background: none;
+  border: none;
   cursor: pointer;
 }
-
-.step, form {
+.step,
+form {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-input {
+
+.email-input, .code-input, .register-input {
   width: 100%;
   padding: 10px;
   margin-bottom: 12px;
@@ -219,7 +237,8 @@ input {
   border: 1px solid #ccc;
   box-sizing: border-box;
 }
-.sendCode-btn, .register-btn {
+
+.sendCode-btn, .checkCode-btn, .register-btn {
   background-color: #a471ff;
   color: white;
   border: none;
@@ -230,18 +249,32 @@ input {
   transition: background 0.3s;
   width: 100%;
 }
-.sendCode-btn:hover, .register-btn:hover {
+.sendCode-btn:hover, .checkCode-btn:hover,
+.register-btn:hover {
   background-color: #854fe6;
 }
+
 .error-msg {
   color: #e74c3c;
   font-size: 13px;
   line-height: 1;
   text-align: center;
 }
-.timer-text {
-  font-size: 14px;
+.verify-section {
+  width: 100%;
+  margin-top: 16px;
+}
+.code-input-wrapper {
+  width: 100%;
+  position: relative;
+}
+.timer-inside {
+  position: absolute;
+  right: 12px;
+  top: 35%;
+  transform: translateY(-50%);
+  font-size: 13px;
   color: #555;
-  margin-bottom: 10px;
+  pointer-events: none;
 }
 </style>
