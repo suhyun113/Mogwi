@@ -26,9 +26,9 @@
 
       <!-- 인증 후 회원가입 영역 -->
       <form v-if="verified" @submit.prevent="onRegister">
-        <input v-model="userid" placeholder="아이디" />
-        <input v-model="userpass" type="password" placeholder="비밀번호" />
-        <input v-model="username" placeholder="닉네임" />
+        <input v-model="userid" placeholder="아이디" class="register-input"/>
+        <input v-model="userpass" type="password" placeholder="비밀번호" class="register-input"/>
+        <input v-model="username" placeholder="닉네임" class="register-input"/>
         <button class="register-btn">가입하기</button>
         <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
       </form>
@@ -138,7 +138,12 @@ const checkCode = async () => {
       errorMessage.value = ''
       clearInterval(timer)
       alert('이메일 인증 완료!')
-    } else {
+    } else if (res.data.status === 'EXPIRED') {
+      errorMessage.value = '인증 시간이 만료되었습니다. 다시 인증해주세요.'
+      mailSent.value = false
+      timeExpired.value = true
+    } 
+    else {
       errorMessage.value = '인증코드가 일치하지 않습니다.'
     }
   } catch (e) {
@@ -147,7 +152,7 @@ const checkCode = async () => {
   }
 }
 
-// 회원가입입
+// 회원가입
 const onRegister = async () => {
   if (!userid.value || !userpass.value || !username.value) {
     errorMessage.value = '모든 정보를 입력해주세요.'
