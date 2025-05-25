@@ -2,6 +2,7 @@ package com.example.mogwi_system.controller;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +95,45 @@ public class RegisterController {
             return ResponseEntity.ok(Map.of("status", "OK"));
         } else {
             return ResponseEntity.ok(Map.of("status", "FAIL"));
+        }
+    }
+
+    // 회원가입
+    @PostMapping("/api/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> params) {
+        String userid = params.get("userid");
+        String userpass = params.get("userpass");
+        String username = params.get("username");
+        String usermail = params.get("usermail");
+        String created_at = params.get("created_at");
+
+        try {
+            String checkSql = "SELECT * FROM users WHERE userid = ?";
+            Query checkQuery = entityManager.createNativeQuery(checkSql);
+            checkQuery.setParameter(1, userid);
+
+            List<Object[]> existing = checkQuery.getResultList();
+            if (!existing.isEmpty()) {
+                return ResponseEntity.ok(Map.of("status", "DUPLICATE"));
+            }
+
+            String insertSql = "INSERT INTO users(userid, userpass, username, usermail, created_at) VALUES (?, ?, ?, ?, ?)";
+            Query insertQuery = entityManager.createNativeQuery(insertSql);
+            insertQuery.setParameter(1, userid);
+            insertQuery.setParameter(2, userpass);
+            insertQuery.setParameter(3, username);
+            insertQuery.setParameter(4, usermail);
+            insertQuery.setParameter(5, created_at);
+
+            int result = insertQuery.executeUpdate();
+            if (result > 0) {
+                return ResponseEntity.ok(Map.of("status", "OK"));
+            } else {
+                return ResponseEntity.ok(Map.of("status", "FAIL"));
+            }
+        } catch (Exception e) {
+            log.error("회원가입 오류 발생: ", e);
+            return ResponseEntity.internalServerError().body(Map.of("status", "ERROR"));
         }
     }
 }
