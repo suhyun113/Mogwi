@@ -10,7 +10,7 @@
       <div v-if="!verified" class="step">
         <div class="email-row">
           <input v-model="usermail" type="email" placeholder="이메일" class="email-input"/>
-          <button @click="sendCode" class="sendCode-btn">인증코드 전송</button>
+          <button @click="sendCode" class="sendCode-btn" :disabled="sendDisabled">인증코드 전송</button>
         </div>
         <!-- 이메일 형식 오류 또는 중복 이메일-->
         <p v-if="emailError" class="error-msg">{{ emailError }}</p>
@@ -56,6 +56,7 @@ const verified = ref(false)
 const mailSent = ref(false)
 const errorMessage = ref('')
 const emailError = ref('')
+const sendDisabled = ref(false)
 
 // Timer 관련
 const minutes = ref(3)
@@ -81,6 +82,7 @@ const startTimer = () => {
         timeExpired.value = true
         mailSent.value = false
         errorMessage.value = '인증 시간이 초과되었습니다. 다시 시도해주세요.'
+        sendDisabled.value = false
       } else {
         minutes.value--
         seconds.value = 59
@@ -109,10 +111,12 @@ const sendCode = async () => {
   }
 
   try {
+    sendDisabled.value = true
     const res = await axios.post('/api/send-email-code', { usermail: usermail.value })
     if (res.data.status === 'DUPLICATE') {
       mailSent.value = false
       emailError.value = '이미 가입된 이메일입니다.'
+      sendDisabled.value = false
       return
     }
     
@@ -126,11 +130,13 @@ const sendCode = async () => {
     } else {
       errorMessage.value = res.data.message || '메일 전송 실패'
       mailSent.value = false
+      sendDisabled.value = false
     }
   } catch (e) {
     console.error(e)
     errorMessage.value = '서버 오류가 발생했습니다.'
     mailSent.value = false
+    sendDisabled.value = false
   }
 }
 
@@ -248,7 +254,9 @@ form {
   align-items: center;
 }
 
-.email-input, .code-input, .register-input {
+.email-input, 
+.code-input, 
+.register-input {
   width: 100%;
   padding: 10px;
   margin-bottom: 12px;
@@ -264,7 +272,9 @@ form {
   border-width:1.5px;
   outline: none;
 }
-.sendCode-btn, .checkCode-btn, .register-btn {
+.sendCode-btn, 
+.checkCode-btn, 
+.register-btn {
   background-color: #a471ff;
   color: white;
   border: none;
@@ -275,7 +285,20 @@ form {
   transition: background 0.3s;
   width: 100%;
 }
-.sendCode-btn:hover, .checkCode-btn:hover,
+.sendCode-btn:disabled {
+  background-color: #d1c4e9 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+/* 비활성화 상태에서 hover에도 변화 없게 */
+.sendCode-btn:disabled:hover {
+  background-color: #d1c4e9 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+/* 활성화된 상태일 때만 hover 스타일 적용 */
+.sendCode-btn:not(:disabled):hover,
+.checkCode-btn:hover,
 .register-btn:hover {
   background-color: #854fe6;
 }

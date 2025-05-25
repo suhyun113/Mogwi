@@ -5,9 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (backend): 회원가입 정보 저장 api 구현">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/RegisterModal.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/RegisterModal.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/RegisterController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -169,7 +166,7 @@
       <workItem from="1747736720319" duration="920000" />
       <workItem from="1747991904033" duration="1428000" />
       <workItem from="1748085500749" duration="9927000" />
-      <workItem from="1748185183763" duration="6153000" />
+      <workItem from="1748185183763" duration="7034000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
