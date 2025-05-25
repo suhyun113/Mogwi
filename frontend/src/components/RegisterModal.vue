@@ -12,15 +12,17 @@
           <input v-model="usermail" type="email" placeholder="이메일" class="email-input"/>
           <button @click="sendCode" class="sendCode-btn">인증코드 전송</button>
         </div>
+        <!-- 이메일 형식 오류 또는 중복 이메일-->
         <p v-if="emailError" class="error-msg">{{ emailError }}</p>
-
+        
+        <!-- 인증코드 입력 영역은 mailSent가 true일 때만 표시-->
         <div v-if="mailSent" class="verify-section">
           <div class="code-input-wrapper">
             <input v-model="verifyInput" placeholder="인증코드 입력" class="code-input" />
             <span class="timer-inside" v-if="!timeExpired">{{ minutes }}:{{ seconds.toString().padStart(2, '0') }}</span>
           </div>
           <button @click="checkCode" class="checkCode-btn">인증 확인</button>
-          <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+          <p v-if="errorMessage && mailSent" class="error-msg">{{ errorMessage }}</p>
         </div>
       </div>
 
@@ -101,22 +103,34 @@ const close = () => {
 // 인증 코드 전송
 const sendCode = async () => {
   validateEmail()
-  if (emailError.value) return
+  if (emailError.value) {
+    mailSent.value = false
+    return
+  }
 
   try {
     const res = await axios.post('/api/send-email-code', { usermail: usermail.value })
+    if (res.data.status === 'DUPLICATE') {
+      mailSent.value = false
+      emailError.value = '이미 가입된 이메일입니다.'
+      return
+    }
+    
     if (res.data.status === 'OK') {
-      verifyCode.value = res.data.code // 실제 서비스에서는 제거
       mailSent.value = true
+      emailError.value = ''
       errorMessage.value = ''
+      verifyCode.value = res.data.code // 실제 서비스에서는 제거
       startTimer()
       alert('이메일로 인증코드를 보냈습니다.')
     } else {
-      errorMessage.value = '메일 전송 실패'
+      errorMessage.value = res.data.message || '메일 전송 실패'
+      mailSent.value = false
     }
   } catch (e) {
     console.error(e)
     errorMessage.value = '서버 오류가 발생했습니다.'
+    mailSent.value = false
   }
 }
 
