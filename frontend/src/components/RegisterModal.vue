@@ -253,10 +253,17 @@ form {
   padding: 10px;
   margin-bottom: 12px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #ccc;
   box-sizing: border-box;
 }
 
+.email-input:hover, .email-input:focus,
+.code-input:hover, .code-input:focus,
+.register-input:hover, .register-input:focus {
+  border-color: #a471ff;
+  border-width:1.5px;
+  outline: none;
+}
 .sendCode-btn, .checkCode-btn, .register-btn {
   background-color: #a471ff;
   color: white;
