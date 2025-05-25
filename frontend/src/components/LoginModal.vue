@@ -18,7 +18,7 @@
         </div>
       </form>
       <div class="links">
-        <router-link to="/register" class="dimmed-link">회원가입</router-link>
+        <a href="#" class="dimmed-link" @click="$emit('open-register')">회원가입</a>
         <span class="dimmed-sep"> | </span>
         <a href="#" class="dimmed-link">아이디·비밀번호 찾기</a>
       </div>
@@ -128,8 +128,13 @@ input {
   padding: 10px;
   margin-bottom: 12px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #ccc;
   box-sizing: border-box;
+}
+input:hover, input:focus {
+  border-color: #a471ff;
+  border-width: 1.5px;
+  outline: none;
 }
 .login-btn {
   width: 100%;

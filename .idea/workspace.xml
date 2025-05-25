@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 로그인 api 연동">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (backend): 회원가입 정보 저장 api 구현">
+      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +33,13 @@
         </projects_view>
       </state>
     </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -69,7 +76,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.MogwiSystemApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/1-feat-login&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/3-feat-register&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;E:/internetDB/Mogwi/mogwi-system&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -156,7 +163,10 @@
       <workItem from="1747235204266" duration="2555000" />
       <workItem from="1747245222379" duration="1412000" />
       <workItem from="1747630928559" duration="303000" />
-      <workItem from="1747736720319" duration="317000" />
+      <workItem from="1747736720319" duration="920000" />
+      <workItem from="1747991904033" duration="1428000" />
+      <workItem from="1748085500749" duration="9927000" />
+      <workItem from="1748185183763" duration="7034000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
@@ -182,7 +192,71 @@
       <option name="project" value="LOCAL" />
       <updated>1747064616495</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Feat (backend): 이메일 인증코드 전송 api 구현">
+      <option name="closed" value="true" />
+      <created>1748090981113</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748090981113</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Feat (backend): SMTP 설정">
+      <option name="closed" value="true" />
+      <created>1748091224299</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748091224299</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Feat (backend): 의존성 추가">
+      <option name="closed" value="true" />
+      <created>1748091403193</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1748091403193</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Feat (backend): SMTP 설정 추가">
+      <option name="closed" value="true" />
+      <created>1748092011965</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1748092011965</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Feat (backend): MailSender 주입 및 이메일 인증코드 전송 api 구현">
+      <option name="closed" value="true" />
+      <created>1748092068045</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1748092068045</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Feat (backend): 인증코드 발송 메일 설정">
+      <option name="closed" value="true" />
+      <created>1748094314213</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1748094314213</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Feat (backend): 의존성 변경">
+      <option name="closed" value="true" />
+      <created>1748101056749</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1748101056749</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Feat (backend): 회원가입 정보 저장 api 구현">
+      <option name="closed" value="true" />
+      <created>1748188208760</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1748188208760</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -202,6 +276,14 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Feat (backend): 로그인 api 구현" />
     <MESSAGE value="Feat (frontend): 로그인 api 연동" />
-    <option name="LAST_COMMIT_MESSAGE" value="Feat (frontend): 로그인 api 연동" />
+    <MESSAGE value="Feat (backend): 이메일 인증코드 전송 api 구현" />
+    <MESSAGE value="Feat (backend): SMTP 설정" />
+    <MESSAGE value="Feat (backend): 의존성 추가" />
+    <MESSAGE value="Feat (backend): SMTP 설정 추가" />
+    <MESSAGE value="Feat (backend): MailSender 주입 및 이메일 인증코드 전송 api 구현" />
+    <MESSAGE value="Feat (backend): 인증코드 발송 메일 설정" />
+    <MESSAGE value="Feat (backend): 의존성 변경" />
+    <MESSAGE value="Feat (backend): 회원가입 정보 저장 api 구현" />
+    <option name="LAST_COMMIT_MESSAGE" value="Feat (backend): 회원가입 정보 저장 api 구현" />
   </component>
 </project>

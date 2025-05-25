@@ -1,11 +1,13 @@
 <template>
   <div id="app">
     <header>
-      <NavBar @open-login="showLogin = true" />
+      <NavBar @open-login="showLogin = true" @open-register="showRegister = true" />
+
     </header>
     <main>
       <router-view />
-      <LoginModal v-if="showLogin" @close="showLogin = false" />
+      <LoginModal v-if="showLogin" @close="showLogin = false" @open-register="openRegisterFromLogin"/>
+      <RegisterModal v-if="showRegister" @close="showRegister = false" />
     </main>
   </div>
 </template>
@@ -14,8 +16,15 @@
 import { ref } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import LoginModal from '@/components/LoginModal.vue'
+import RegisterModal from '@/components/RegisterModal.vue'
 
 const showLogin = ref(false)
+const showRegister = ref(false)
+
+const openRegisterFromLogin = () => {
+  showLogin.value = false
+  showRegister.value = true
+}
 </script>
 
 <style>
