@@ -32,6 +32,16 @@ public class RegisterController {
     public ResponseEntity<?> sendEmailCode(@RequestBody Map<String, String> body) {
         String usermail = body.get("usermail");
 
+        // 등록된 이메일 검사
+        String checkSql = "SELECT * FROM users WHERE usermail = ?";
+        Query checkQuery = entityManager.createNativeQuery(checkSql);
+        checkQuery.setParameter(1, usermail);
+
+        List<?> existing = checkQuery.getResultList();
+        if (!existing.isEmpty()) {
+        return ResponseEntity.ok(Map.of("status", "DUPLICATE", "message", "이미 가입된 계정입니다."));
+        }
+
         // 인증코드 : 숫자 + 대문자 영어 6자리 생성
         String code = generateCode();
         LocalDateTime expire = LocalDateTime.now().plusMinutes(3);
@@ -46,13 +56,13 @@ public class RegisterController {
             message.setText("인증코드는 다음과 같습니다:\n\n" + code + "\n\n3분 내에 입력해주세요.");
             mailSender.send(message);
 
-            log.info("인증 메일 발송 완료 - {} : {}", usermail, code);
+            log.info("인증코드 발송 완료 - {} : {}", usermail, code);
             return ResponseEntity.ok(Map.of("status", "OK"));
         } catch (Exception e) {
-            log.error("메일 전송 실패)", e);
+            log.error("인증코드 전송 실패)", e);
             System.out.println("ENV USER: " + System.getenv("SPRING_MAIL_USERMAIL"));
 
-            return ResponseEntity.ok(Map.of("status", "FAIL"));
+            return ResponseEntity.ok(Map.of("status", "FAIL", "message", "인증코드 전송 실패"));
         }
     }
 
