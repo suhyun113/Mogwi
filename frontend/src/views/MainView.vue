@@ -1,27 +1,27 @@
 <template>
-  <div class="main-container">
-    <SearchBar @search="handleSearch" :categories="categories" />
-    <div class="problem-list">
-      <ProblemSummary
-        v-for="problem in filteredProblems"
-        :key="problem.id"
-        :problem="problem"
-        @click="handleClick(problem)"
-      />
+  <div class="main-view-wrapper">
+    <div class="main-inner">
+      <SearchBar @search="handleSearch" :categories="categories" />
+       
+      <div class="problem-list">
+        <ProblemSummary
+          v-for="problem in filteredProblems"
+          :key="problem.id"
+          :problem="problem"
+          @click="handleClick(problem)"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import ProblemSummary from '@/components/ProblemSummary.vue'
 
 export default {
-  components: {
-    SearchBar,
-    ProblemSummary
-  },
+  components: { SearchBar, ProblemSummary },
   setup() {
     const problems = ref([
       {
@@ -49,23 +49,23 @@ export default {
         cardCount: 6
       }
     ])
-
+    
     const selectedProblem = ref(null)
     const query = ref('')
-    const selectedCategory = ref('')
-
+    const selectedCategory = ref('#전체')
+    
     const categories = ref(['#전체', '#수학', '#AI', '#컴퓨터', '#과학', '#역사', '#기타'])
-
+    
     const handleSearch = ({ text, category }) => {
       query.value = text
       selectedCategory.value = category
     }
-
+    
     const handleClick = (problem) => {
       selectedProblem.value = problem
       alert('문제 상세 보기 기능은 로그인 후 제공됩니다.')
     }
-
+    
     const filteredProblems = computed(() => {
       return problems.value.filter(problem => {
         const matchText = problem.title.toLowerCase().includes(query.value.toLowerCase())
@@ -73,14 +73,8 @@ export default {
         return matchText && matchCategory
       })
     })
-
-    onMounted(() => {})
-
+    
     return {
-      problems,
-      selectedProblem,
-      query,
-      selectedCategory,
       filteredProblems,
       categories,
       handleSearch,
@@ -91,8 +85,14 @@ export default {
 </script>
 
 <style scoped>
-.main-container {
+.main-view-wrapper {
+  display: flex;
+  justify-content: center;
   padding: 24px;
+}
+.main-inner {
+  width: 100%;
+  max-width: 720px;
 }
 .problem-list {
   display: flex;

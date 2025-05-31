@@ -1,4 +1,3 @@
-// ProblemSummary.vue
 <template>
   <div class="problem-summary">
     <h3>{{ problem.title }}</h3>
@@ -33,7 +32,8 @@ export default {
         '#역사': '#a1887f',
         '#기타': '#e0e0e0',
         '#프론트엔드': '#ba68c8',
-        '#자료구조': '#f06292'
+        '#자료구조': '#f06292',
+        '#전체': '#b0bec5'
       }
       return colors[tag] || '#ccc'
     }
@@ -48,6 +48,8 @@ export default {
   border-radius: 8px;
   background: #fafafa;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
 }
 .problem-summary h3 {
   margin: 0 0 6px;
@@ -58,8 +60,8 @@ export default {
 }
 .tag {
   display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 4px 10px;
+  border-radius: 14px;
   font-size: 13px;
   margin-right: 6px;
   color: white;

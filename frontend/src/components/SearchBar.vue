@@ -1,24 +1,22 @@
 <template>
-  <div class="search-bar-wrapper">
-    <div class="search-bar">
-      <div class="search-input-wrapper">
-        <input
-          v-model="searchText"
-          placeholder="문제 제목 검색"
-          class="search-input"
-        />
-        <button class="search-btn" @click="emitSearch">검색</button>
-      </div>
-      <div class="category-buttons">
-        <button
-          v-for="cat in categories"
-          :key="cat"
-          @click="selectCategory(cat)"
-          :class="['category-button', { active: selectedCategory === cat }]"
-        >
-          {{ cat }}
-        </button>
-      </div>
+  <div class="search-bar">
+    <div class="search-input-wrapper">
+      <input
+        v-model="searchText"
+        placeholder="문제 제목 검색"
+        class="search-input"
+      />
+      <button class="search-btn" @click="emitSearch">검색</button>
+    </div>
+    <div class="category-buttons">
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        @click="selectCategory(cat)"
+        :class="['category-button', { active: selectedCategory === cat }]"
+      >
+        {{ cat }}
+      </button>
     </div>
   </div>
 </template>
@@ -53,13 +51,7 @@ export default {
 </script>
 
 <style scoped>
-.search-bar-wrapper {
-  display: flex;
-  justify-content: center;
-}
-
 .search-bar {
-  max-width: 720px;
   width: 100%;
   margin-bottom: 16px;
 }
