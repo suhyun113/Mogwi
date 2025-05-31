@@ -1,16 +1,21 @@
 <template>
   <div class="problem-summary">
     <h3>{{ problem.title }}</h3>
-    <div class="category-tags">
-      <span
-        class="tag"
-        v-for="tag in problem.categories"
-        :key="tag"
-        :style="{ backgroundColor: getColor(tag) }"
-      >
-        {{ tag }}
-      </span>
+
+    <div class="category-row">
+      <div class="category-tags">
+        <span
+          class="tag"
+          v-for="tag in problem.categories"
+          :key="tag"
+          :style="{ backgroundColor: getColor(tag) }"
+        >
+          {{ tag }}
+        </span>
+      </div>
+      <button class="solve-btn" @click="handleSolveClick"> 문제 풀기 </button>
     </div>
+
     <div class="meta">
       <span>❤️ {{ problem.likes }}</span>
       <span>📌 {{ problem.scraps }}</span>
@@ -21,7 +26,8 @@
 
 <script>
 export default {
-  props: ['problem'],
+  props: ['problem', 'isAuthenticated'],
+  emits: ['solve'],
   methods: {
     getColor(tag) {
       const colors = {
@@ -36,6 +42,9 @@ export default {
         '#전체': '#b0bec5'
       }
       return colors[tag] || '#ccc'
+    },
+    handleSolveClick() {
+      this.$emit('solve', this.problem)
     }
   }
 }
@@ -55,8 +64,14 @@ export default {
   margin: 0 0 6px;
   font-size: 18px;
 }
-.category-tags {
+.category-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 6px;
+}
+.category-tags {
+  margin-bottom: 5px;
 }
 .tag {
   display: inline-block;
@@ -72,5 +87,19 @@ export default {
   gap: 12px;
   font-size: 14px;
   color: #666;
+}
+.solve-btn {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #a471ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  float: right;
+}
+.solve-btn:hover {
+  background-color: #854fe6;
 }
 </style>
