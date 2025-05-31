@@ -13,12 +13,12 @@
           {{ tag }}
         </span>
       </div>
-      <button class="solve-btn" @click="handleSolveClick"> 문제 풀기 </button>
+      <button class="solve-btn" @click.stop="handleSolveClick"> 문제 풀기 </button>
     </div>
 
     <div class="meta">
-      <span>❤️ {{ problem.likes }}</span>
-      <span>📌 {{ problem.scraps }}</span>
+      <span @click.stop="handleLikeClick" class="clickable">❤️ {{ problem.likes }}</span>
+      <span @click.stop="handleScrapClick" class="clickable">📌 {{ problem.scraps }}</span>
       <span>🃏 {{ problem.cardCount }} 카드</span>
     </div>
   </div>
@@ -27,7 +27,7 @@
 <script>
 export default {
   props: ['problem', 'isAuthenticated'],
-  emits: ['solve'],
+  emits: ['solve', 'auth-required', 'update-like', 'update-scrap'],
   methods: {
     getColor(tag) {
       const colors = {
@@ -45,6 +45,20 @@ export default {
     },
     handleSolveClick() {
       this.$emit('solve', this.problem)
+    },
+    handleLikeClick() {
+      if (this.isAuthenticated) {
+        this.$emit('update-like', this.problem)
+      } else {
+        this.$emit('auth-required')
+      }
+    },
+    handleScrapClick() {
+      if (this.isAuthenticated) {
+        this.$emit('update-scrap', this.problem)
+      } else {
+        this.$emit('auth-required')
+      }
     }
   }
 }
@@ -56,7 +70,6 @@ export default {
   border: 1px solid #ccc;
   border-radius: 8px;
   background: #fafafa;
-  cursor: pointer;
   width: 100%;
   box-sizing: border-box;
 }
@@ -89,17 +102,19 @@ export default {
   color: #666;
 }
 .solve-btn {
-  margin-top: 12px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background-color: #a471ff;
   color: white;
   border: none;
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
-  float: right;
+  white-space: nowrap;
 }
 .solve-btn:hover {
   background-color: #854fe6;
+}
+.clickable {
+  cursor: pointer;
 }
 </style>
