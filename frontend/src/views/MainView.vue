@@ -10,8 +10,22 @@
           :problem="problem"
           :isAuthenticated="isAuthenticated"
           @solve="handleSolve"
+          @auth-required="handleAuthRequired"
+          @update-like="increaseLike"
+          @update-scrap="increaseScrap"
         />
       </div>
+
+      <LoginPromptModal
+        v-if="showLoginPrompt"
+        @continue="showLoginPrompt = false"
+        @open-login="openLoginModal"
+      />
+
+      <LoginModal
+        v-if="showLoginModal"
+        @close="showLoginModal = false"
+      />
     </div>
   </div>
 </template>
@@ -21,39 +35,21 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from '@/components/SearchBar.vue'
 import ProblemSummary from '@/components/ProblemSummary.vue'
+import LoginPromptModal from '@/components/LoginPromptModal.vue'
+import LoginModal from '@/components/LoginModal.vue'
 
 export default {
-  components: { SearchBar, ProblemSummary },
+  components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal },
   setup() {
     const router = useRouter()
     const problems = ref([
-      {
-        id: 1,
-        title: '자료구조 마스터',
-        categories: ['#컴퓨터', '#자료구조'],
-        likes: 12,
-        scraps: 8,
-        cardCount: 5
-      },
-      {
-        id: 2,
-        title: 'Vue 기초 다지기',
-        categories: ['#프론트엔드', '#컴퓨터'],
-        likes: 24,
-        scraps: 15,
-        cardCount: 10
-      },
-      {
-        id: 3,
-        title: '기초 통계',
-        categories: ['#수학', '#AI'],
-        likes: 10,
-        scraps: 5,
-        cardCount: 6
-      }
+      { id: 1, title: '자료구조 마스터', categories: ['#컴퓨터', '#자료구조'], likes: 12, scraps: 8, cardCount: 5 },
+      { id: 2, title: 'Vue 기초 다지기', categories: ['#프론트엔드', '#컴퓨터'], likes: 24, scraps: 15, cardCount: 10 },
+      { id: 3, title: '기초 통계', categories: ['#수학', '#AI'], likes: 10, scraps: 5, cardCount: 6 }
     ])
 
     const isAuthenticated = ref(false)
+    const showLoginPrompt = ref(false)
     const showLoginModal = ref(false)
     const selectedProblem = ref(null)
     const query = ref('')
@@ -70,9 +66,27 @@ export default {
         router.push(`/study/${problem.id}`)
       } else {
         selectedProblem.value = problem
-        showLoginModal.value = true
-        alert('로그인이 필요합니다.')
+        showLoginPrompt.value = true
       }
+    }
+
+    const handleAuthRequired = () => {
+      showLoginPrompt.value = true
+    }
+
+    const openLoginModal = () => {
+      showLoginPrompt.value = false
+      showLoginModal.value = true
+    }
+
+    const increaseLike = (problem) => {
+      const target = problems.value.find(p => p.id === problem.id)
+      if (target) target.likes++
+    }
+
+    const increaseScrap = (problem) => {
+      const target = problems.value.find(p => p.id === problem.id)
+      if (target) target.scraps++
     }
 
     const filteredProblems = computed(() => {
@@ -90,10 +104,15 @@ export default {
       categories,
       filteredProblems,
       isAuthenticated,
+      showLoginPrompt,
       showLoginModal,
       selectedProblem,
       handleSearch,
-      handleSolve
+      handleSolve,
+      handleAuthRequired,
+      openLoginModal,
+      increaseLike,
+      increaseScrap
     }
   }
 }
