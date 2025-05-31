@@ -39,11 +39,11 @@ public class LoginController {
                 Object[] row = result.get(0);
 
                 Map<String, Object> user = new HashMap<>();
-                user.put("userid", row[0]);
-                user.put("userpass", row[1]);
-                user.put("usermail", row[2]);
-                user.put("username", row[3]);
-                user.put("created_at", row[4]);
+                user.put("userid", row[1]);
+                user.put("userpass", row[2]);
+                user.put("usermail", row[3]);
+                user.put("username", row[4]);
+                user.put("created_at", row[5]);
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("status", "OK");
