@@ -31,8 +31,9 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 import SearchBar from '@/components/SearchBar.vue'
 import ProblemSummary from '@/components/ProblemSummary.vue'
 import LoginPromptModal from '@/components/LoginPromptModal.vue'
@@ -40,13 +41,10 @@ import LoginModal from '@/components/LoginModal.vue'
 
 export default {
   components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal },
+  emits: ['open-login'],
   setup() {
     const router = useRouter()
-    const problems = ref([
-      { id: 1, title: '자료구조 마스터', categories: ['#컴퓨터', '#자료구조'], likes: 12, scraps: 8, cardCount: 5 },
-      { id: 2, title: 'Vue 기초 다지기', categories: ['#프론트엔드', '#컴퓨터'], likes: 24, scraps: 15, cardCount: 10 },
-      { id: 3, title: '기초 통계', categories: ['#수학', '#AI'], likes: 10, scraps: 5, cardCount: 6 }
-    ])
+    const problems = ref([])
 
     const isAuthenticated = ref(false)
     const showLoginPrompt = ref(false)
@@ -56,9 +54,25 @@ export default {
     const selectedCategory = ref('#전체')
     const categories = ref(['#전체', '#수학', '#AI', '#컴퓨터', '#과학', '#역사', '#기타'])
 
+    // 문제 불러오기기
+    const fetchProblems = async () => {
+      try {
+        const response = await axios.get('/api/problems', {
+          params: {
+            query: query.value,
+            category: selectedCategory.value
+          }
+        })
+        problems.value = response.data
+      } catch (error) {
+        console.error('문제 불러오기 실패:', error)
+      }
+    }
+
     const handleSearch = ({ text, category }) => {
       query.value = text
       selectedCategory.value = category
+      fetchProblems()
     }
 
     const handleSolve = (problem) => {
@@ -98,6 +112,8 @@ export default {
         return matchText && matchCategory
       })
     })
+    
+    onMounted(fetchProblems)
 
     return {
       problems,
