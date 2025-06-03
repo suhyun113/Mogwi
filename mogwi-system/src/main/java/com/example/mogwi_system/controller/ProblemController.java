@@ -22,7 +22,7 @@ public class ProblemController {
     ) {
         try {
             StringBuilder sql = new StringBuilder(
-                    "SELECT p.id, p.title, u.username AS author, p.card_count, " +
+                    "SELECT p.id, p.title, u.username AS author_name, p.card_count, " +
                             "COALESCE((SELECT COUNT(*) FROM likes l WHERE l.problem_id = p.id), 0) AS likes, " +
                             "COALESCE((SELECT COUNT(*) FROM scraps s WHERE s.problem_id = p.id), 0) AS scraps, " +
                             "c1.tag_name AS category1, c2.tag_name AS category2, c3.tag_name AS category3 " +
