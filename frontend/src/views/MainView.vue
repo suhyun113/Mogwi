@@ -59,6 +59,7 @@ export default {
     const selectedCategory = ref('#전체')
     const categories = ref(['#전체', '#수학', '#AI', '#컴퓨터', '#과학', '#역사', '#기타'])
 
+    // 문제 불러오기기
     const fetchProblems = async () => {
       try {
         const response = await axios.get('/api/problems', {

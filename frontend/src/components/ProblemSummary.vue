@@ -9,27 +9,27 @@
     </div>
 
     <div class="category-row">
-  <div class="category-tags">
-    <span
-      class="tag"
-      v-for="tag in localProblem.categories"
-      :key="tag"
-      :style="{ backgroundColor: getColor(tag) }"
-    >
-      {{ tag }}
-    </span>
-  </div>
-  <div class="btn-wrapper">
-    <button
-        v-if="isAuthenticated && localProblem.authorId === currentUserId"
-        class="edit-btn"
-        @click.stop="handleEditClick"
-      >
-        수정
-    </button>
-    <button class="solve-btn" @click.stop="handleSolveClick">문제 풀기</button>
-  </div>
-</div>
+      <div class="category-tags">
+        <span
+          class="tag"
+          v-for="tag in localProblem.categories"
+          :key="tag"
+          :style="{ backgroundColor: getColor(tag) }"
+        >
+          {{ tag }}
+        </span>
+      </div>
+      <div class="btn-wrapper">
+        <button
+          v-if="isAuthenticated && localProblem.authorId === currentUserId"
+          class="edit-btn"
+          @click.stop="handleEditClick"
+        >
+          수정
+        </button>
+        <button class="solve-btn" @click.stop="handleSolveClick">문제 풀기</button>
+      </div>
+    </div>
 
     <div class="meta">
       <div class="meta-left">
@@ -40,12 +40,7 @@
         >
           ❤️ {{ localProblem.likes }}
         </span>
-        <span
-          v-else
-          class="clickable disabled"
-        >
-          ❤️ {{ localProblem.likes }}
-        </span>
+        <span v-else class="clickable disabled">❤️ {{ localProblem.likes }}</span>
 
         <span
           v-if="canLikeScrap"
@@ -54,14 +49,8 @@
         >
           📌 {{ localProblem.scraps }}
         </span>
-        <span
-          v-else
-          class="clickable disabled"
-        >
-          📌 {{ localProblem.scraps }}
-        </span>
+        <span v-else class="clickable disabled">📌 {{ localProblem.scraps }}</span>
       </div>
-
     </div>
   </div>
 </template>
@@ -72,7 +61,7 @@ export default {
   emits: ['auth-required', 'update-like', 'update-scrap'],
   data() {
     return {
-      localProblem: { ...this.problem } // props 복사본
+      localProblem: { ...this.problem }
     }
   },
   computed: {
@@ -139,59 +128,52 @@ export default {
   box-sizing: border-box;
 }
 .problem-summary h3 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 18px;
 }
 .title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 }
-
 .title-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .problem-title {
-  margin: 0;
   font-size: 18px;
   font-weight: bold;
 }
-
 .author {
   font-size: 13px;
   color: #888;
   white-space: nowrap;
 }
-
 .card-count {
   font-size: 13px;
   color: #666;
   white-space: nowrap;
 }
-
 .category-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin: 8px 0;
 }
 .category-tags {
-  margin-bottom: 5px;
+  display: flex;
+  gap: 8px;
 }
 .tag {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 14px;
   font-size: 13px;
-  margin-right: 6px;
   color: white;
 }
 .meta {
-  margin-top: 8px;
+  margin-top: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -202,15 +184,10 @@ export default {
   display: flex;
   gap: 12px;
 }
-
 .btn-wrapper {
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 6px; /* 버튼 사이 여백 */
-  min-height: 70px; /* 높이 일정 유지용 */
+  gap: 6px;
 }
-
 .edit-btn {
   padding: 6px 10px;
   background-color: #fff4c1;
@@ -226,7 +203,6 @@ export default {
 .edit-btn:hover {
   background-color: #ffe066;
 }
-
 .solve-btn {
   padding: 6px 10px;
   background-color: #a471ff;
@@ -240,7 +216,6 @@ export default {
 .solve-btn:hover {
   background-color: #854fe6;
 }
-
 .clickable {
   cursor: pointer;
 }
