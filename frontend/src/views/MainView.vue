@@ -12,8 +12,8 @@
           :currentUserId="currentUserId"
           @solve="handleSolve"
           @auth-required="handleAuthRequired"
-          @update-like="increaseLike"
-          @update-scrap="increaseScrap"
+          @update-like="handleUpdateLike"
+          @update-scrap="handleUpdateScrap"
         />
       </div>
 
@@ -97,14 +97,20 @@ export default {
       showLoginModal.value = true
     }
 
-    const increaseLike = (problem) => {
+    const handleUpdateLike = (problem) => {
       const target = problems.value.find(p => p.id === problem.id)
-      if (target) target.likes++
+      if (target && target.authorId !== currentUserId.value) {
+        target.liked = !target.liked
+        target.likes += target.liked ? 1 : -1
+      }
     }
 
-    const increaseScrap = (problem) => {
+    const handleUpdateScrap = (problem) => {
       const target = problems.value.find(p => p.id === problem.id)
-      if (target) target.scraps++
+      if (target && target.authorId !== currentUserId.value) {
+        target.scrapped = !target.scrapped
+        target.scraps += target.scrapped ? 1 : -1
+      }
     }
 
     const filteredProblems = computed(() => {
@@ -132,8 +138,8 @@ export default {
       handleSolve,
       handleAuthRequired,
       openLoginModal,
-      increaseLike,
-      increaseScrap
+      handleUpdateLike,
+      handleUpdateScrap
     }
   }
 }

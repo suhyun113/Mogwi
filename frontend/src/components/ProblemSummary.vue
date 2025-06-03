@@ -21,17 +21,33 @@
     <div class="meta">
       <div class="meta-left">
         <span
+          v-if="canLikeScrap"
           @click.stop="toggleLike"
           :class="['clickable', { active: localProblem.liked }]"
         >
           ❤️ {{ localProblem.likes }}
         </span>
         <span
+          v-else
+          class="clickable disabled"
+        >
+          ❤️ {{ localProblem.likes }}
+        </span>
+
+        <span
+          v-if="canLikeScrap"
           @click.stop="toggleScrap"
           :class="['clickable', { active: localProblem.scrapped }]"
         >
           📌 {{ localProblem.scraps }}
         </span>
+        <span
+          v-else
+          class="clickable disabled"
+        >
+          📌 {{ localProblem.scraps }}
+        </span>
+
         <span>🃏 {{ localProblem.cardCount }} 카드</span>
       </div>
 
@@ -53,6 +69,11 @@ export default {
   data() {
     return {
       localProblem: { ...this.problem } // props 복사본
+    }
+  },
+  computed: {
+    canLikeScrap() {
+      return this.isAuthenticated && this.localProblem.authorId !== this.currentUserId
     }
   },
   watch: {
@@ -86,13 +107,13 @@ export default {
       }
     },
     toggleLike() {
-      if (!this.isAuthenticated) return this.$emit('auth-required')
+      if (!this.canLikeScrap) return
       this.localProblem.liked = !this.localProblem.liked
       this.localProblem.likes += this.localProblem.liked ? 1 : -1
       this.$emit('update-like', this.localProblem)
     },
     toggleScrap() {
-      if (!this.isAuthenticated) return this.$emit('auth-required')
+      if (!this.canLikeScrap) return
       this.localProblem.scrapped = !this.localProblem.scrapped
       this.localProblem.scraps += this.localProblem.scrapped ? 1 : -1
       this.$emit('update-scrap', this.localProblem)
@@ -180,5 +201,9 @@ export default {
 .clickable.active {
   color: #e91e63;
   font-weight: bold;
+}
+.clickable.disabled {
+  color: #aaa;
+  cursor: not-allowed;
 }
 </style>
