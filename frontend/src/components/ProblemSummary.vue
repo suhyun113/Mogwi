@@ -2,6 +2,8 @@
   <div class="problem-summary">
     <h3>{{ problem.title }}</h3>
 
+    <p class="author"> 글 작성자: {{ problem.author }}</p>
+
     <div class="category-row">
       <div class="category-tags">
         <span
@@ -76,6 +78,11 @@ export default {
 .problem-summary h3 {
   margin: 0 0 6px;
   font-size: 18px;
+}
+.author {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  color: #999;
 }
 .category-row {
   display: flex;
