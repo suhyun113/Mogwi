@@ -1,8 +1,12 @@
 <template>
   <div class="problem-summary">
-    <h3>{{ localProblem.title }}</h3>
-
-    <p class="author"> 글 작성자: {{ localProblem.author }}</p>
+    <div class="title-row">
+      <div class="title-left">
+        <h3 class="problem-title">{{ localProblem.title }}</h3>
+        <span class="author">작성자: {{ localProblem.author }}</span>
+      </div>
+      <span class="card-count">🃏 {{ localProblem.cardCount }} 카드</span>
+    </div>
 
     <div class="category-row">
       <div class="category-tags">
@@ -47,8 +51,6 @@
         >
           📌 {{ localProblem.scraps }}
         </span>
-
-        <span>🃏 {{ localProblem.cardCount }} 카드</span>
       </div>
 
       <span
@@ -138,11 +140,37 @@ export default {
   margin: 0 0 6px;
   font-size: 18px;
 }
-.author {
-  margin: 4px 0 8px;
-  font-size: 13px;
-  color: #999;
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
 }
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.problem-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.author {
+  font-size: 13px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.card-count {
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+
 .category-row {
   display: flex;
   justify-content: space-between;
