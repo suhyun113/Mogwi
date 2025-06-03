@@ -9,6 +9,7 @@
           :key="problem.id"
           :problem="problem"
           :isAuthenticated="isAuthenticated"
+          :currentUserId="currentUserId"
           @solve="handleSolve"
           @auth-required="handleAuthRequired"
           @update-like="increaseLike"
@@ -32,6 +33,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import SearchBar from '@/components/SearchBar.vue'
@@ -43,10 +45,13 @@ export default {
   components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal },
   emits: ['open-login'],
   setup() {
+    const store = useStore()
     const router = useRouter()
     const problems = ref([])
 
-    const isAuthenticated = ref(false)
+    const isAuthenticated = computed(() => !!store.state.store_userid)
+    const currentUserId = computed(() => store.state.store_userid)
+
     const showLoginPrompt = ref(false)
     const showLoginModal = ref(false)
     const selectedProblem = ref(null)
@@ -54,7 +59,6 @@ export default {
     const selectedCategory = ref('#전체')
     const categories = ref(['#전체', '#수학', '#AI', '#컴퓨터', '#과학', '#역사', '#기타'])
 
-    // 문제 불러오기기
     const fetchProblems = async () => {
       try {
         const response = await axios.get('/api/problems', {
@@ -112,7 +116,7 @@ export default {
         return matchText && matchCategory
       })
     })
-    
+
     onMounted(fetchProblems)
 
     return {
@@ -120,6 +124,7 @@ export default {
       categories,
       filteredProblems,
       isAuthenticated,
+      currentUserId,
       showLoginPrompt,
       showLoginModal,
       selectedProblem,

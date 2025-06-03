@@ -1,35 +1,68 @@
 <template>
   <div class="problem-summary">
-    <h3>{{ problem.title }}</h3>
+    <h3>{{ localProblem.title }}</h3>
 
-    <p class="author"> 글 작성자: {{ problem.author }}</p>
+    <p class="author"> 글 작성자: {{ localProblem.author }}</p>
 
     <div class="category-row">
       <div class="category-tags">
         <span
           class="tag"
-          v-for="tag in problem.categories"
+          v-for="tag in localProblem.categories"
           :key="tag"
           :style="{ backgroundColor: getColor(tag) }"
         >
           {{ tag }}
         </span>
       </div>
-      <button class="solve-btn" @click.stop="handleSolveClick"> 문제 풀기 </button>
+      <button class="solve-btn" @click.stop="handleSolveClick">문제 풀기</button>
     </div>
 
     <div class="meta">
-      <span @click.stop="handleLikeClick" class="clickable">❤️ {{ problem.likes }}</span>
-      <span @click.stop="handleScrapClick" class="clickable">📌 {{ problem.scraps }}</span>
-      <span>🃏 {{ problem.cardCount }} 카드</span>
+      <div class="meta-left">
+        <span
+          @click.stop="toggleLike"
+          :class="['clickable', { active: localProblem.liked }]"
+        >
+          ❤️ {{ localProblem.likes }}
+        </span>
+        <span
+          @click.stop="toggleScrap"
+          :class="['clickable', { active: localProblem.scrapped }]"
+        >
+          📌 {{ localProblem.scraps }}
+        </span>
+        <span>🃏 {{ localProblem.cardCount }} 카드</span>
+      </div>
+
+      <span
+        v-if="isAuthenticated && localProblem.authorId === currentUserId"
+        class="edit-button"
+        @click.stop="handleEditClick"
+      >
+        🖋️ 수정
+      </span>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  props: ['problem', 'isAuthenticated'],
-  emits: ['solve', 'auth-required', 'update-like', 'update-scrap'],
+  props: ['problem', 'isAuthenticated', 'currentUserId'],
+  emits: ['auth-required', 'update-like', 'update-scrap'],
+  data() {
+    return {
+      localProblem: { ...this.problem } // props 복사본
+    }
+  },
+  watch: {
+    problem: {
+      handler(newVal) {
+        this.localProblem = { ...newVal }
+      },
+      deep: true
+    }
+  },
   methods: {
     getColor(tag) {
       const colors = {
@@ -46,21 +79,26 @@ export default {
       return colors[tag] || '#ccc'
     },
     handleSolveClick() {
-      this.$emit('solve', this.problem)
-    },
-    handleLikeClick() {
       if (this.isAuthenticated) {
-        this.$emit('update-like', this.problem)
+        this.$router.push(`/study/${this.localProblem.id}`)
       } else {
         this.$emit('auth-required')
       }
     },
-    handleScrapClick() {
-      if (this.isAuthenticated) {
-        this.$emit('update-scrap', this.problem)
-      } else {
-        this.$emit('auth-required')
-      }
+    toggleLike() {
+      if (!this.isAuthenticated) return this.$emit('auth-required')
+      this.localProblem.liked = !this.localProblem.liked
+      this.localProblem.likes += this.localProblem.liked ? 1 : -1
+      this.$emit('update-like', this.localProblem)
+    },
+    toggleScrap() {
+      if (!this.isAuthenticated) return this.$emit('auth-required')
+      this.localProblem.scrapped = !this.localProblem.scrapped
+      this.localProblem.scraps += this.localProblem.scrapped ? 1 : -1
+      this.$emit('update-scrap', this.localProblem)
+    },
+    handleEditClick() {
+      this.$router.push(`/edit/${this.localProblem.id}`)
     }
   }
 }
@@ -104,9 +142,24 @@ export default {
 .meta {
   margin-top: 8px;
   display: flex;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
   font-size: 14px;
   color: #666;
+}
+.meta-left {
+  display: flex;
+  gap: 12px;
+}
+.edit-button {
+  margin-left: auto;
+  font-size: 13px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.edit-button:hover {
+  color: #5f35b4;
 }
 .solve-btn {
   padding: 6px 10px;
@@ -123,5 +176,9 @@ export default {
 }
 .clickable {
   cursor: pointer;
+}
+.clickable.active {
+  color: #e91e63;
+  font-weight: bold;
 }
 </style>
