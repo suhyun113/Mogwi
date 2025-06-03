@@ -56,6 +56,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   props: ['problem', 'isAuthenticated', 'currentUserId'],
   emits: ['auth-required', 'update-like', 'update-scrap'],
@@ -101,9 +103,23 @@ export default {
     },
     toggleLike() {
       if (!this.canLikeScrap) return
-      this.localProblem.liked = !this.localProblem.liked
-      this.localProblem.likes += this.localProblem.liked ? 1 : -1
-      this.$emit('update-like', this.localProblem)
+
+      const newLiked = !this.localProblem.liked
+      this.localProblem.liked = newLiked
+      this.localProblem.likes += newLiked ? 1 : -1
+
+      // 서버 요청
+      axios.post(`/api/like/${this.localProblem.id}`, {
+        userId: this.currentUserId,
+        liked: newLiked
+      }).then(() => {
+        this.$emit('update-like', this.localProblem)
+      }).catch((error) => {
+        console.error('좋아요 반영 실패:', error)
+        // 실패 시 롤백
+        this.localProblem.liked = !newLiked
+        this.localProblem.likes += newLiked ? -1 : 1
+      })
     },
     toggleScrap() {
       if (!this.canLikeScrap) return

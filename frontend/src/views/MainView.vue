@@ -65,7 +65,8 @@ export default {
         const response = await axios.get('/api/problems', {
           params: {
             query: query.value,
-            category: selectedCategory.value
+            category: selectedCategory.value,
+            currentUserId: currentUserId.value
           }
         })
         problems.value = response.data
