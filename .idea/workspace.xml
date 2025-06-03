@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (backend): 회원가입 정보 저장 api 구현">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ProblemSummary.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ProblemSummary.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/views/MainView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/MainView.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ProblemController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ProblemController.java" afterDir="false" />
     </list>
