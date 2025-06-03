@@ -22,7 +22,7 @@ public class ProblemController {
     ) {
         try {
             StringBuilder sql = new StringBuilder(
-                    "SELECT p.id, p.title, u.username AS author_name, p.card_count, " +
+                    "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.card_count, " +
                             "COALESCE((SELECT COUNT(*) FROM likes l WHERE l.problem_id = p.id), 0) AS likes, " +
                             "COALESCE((SELECT COUNT(*) FROM scraps s WHERE s.problem_id = p.id), 0) AS scraps, " +
                             "c1.tag_name AS category1, c2.tag_name AS category2, c3.tag_name AS category3 " +
@@ -58,16 +58,19 @@ public class ProblemController {
                 Map<String, Object> item = new HashMap<>();
                 item.put("id", row[0]);
                 item.put("title", row[1]);
-                item.put("author", row[2]);
-                item.put("cardCount", row[3]);
-                item.put("likes", row[4]);
-                item.put("scraps", row[5]);
+                item.put("author", row[2]); // username
+                item.put("authorId", row[3]); // userid
+                item.put("cardCount", row[4]);
+                item.put("likes", row[5]);
+                item.put("scraps", row[6]);
 
                 List<String> tags = new ArrayList<>();
-                for (int i = 6; i <= 8; i++) {
+                for (int i = 7; i <= 9; i++) {
                     if (row[i] != null) tags.add(row[i].toString());
                 }
                 item.put("categories", tags);
+                item.put("liked", false);  // 초기값: 좋아요 안 한 상태
+                item.put("scrapped", false);  // 초기값: 스크랩 안 한 상태
                 problems.add(item);
             }
 

@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (backend): 회원가입 정보 저장 api 구현">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ProblemSummary.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ProblemSummary.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ProblemController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ProblemController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -176,7 +177,8 @@
       <workItem from="1748704684313" duration="1140000" />
       <workItem from="1748840808151" duration="867000" />
       <workItem from="1748846888542" duration="4315000" />
-      <workItem from="1748947062091" duration="1196000" />
+      <workItem from="1748947062091" duration="1812000" />
+      <workItem from="1748963894607" duration="694000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
