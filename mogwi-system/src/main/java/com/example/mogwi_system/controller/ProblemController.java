@@ -149,4 +149,61 @@ public class ProblemController {
         }
     }
 
+    // 스크랩 상태 변경 api
+    @PostMapping("/api/scrap/{problemId}")
+    public ResponseEntity<Map<String, Object>> toggleScrap(
+            @PathVariable Long problemId,
+            @RequestBody Map<String, Object> data) {
+
+        String userId = (String) data.get("userId");
+        Boolean scrapped = (Boolean) data.get("scrapped");
+
+        if (userId == null || scrapped == null || problemId == null) {
+            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", "입력값 누락"));
+        }
+
+        try {
+            // 사용자 내부 ID 조회
+            List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
+                    .setParameter(1, userId)
+                    .getResultList();
+
+            if (userResult.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("status", "ERROR", "message", "사용자 없음"));
+            }
+
+            Long internalUserId = ((Number) userResult.get(0)).longValue();
+
+            // 기존 상태 확인
+            List<?> existing = entityManager.createNativeQuery(
+                            "SELECT id FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2")
+                    .setParameter(1, internalUserId)
+                    .setParameter(2, problemId)
+                    .getResultList();
+
+            if (existing.isEmpty()) {
+                // INSERT
+                entityManager.createNativeQuery(
+                                "INSERT INTO user_problem_status (user_id, problem_id, is_scrapped) VALUES (?1, ?2, ?3)")
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, problemId)
+                        .setParameter(3, scrapped ? 1 : 0)
+                        .executeUpdate();
+            } else {
+                // UPDATE
+                entityManager.createNativeQuery(
+                                "UPDATE user_problem_status SET is_scrapped = ?1 WHERE user_id = ?2 AND problem_id = ?3")
+                        .setParameter(1, scrapped ? 1 : 0)
+                        .setParameter(2, internalUserId)
+                        .setParameter(3, problemId)
+                        .executeUpdate();
+            }
+
+            return ResponseEntity.ok(Map.of("status", "OK"));
+        } catch (Exception e) {
+            log.error("스크랩 처리 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
+        }
+    }
+
 }
