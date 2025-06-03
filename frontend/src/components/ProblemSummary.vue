@@ -9,18 +9,27 @@
     </div>
 
     <div class="category-row">
-      <div class="category-tags">
-        <span
-          class="tag"
-          v-for="tag in localProblem.categories"
-          :key="tag"
-          :style="{ backgroundColor: getColor(tag) }"
-        >
-          {{ tag }}
-        </span>
-      </div>
-      <button class="solve-btn" @click.stop="handleSolveClick">문제 풀기</button>
-    </div>
+  <div class="category-tags">
+    <span
+      class="tag"
+      v-for="tag in localProblem.categories"
+      :key="tag"
+      :style="{ backgroundColor: getColor(tag) }"
+    >
+      {{ tag }}
+    </span>
+  </div>
+  <div class="btn-wrapper">
+    <button
+        v-if="isAuthenticated && localProblem.authorId === currentUserId"
+        class="edit-btn"
+        @click.stop="handleEditClick"
+      >
+        수정
+    </button>
+    <button class="solve-btn" @click.stop="handleSolveClick">문제 풀기</button>
+  </div>
+</div>
 
     <div class="meta">
       <div class="meta-left">
@@ -53,13 +62,6 @@
         </span>
       </div>
 
-      <span
-        v-if="isAuthenticated && localProblem.authorId === currentUserId"
-        class="edit-button"
-        @click.stop="handleEditClick"
-      >
-        🖋️ 수정
-      </span>
     </div>
   </div>
 </template>
@@ -200,16 +202,31 @@ export default {
   display: flex;
   gap: 12px;
 }
-.edit-button {
-  margin-left: auto;
-  font-size: 13px;
-  color: #888;
+
+.btn-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px; /* 버튼 사이 여백 */
+  min-height: 70px; /* 높이 일정 유지용 */
+}
+
+.edit-btn {
+  padding: 6px 10px;
+  background-color: #fff4c1;
+  color: #4a3f69;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
-  transition: color 0.2s;
+  white-space: nowrap;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
 }
-.edit-button:hover {
-  color: #5f35b4;
+.edit-btn:hover {
+  background-color: #ffe066;
 }
+
 .solve-btn {
   padding: 6px 10px;
   background-color: #a471ff;
@@ -223,6 +240,7 @@ export default {
 .solve-btn:hover {
   background-color: #854fe6;
 }
+
 .clickable {
   cursor: pointer;
 }
