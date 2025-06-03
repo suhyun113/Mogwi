@@ -123,9 +123,21 @@ export default {
     },
     toggleScrap() {
       if (!this.canLikeScrap) return
-      this.localProblem.scrapped = !this.localProblem.scrapped
-      this.localProblem.scraps += this.localProblem.scrapped ? 1 : -1
-      this.$emit('update-scrap', this.localProblem)
+
+      const newScrapped = !this.localProblem.scrapped
+      this.localProblem.scrapped = newScrapped
+      this.localProblem.scraps += newScrapped ? 1 : -1
+
+      axios.post(`/api/scrap/${this.localProblem.id}`, {
+        userId: this.currentUserId,
+        scrapped: newScrapped
+      }).then(() => {
+        this.$emit('update-scrap', this.localProblem)
+      }).catch(() => {
+        // 실패 시 롤백
+        this.localProblem.scrapped = !newScrapped
+        this.localProblem.scraps += newScrapped ? -1 : 1
+      })
     },
     handleEditClick() {
       this.$router.push(`/edit/${this.localProblem.id}`)
