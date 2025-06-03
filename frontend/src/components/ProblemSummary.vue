@@ -33,23 +33,23 @@
 
     <div class="meta">
       <div class="meta-left">
-        <span
-          v-if="canLikeScrap"
-          @click.stop="toggleLike"
-          :class="['clickable', { active: localProblem.liked }]"
-        >
-          ❤️ {{ localProblem.likes }}
-        </span>
-        <span v-else class="clickable disabled">❤️ {{ localProblem.likes }}</span>
+        <div v-if="canLikeScrap" class="icon-wrapper" @click.stop="toggleLike">
+          <img :src="localProblem.liked ? heartOn : heartOff" alt="like" class="icon" />
+          <span>{{ localProblem.likes }}</span>
+        </div>
+        <div v-else class="icon-wrapper disabled">
+          <img :src="heartOff" alt="like" class="icon" />
+          <span>{{ localProblem.likes }}</span>
+        </div>
 
-        <span
-          v-if="canLikeScrap"
-          @click.stop="toggleScrap"
-          :class="['clickable', { active: localProblem.scrapped }]"
-        >
-          📌 {{ localProblem.scraps }}
-        </span>
-        <span v-else class="clickable disabled">📌 {{ localProblem.scraps }}</span>
+        <div v-if="canLikeScrap" class="icon-wrapper" @click.stop="toggleScrap">
+          <img :src="localProblem.scrapped ? scrapOn : scrapOff" alt="scrap" class="icon" />
+          <span>{{ localProblem.scraps }}</span>
+        </div>
+        <div v-else class="icon-wrapper disabled">
+          <img :src="scrapOff" alt="scrap" class="icon" />
+          <span>{{ localProblem.scraps }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -57,13 +57,21 @@
 
 <script>
 import axios from 'axios'
+import heartOff from '@/assets/icons/like_outline.png'
+import heartOn from '@/assets/icons/like_filled.png'
+import scrapOff from '@/assets/icons/scrap_outline.png'
+import scrapOn from '@/assets/icons/scrap_filled.png'
 
 export default {
   props: ['problem', 'isAuthenticated', 'currentUserId'],
   emits: ['auth-required', 'update-like', 'update-scrap'],
   data() {
     return {
-      localProblem: { ...this.problem }
+      localProblem: { ...this.problem },
+      heartOff,
+      heartOn,
+      scrapOff,
+      scrapOn
     }
   },
   computed: {
@@ -108,7 +116,6 @@ export default {
       this.localProblem.liked = newLiked
       this.localProblem.likes += newLiked ? 1 : -1
 
-      // 서버 요청
       axios.post(`/api/like/${this.localProblem.id}`, {
         userId: this.currentUserId,
         liked: newLiked
@@ -116,7 +123,6 @@ export default {
         this.$emit('update-like', this.localProblem)
       }).catch((error) => {
         console.error('좋아요 반영 실패:', error)
-        // 실패 시 롤백
         this.localProblem.liked = !newLiked
         this.localProblem.likes += newLiked ? -1 : 1
       })
@@ -134,7 +140,6 @@ export default {
       }).then(() => {
         this.$emit('update-scrap', this.localProblem)
       }).catch(() => {
-        // 실패 시 롤백
         this.localProblem.scrapped = !newScrapped
         this.localProblem.scraps += newScrapped ? -1 : 1
       })
@@ -210,7 +215,25 @@ export default {
 }
 .meta-left {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+}
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.icon-wrapper.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.icon:hover {
+  transform: scale(1.1);
 }
 .btn-wrapper {
   display: flex;
@@ -243,16 +266,5 @@ export default {
 }
 .solve-btn:hover {
   background-color: #854fe6;
-}
-.clickable {
-  cursor: pointer;
-}
-.clickable.active {
-  color: #e91e63;
-  font-weight: bold;
-}
-.clickable.disabled {
-  color: #aaa;
-  cursor: not-allowed;
 }
 </style>
