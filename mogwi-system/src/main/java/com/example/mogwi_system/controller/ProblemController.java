@@ -18,20 +18,22 @@ public class ProblemController {
     @GetMapping("/api/problems")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) String category
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String currentUserId
     ) {
         try {
             StringBuilder sql = new StringBuilder(
                     "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.card_count, " +
-                            "COALESCE((SELECT COUNT(*) FROM likes l WHERE l.problem_id = p.id), 0) AS likes, " +
-                            "COALESCE((SELECT COUNT(*) FROM scraps s WHERE s.problem_id = p.id), 0) AS scraps, " +
-                            "c1.tag_name AS category1, c2.tag_name AS category2, c3.tag_name AS category3 " +
+                            "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1), 0) AS likes, " +
+                            "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_scrapped = 1), 0) AS scraps, " +
+                            "IFNULL(ups.is_liked, 0) AS liked, " +
+                            "IFNULL(ups.is_scrapped, 0) AS scrapped, " +
+                            "c.tag_name AS category " +
                             "FROM problems p " +
                             "JOIN users u ON p.author_id = u.id " +
+                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserId) " +
                             "LEFT JOIN problem_categories pc ON p.id = pc.problem_id " +
-                            "LEFT JOIN categories c1 ON pc.category_id_1 = c1.id " +
-                            "LEFT JOIN categories c2 ON pc.category_id_2 = c2.id " +
-                            "LEFT JOIN categories c3 ON pc.category_id_3 = c3.id " +
+                            "LEFT JOIN categories c ON pc.category_id = c.id " +
                             "WHERE p.is_public = true "
             );
 
@@ -39,8 +41,10 @@ public class ProblemController {
                 sql.append("AND p.title LIKE :query ");
             }
             if (category != null && !category.equals("#전체")) {
-                sql.append("AND (:category IN (c1.tag_name, c2.tag_name, c3.tag_name)) ");
+                sql.append("AND c.tag_name = :category ");
             }
+
+            sql.append("ORDER BY p.id DESC");
 
             var queryObj = entityManager.createNativeQuery(sql.toString());
 
@@ -50,31 +54,37 @@ public class ProblemController {
             if (category != null && !category.equals("#전체")) {
                 queryObj.setParameter("category", category);
             }
+            if (currentUserId == null) {
+                currentUserId = ""; // NULL 대비
+            }
+            queryObj.setParameter("currentUserId", currentUserId);
 
             List<Object[]> results = queryObj.getResultList();
-            List<Map<String, Object>> problems = new ArrayList<>();
+            Map<Long, Map<String, Object>> problemMap = new LinkedHashMap<>();
 
             for (Object[] row : results) {
-                Map<String, Object> item = new HashMap<>();
-                item.put("id", row[0]);
-                item.put("title", row[1]);
-                item.put("author", row[2]); // username
-                item.put("authorId", row[3]); // userid
-                item.put("cardCount", row[4]);
-                item.put("likes", row[5]);
-                item.put("scraps", row[6]);
+                Long problemId = ((Number) row[0]).longValue();
 
-                List<String> tags = new ArrayList<>();
-                for (int i = 7; i <= 9; i++) {
-                    if (row[i] != null) tags.add(row[i].toString());
+                if (!problemMap.containsKey(problemId)) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", problemId);
+                    item.put("title", row[1]);
+                    item.put("author", row[2]);
+                    item.put("authorId", row[3]);
+                    item.put("cardCount", row[4]);
+                    item.put("likes", row[5]);
+                    item.put("scraps", row[6]);
+                    item.put("liked", ((Number) row[7]).intValue() == 1);
+                    item.put("scrapped", ((Number) row[8]).intValue() == 1);
+                    item.put("categories", new ArrayList<String>());
+                    problemMap.put(problemId, item);
                 }
-                item.put("categories", tags);
-                item.put("liked", false);  // 초기값: 좋아요 안 한 상태
-                item.put("scrapped", false);  // 초기값: 스크랩 안 한 상태
-                problems.add(item);
+                if (row[9] != null) {
+                    ((List<String>) problemMap.get(problemId).get("categories")).add(row[9].toString());
+                }
             }
 
-            return ResponseEntity.ok(problems);
+            return ResponseEntity.ok(new ArrayList<>(problemMap.values()));
 
         } catch (Exception e) {
             log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage());
