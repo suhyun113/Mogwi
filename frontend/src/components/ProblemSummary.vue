@@ -5,7 +5,10 @@
         <h3 class="problem-title">{{ localProblem.title }}</h3>
         <span class="author">작성자: {{ localProblem.author }}</span>
       </div>
-      <span class="card-count">🃏 {{ localProblem.cardCount }} 카드</span>
+      <div class="card-count">
+        <img :src="cardIcon" alt="card icon" class="icon card-icon" />
+        {{ localProblem.cardCount }} 카드
+      </div>
     </div>
 
     <div class="category-row">
@@ -61,6 +64,7 @@ import heartOff from '@/assets/icons/like_outline.png'
 import heartOn from '@/assets/icons/like_filled.png'
 import scrapOff from '@/assets/icons/scrap_outline.png'
 import scrapOn from '@/assets/icons/scrap_filled.png'
+import cardIcon from '@/assets/icons/card.png'
 
 export default {
   props: ['problem', 'isAuthenticated', 'currentUserId'],
@@ -71,7 +75,8 @@ export default {
       heartOff,
       heartOn,
       scrapOff,
-      scrapOn
+      scrapOn,
+      cardIcon
     }
   },
   computed: {
@@ -186,7 +191,9 @@ export default {
 .card-count {
   font-size: 13px;
   color: #666;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .category-row {
   display: flex;
@@ -234,6 +241,10 @@ export default {
 }
 .icon:hover {
   transform: scale(1.1);
+}
+.card-icon {
+  width: 18px;
+  height: 18px;
 }
 .btn-wrapper {
   display: flex;
