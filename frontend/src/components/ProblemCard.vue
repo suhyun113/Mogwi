@@ -17,11 +17,6 @@
         <span>{{ problem.scraps }}</span>
       </div>
     </div>
-
-    <div class="card-info">
-      <img src="@/assets/icons/card.png" class="card-icon" />
-      <p class="card-text">총 {{ problem.cards.length }}개의 카드</p>
-    </div>
   </div>
 </template>
 
@@ -32,7 +27,9 @@ import ScrapFilled from '@/assets/icons/scrap_filled.png';
 import ScrapOutline from '@/assets/icons/scrap_outline.png';
 
 export default {
-  props: { problem: Object },
+  props: {
+    problem: Object
+  },
   computed: {
     likeIcon() {
       return this.problem.liked ? HeartFilled : HeartOutline;
@@ -91,18 +88,5 @@ export default {
 .icon img {
   width: 1.25rem;
   height: 1.25rem;
-}
-.card-info {
-  margin-top: 1rem;
-  text-align: center;
-}
-.card-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  margin: 0 auto 0.25rem auto;
-}
-.card-text {
-  font-size: 0.75rem;
-  color: #9ca3af;
 }
 </style>
