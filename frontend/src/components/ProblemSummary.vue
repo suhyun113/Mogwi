@@ -107,13 +107,6 @@ export default {
       }
       return colors[tag] || '#ccc'
     },
-    handleSolveClick() {
-      if (this.isAuthenticated) {
-        this.$router.push(`/study/${this.localProblem.id}`)
-      } else {
-        this.$emit('auth-required')
-      }
-    },
     toggleLike() {
       if (!this.canLikeScrap) return
 
@@ -151,6 +144,13 @@ export default {
     },
     handleEditClick() {
       this.$router.push(`/edit/${this.localProblem.id}`)
+    },
+    handleSolveClick() {
+      if (this.isAuthenticated) {
+        this.$router.push(`/study/${this.localProblem.id}`)
+      } else {
+        this.$emit('auth-required')
+      }
     }
   }
 }
