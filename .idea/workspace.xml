@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Chore (frontend): 함수 위치 이동" />
+    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 메인 뷰 검색창 고정">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -175,7 +177,8 @@
       <workItem from="1748846888542" duration="4315000" />
       <workItem from="1748947062091" duration="1812000" />
       <workItem from="1748963894607" duration="3028000" />
-      <workItem from="1749001539022" duration="858000" />
+      <workItem from="1749001539022" duration="1493000" />
+      <workItem from="1749053516569" duration="937000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
@@ -305,7 +308,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749002397003</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Feat (frontend): 메인 뷰 검색창 고정">
+      <option name="closed" value="true" />
+      <created>1749003076812</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1749003076812</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -338,6 +349,7 @@
     <MESSAGE value="Feat (backend): 스크랩 상태 변경 api 구현" />
     <MESSAGE value="Feat (frontend): 스크랩 상태 변경 api 연동" />
     <MESSAGE value="Chore (frontend): 함수 위치 이동" />
-    <option name="LAST_COMMIT_MESSAGE" value="Chore (frontend): 함수 위치 이동" />
+    <MESSAGE value="Feat (frontend): 메인 뷰 검색창 고정" />
+    <option name="LAST_COMMIT_MESSAGE" value="Feat (frontend): 메인 뷰 검색창 고정" />
   </component>
 </project>

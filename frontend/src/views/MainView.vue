@@ -1,7 +1,9 @@
 <template>
   <div class="main-view-wrapper">
     <div class="main-inner">
-      <SearchBar @search="handleSearch" :categories="categories" />
+      <div class="sticky-search">
+        <SearchBar @search="handleSearch" :categories="categories" />
+      </div>
 
       <div class="problem-list">
         <ProblemSummary
@@ -30,6 +32,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import { ref, computed, onMounted } from 'vue'
@@ -151,12 +154,22 @@ export default {
 .main-view-wrapper {
   display: flex;
   justify-content: center;
-  padding: 24px;
 }
+
 .main-inner {
   width: 100%;
   max-width: 720px;
 }
+
+.sticky-search {
+  position: sticky;
+  top: 64px; /* 헤더 높이 고려 */
+  background-color: #fdf8f4;
+  z-index: 999;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
 .problem-list {
   display: flex;
   flex-direction: column;
