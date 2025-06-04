@@ -4,10 +4,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -205,5 +207,53 @@ public class ProblemController {
             return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
+    // 문제 상세 조회 (문제 + 카드 목록)
+    @GetMapping("/api/problems/{id}")
+    public ResponseEntity<Map<String, Object>> getProblemDetail(@PathVariable Long id) {
+        try {
+            List<?> problemResult = entityManager.createNativeQuery(
+                            "SELECT p.id, p.title, p.description, u.username AS author_name " +  // ✅ 수정: summary → description
+                                    "FROM problems p " +
+                                    "JOIN users u ON p.author_id = u.id " +
+                                    "WHERE p.id = ?1")
+                    .setParameter(1, id)
+                    .getResultList();
+
+            if (problemResult.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("status", "ERROR", "message", "문제를 찾을 수 없음"));
+            }
+
+            Object[] row = (Object[]) problemResult.get(0);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", ((Number) row[0]).longValue());
+            response.put("title", row[1]);
+            response.put("summary", row[2]); // Vue에서는 여전히 summary라는 키로 받아오니까 이렇게 사용
+            response.put("author", row[3]);
+
+            // 카드 리스트 조회
+            List<?> cardResults = entityManager.createNativeQuery(
+                            "SELECT question, correct FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
+                    .setParameter(1, id)
+                    .getResultList();
+
+            List<Map<String, Object>> cards = new ArrayList<>();
+            for (Object result : cardResults) {
+                Object[] cardRow = (Object[]) result;
+                Map<String, Object> card = new HashMap<>();
+                card.put("question", cardRow[0]);
+                card.put("correct", cardRow[1]);
+                cards.add(card);
+            }
+
+            response.put("cards", cards);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("문제 상세 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
+        }
+    }
+
+
 
 }
