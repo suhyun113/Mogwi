@@ -2,7 +2,7 @@
   <header class="navbar">
     <div class="logo" @click="goHome">
       <img src="@/assets/mogwi-character.png" alt="Mogwi Character" />
-      <span>MOGWI</span>
+      <span>모귀</span>
     </div>
     <nav class="menu">
       <router-link to="/mystudy">나의 학습</router-link>

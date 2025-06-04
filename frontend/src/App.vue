@@ -1,8 +1,7 @@
 <template>
   <div id="app">
-    <header>
+    <header class="sticky-header">
       <NavBar @open-login="showLogin = true" @open-register="showRegister = true" />
-
     </header>
     <main>
       <router-view />
@@ -32,5 +31,12 @@ body {
   margin: 0;
   background-color: #fdf8f4;
   font-family: 'Pretendard', sans-serif;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #2c003e;
 }
 </style>
