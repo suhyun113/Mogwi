@@ -33,20 +33,22 @@ export default {
 .answer-section {
   display: flex;
   gap: 10px;
-  justify-content: center; /* input과 button을 중앙 정렬 */
-  align-items: center; /* 세로 중앙 정렬 (선택 사항) */
-  width: 100%; /* 부모(solve-section-container)의 100% 너비를 차지 */
-  max-width: 400px; /* 최대 너비를 설정하여 너무 넓어지지 않도록 */
-  margin-top: 20px; /* 상단 마진 유지 */
+  width: 100%;
+  margin-top: 40px; /* 카드와 정답 입력란 사이 간격 증가 */
 }
 
 .answer-input {
+  flex-grow: 1;
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 0.75rem; /* 래디어스 값 통일 */
   font-size: 1rem;
-  flex-grow: 1; /* 남은 공간을 채우도록 함 */
-  max-width: 250px; /* 입력 필드 자체의 최대 너비 제한 (넘치지 않도록) */
+}
+
+.answer-input:focus {
+  outline: none;
+  border-color: #7a4cb8; /* 포커스 시 진한 보라색 테두리 */
+  /* 그림자 없이 진한 보라색 테두리만 */
 }
 
 .answer-input:disabled {
@@ -59,21 +61,22 @@ export default {
   color: white;
   border: none;
   border-radius: 0.5rem; /* StartButton의 border-radius */
-  padding: 0.5rem 1rem; /* 세로 패딩을 늘려 버튼 높이 증가 */
+  padding: 0.375rem 1rem; /* StartButton의 padding */
   font-size: 0.875rem; /* StartButton의 font-size */
   font-weight: 600; /* StartButton의 font-weight */
   cursor: pointer;
   transition: background-color 0.2s; /* StartButton의 transition */
-  line-height: 1; /* 텍스트 줄 간격을 조절하여 버튼 높이 줄이기 */
-  text-align: center; /* 두 줄 텍스트 중앙 정렬 */
+  flex-shrink: 0;
 }
 
 .submit-button:disabled {
   background-color: #c9b3ff; /* StartButton 색상에 맞춰 비활성화 색상 추정 */
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .submit-button:hover:not(:disabled) {
   background-color: #8b5cf6; /* StartButton의 hover 색상 */
+  transform: translateY(-2px); /* 호버 시 살짝 올라가는 효과 */
 }
 </style> 

@@ -11,12 +11,16 @@
         &#9664; <!-- 왼쪽 화살표 문자 -->
       </button>
 
+      <!-- 새로 분리된 카드 수 표시 컴포넌트 -->
+      <CardCountDisplay
+        :current-card-index="currentCardIndex"
+        :total-cards="shuffledProblemCards.length"
+      />
+
       <div class="problem-card-wrapper">
         <!-- 문제 카드 컴포넌트 -->
         <ProblemSolveCard
           :problem="currentProblemCard"
-          :current-card-index="currentCardIndex"
-          :total-cards="shuffledProblemCards.length"
           :has-submitted="hasSubmitted"
           :is-correct-answer="isCorrectAnswer"
           :show-answer="showAnswer"
@@ -56,11 +60,13 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import ProblemSolveCard from '@/components/ProblemSolveCard.vue';
 import AnswerInputSection from '@/components/AnswerInputSection.vue';
+import CardCountDisplay from '@/components/CardCountDisplay.vue';
 
 export default {
   components: {
     ProblemSolveCard,
-    AnswerInputSection
+    AnswerInputSection,
+    CardCountDisplay
   },
   setup() {
     const store = useStore();
@@ -222,7 +228,7 @@ export default {
   height: 100%;
   background-color: #fdf8f4;
   overflow: hidden; /* 스크롤바 생성 방지 */
-  padding: 20px;
+  padding: 20px; /* 전체 뷰에 패딩 유지 */
   box-sizing: border-box; /* 패딩을 포함한 너비/높이 계산 */
 }
 
@@ -231,22 +237,26 @@ export default {
   font-size: 1.25rem;
 }
 
-/* solve-section-container 추가: 카드와 화살표 버튼을 감싸는 컨테이너 */
+/* solve-section-container: 카드, 입력란, 버튼, 화살표를 감싸는 핵심 컨테이너 */
 .solve-section-container {
   display: flex;
-  flex-direction: column; /* 아이템들을 세로로 정렬 (카드, 입력란, 버튼) */
+  flex-direction: column; /* 아이템들을 세로로 정렬 */
   justify-content: center; /* 세로축 가운데 정렬 */
-  align-items: center; /* 가로축 가운데 정렬 (핵심 변경) */
+  align-items: center; /* 가로축 가운데 정렬 */
   width: 100%;
-  max-width: 600px; /* 화살표 버튼 포함한 전체 너비 */
+  max-width: 450px; /* 전체 컨테이너의 최대 너비 조정 */
   position: relative; /* 내부 요소 (화살표) 절대 위치 기준점 */
+  padding: 20px; /* solve-section-container 내부에 패딩 추가 */
+  box-sizing: border-box; /* 패딩 포함 너비 계산 */
+  border-radius: 12px; /* 부드러운 모서리 */
+  /* 배경색과 그림자는 더 이상 solve-section-container에 두지 않습니다. */
 }
 
-.problem-card-wrapper { /* ProblemSolveCard를 감싸는 새로운 래퍼 */
+.problem-card-wrapper { /* ProblemSolveCard를 감싸는 래퍼 */
   width: 100%;
-  max-width: 280px; /* ProblemCard의 기존 너비 (필요에 따라 조절) */
+  max-width: 300px; /* 카드 자체의 너비 조절 */
   text-align: center;
-  margin-bottom: 20px; /* ProblemSolveCard와 AnswerInputSection 사이 간격 */
+  margin-bottom: 25px; /* ProblemSolveCard와 AnswerInputSection 사이 간격 증가 */
   display: flex;
   flex-direction: column;
   align-items: center; /* 내부 ProblemSolveCard를 중앙 정렬 */
@@ -258,62 +268,64 @@ export default {
   color: white;
   border: none;
   border-radius: 50%; /* 원형 버튼 */
-  width: 50px; /* 버튼 크기 */
-  height: 50px; /* 버튼 크기 */
-  font-size: 1.5rem; /* 화살표 크기 */
+  width: 55px; /* 버튼 크기 약간 증가 */
+  height: 55px; /* 버튼 크기 약간 증가 */
+  font-size: 1.6rem; /* 화살표 크기 약간 증가 */
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
   position: absolute; /* solve-section-container 기준 절대 위치 */
-  top: 35%; /* 수직 위치를 위로 조정 (예: 35% 또는 40%) */
+  top: 40%; /* 수직 위치 조정 */
   transform: translateY(-50%); /* 정확한 수직 중앙 정렬을 위해 자신의 높이의 절반만큼 위로 이동 */
   z-index: 10; /* 카드보다 위에 오도록 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25); /* 그림자 강조 */
 }
 
 .nav-arrow-button.left-arrow {
-  left: 10px; /* 왼쪽에서 10px 떨어짐 */
+  left: -20px; /* 왼쪽에서 더 멀리 떨어지게 */
 }
 
 .nav-arrow-button.right-arrow {
-  right: 10px; /* 오른쪽에서 10px 떨어짐 */
+  right: -20px; /* 오른쪽에서 더 멀리 떨어지게 */
 }
 
 .nav-arrow-button:hover {
   background-color: #8b5cf6; /* StartButton의 hover 색상 */
-  transform: translateY(-50%) scale(1.05); /* 호버 시 약간 확대 */
+  transform: translateY(-50%) scale(1.1); /* 호버 시 더 크게 확대 */
 }
 
 .navigation-buttons {
-  margin-top: 20px;
+  margin-top: 25px; /* AnswerInputSection과 간격 증가 */
   display: flex;
   justify-content: center; /* 학습 완료 버튼을 중앙에 정렬 */
-  gap: 10px;
+  gap: 15px; /* 버튼 간격 증가 */
   width: 100%;
-  max-width: 400px; /* AnswerInputSection과 시각적 통일성을 위해 추가 */
+  max-width: 350px; /* 정답 입력란과 시각적 통일성을 위해 조정 */
 }
 
 .nav-button {
   background-color: #a471ff;
   color: white;
   border: none;
-  border-radius: 0.5rem;
-  padding: 0.375rem 1rem;
-  font-size: 0.875rem;
+  border-radius: 0.75rem; /* 버튼 모서리 둥글게 */
+  padding: 0.5rem 1.25rem; /* 패딩 증가 */
+  font-size: 0.95rem; /* 폰트 크기 약간 증가 */
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .nav-button:hover {
   background-color: #8b5cf6;
+  transform: translateY(-2px); /* 호버 시 살짝 올라가는 효과 */
 }
 
 .nav-button.finish-button {
-  background-color: #7a4cb8;
+  background-color: #7a4cb8; /* 더 진한 보라색 */
 }
 
 .nav-button.finish-button:hover {
