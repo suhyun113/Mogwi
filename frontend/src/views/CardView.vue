@@ -215,11 +215,15 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: #fdf8f4;
-  padding: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  position: relative; /* 화살표 버튼 위치 지정을 위해 추가 */
+  height: 100%;
+  background-color: #fdf8f4;
+  overflow: hidden; /* 스크롤바 생성 방지 */
+  padding: 20px;
+  box-sizing: border-box; /* 패딩을 포함한 너비/높이 계산 */
 }
 
 .loading, .no-problems {
