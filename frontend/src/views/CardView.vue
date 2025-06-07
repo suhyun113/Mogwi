@@ -1,15 +1,19 @@
 <template>
   <div class="solve-view">
     <div v-if="loading" class="loading">문제 카드들을 불러오는 중입니다...</div>
-    <div v-else-if="currentProblemCard" class="solve-section-container">
-      <!-- 이전 카드 버튼 -->
-      <button
-        v-if="currentCardIndex > 0"
-        @click="prevCard"
-        class="nav-arrow-button left-arrow"
-      >
-        &#9664; <!-- 왼쪽 화살표 문자 -->
-      </button>
+    <div v-else-if="currentProblemCard">
+      <!-- 문제 제목을 카드 위에 표시 -->
+      <h1 v-if="problemTitle" class="problem-title">{{ problemTitle }}</h1>
+
+      <div class="solve-section-container">
+        <!-- 이전 카드 버튼 -->
+        <button
+          v-if="currentCardIndex > 0"
+          @click="prevCard"
+          class="nav-arrow-button left-arrow"
+        >
+          &#9664; <!-- 왼쪽 화살표 문자 -->
+        </button>
 
       <!-- 새로 분리된 카드 수 표시 컴포넌트 -->
       <CardCountDisplay
@@ -28,26 +32,27 @@
         />
       </div>
 
-      <!-- 정답 입력란 컴포넌트를 solve-section-container의 직접 자식으로 배치 -->
-      <AnswerInputSection
-        v-model="userAnswer"
-        :is-disabled="hasSubmitted"
-        @submit-answer="submitAnswer"
-      />
+        <!-- 정답 입력란 컴포넌트를 solve-section-container의 직접 자식으로 배치 -->
+        <AnswerInputSection
+          v-model="userAnswer"
+          :is-disabled="hasSubmitted"
+          @submit-answer="submitAnswer"
+        />
 
       <!-- 학습 완료 버튼을 solve-section-container의 직접 자식으로 배치 -->
       <div class="navigation-buttons">
         <button v-if="hasSubmitted && currentCardIndex === shuffledProblemCards.length - 1" @click="finishStudy" class="nav-button finish-button">학습 완료</button>
       </div>
 
-      <!-- 다음 카드 버튼 -->
-      <button
-        v-if="currentCardIndex < shuffledProblemCards.length - 1"
-        @click="nextCard"
-        class="nav-arrow-button right-arrow"
-      >
-        &#9654; <!-- 오른쪽 화살표 문자 -->
-      </button>
+        <!-- 다음 카드 버튼 -->
+        <button
+          v-if="currentCardIndex < shuffledProblemCards.length - 1"
+          @click="nextCard"
+          class="nav-arrow-button right-arrow"
+        >
+          &#9654; <!-- 오른쪽 화살표 문자 -->
+        </button>
+      </div>
     </div>
     <div v-else class="no-problems">카드를 찾을 수 없습니다.</div>
   </div>
@@ -80,6 +85,7 @@ export default {
     const hasSubmitted = ref(false);
     const isCorrectAnswer = ref(false);
     const showAnswer = ref(false);
+    const problemTitle = ref('');
 
     const currentUserId = computed(() => store.state.store_userid);
 
@@ -131,14 +137,16 @@ export default {
       hasSubmitted.value = true;
       const problemId = router.currentRoute.value.params.id;
       const cardId = currentProblemCard.value.id;
-      const correct = currentProblemCard.value.answer.trim().toLowerCase();
+      const correct = currentProblemCard.value.correct.trim().toLowerCase();
       const submittedAnswer = userAnswer.value.trim().toLowerCase();
 
       let newCardStatus = 'unsolved';
       if (submittedAnswer === correct) {
+        alert("정답입니다!");
         isCorrectAnswer.value = true;
         newCardStatus = 'solved';
       } else {
+        alert(`오답입니다. 정답은 "${currentProblemCard.value.correct}" 입니다.`);
         isCorrectAnswer.value = false;
         newCardStatus = 'review';
         showAnswer.value = true;
@@ -190,7 +198,21 @@ export default {
       showAnswer.value = !showAnswer.value;
     };
 
-    onMounted(fetchProblemCards);
+    onMounted(async () => {
+      await fetchProblemCards();
+      const problemId = router.currentRoute.value.params.id;
+      try {
+        const problemResponse = await axios.get(`/api/problems/${problemId}`, {
+          params: {
+            currentUserId: currentUserId.value
+          }
+        });
+        problemTitle.value = problemResponse.data.title;
+        console.log('DEBUG: 문제 제목 불러오기 성공:', problemTitle.value);
+      } catch (error) {
+        console.error("문제 제목 불러오기 실패:", error.response ? error.response.data : error.message);
+      }
+    });
 
     return {
       loading,
@@ -203,6 +225,7 @@ export default {
       showAnswer,
       currentProblemCard,
       currentUserId,
+      problemTitle,
       fetchProblemCards,
       shuffleCards,
       submitAnswer,
@@ -262,34 +285,34 @@ export default {
   align-items: center; /* 내부 ProblemSolveCard를 중앙 정렬 */
 }
 
-/* 새롭게 추가된 화살표 버튼 스타일 */
 .nav-arrow-button {
-  background-color: #a471ff; /* StartButton과 동일한 보라색 */
+  background-color: #a471ff;
   color: white;
   border: none;
-  border-radius: 50%; /* 원형 버튼 */
-  width: 55px; /* 버튼 크기 약간 증가 */
-  height: 55px; /* 버튼 크기 약간 증가 */
-  font-size: 1.6rem; /* 화살표 크기 약간 증가 */
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  font-size: 1.6rem;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
-  position: absolute; /* solve-section-container 기준 절대 위치 */
-  top: 40%; /* 수직 위치 조정 */
-  transform: translateY(-50%); /* 정확한 수직 중앙 정렬을 위해 자신의 높이의 절반만큼 위로 이동 */
-  z-index: 10; /* 카드보다 위에 오도록 */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25); /* 그림자 강조 */
+  position: fixed; /* 화면 기준 고정 */
+  top: 50%; /* 화면 중앙 수직 정렬 */
+  transform: translateY(-50%);
+  z-index: 1000; /* 최상단 표시 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .nav-arrow-button.left-arrow {
-  left: -20px; /* 왼쪽에서 더 멀리 떨어지게 */
+  left: 40px; /* 화면 왼쪽 끝에서 떨어진 거리 */
 }
 
 .nav-arrow-button.right-arrow {
-  right: -20px; /* 오른쪽에서 더 멀리 떨어지게 */
+  right: 40px; /* 화면 오른쪽 끝에서 떨어진 거리 */
 }
+
 
 .nav-arrow-button:hover {
   background-color: #8b5cf6; /* StartButton의 hover 색상 */
@@ -331,4 +354,23 @@ export default {
 .nav-button.finish-button:hover {
   background-color: #613e92;
 }
+
+.problem-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #4a3f69;
+  margin-bottom: 30px;
+  text-align: center;
+  width: 100%;
+  max-width: 550px;
+  line-height: 1.4;
+
+  background-color: #e6d6ff; /* 아주 연한 보라색 배경 */
+  padding: 10px 20px;        /* 살짝 얇게 */
+  border-radius: 8px;       /* 카드, 버튼과 통일된 둥글기 */
+  border: 1px solid #c9b3ff; 
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 은은한 그림자 */
+  box-sizing: border-box;
+}
+
 </style> 

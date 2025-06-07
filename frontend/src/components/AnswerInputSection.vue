@@ -40,7 +40,7 @@ export default {
 .answer-input {
   flex-grow: 1;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
   border-radius: 0.75rem; /* 래디어스 값 통일 */
   font-size: 1rem;
 }
