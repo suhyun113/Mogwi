@@ -11,7 +11,7 @@
         &#9664; <!-- 왼쪽 화살표 문자 -->
       </button>
 
-      <div class="solve-card-container">
+      <div class="problem-card-wrapper">
         <!-- 문제 카드 컴포넌트 -->
         <ProblemSolveCard
           :problem="currentProblemCard"
@@ -22,18 +22,18 @@
           :show-answer="showAnswer"
           @toggle-show-answer="toggleShowAnswer"
         />
+      </div>
 
-        <!-- 정답 입력란 컴포넌트 -->
-        <AnswerInputSection
-          v-model="userAnswer"
-          :is-disabled="hasSubmitted"
-          @submit-answer="submitAnswer"
-        />
+      <!-- 정답 입력란 컴포넌트를 solve-section-container의 직접 자식으로 배치 -->
+      <AnswerInputSection
+        v-model="userAnswer"
+        :is-disabled="hasSubmitted"
+        @submit-answer="submitAnswer"
+      />
 
-        <!-- 학습 완료 버튼은 여기에 유지하거나, 필요에 따라 위치를 조정할 수 있습니다. -->
-        <div class="navigation-buttons">
-          <button v-if="hasSubmitted && currentCardIndex === shuffledProblemCards.length - 1" @click="finishStudy" class="nav-button finish-button">학습 완료</button>
-        </div>
+      <!-- 학습 완료 버튼을 solve-section-container의 직접 자식으로 배치 -->
+      <div class="navigation-buttons">
+        <button v-if="hasSubmitted && currentCardIndex === shuffledProblemCards.length - 1" @click="finishStudy" class="nav-button finish-button">학습 완료</button>
       </div>
 
       <!-- 다음 카드 버튼 -->
@@ -234,24 +234,22 @@ export default {
 /* solve-section-container 추가: 카드와 화살표 버튼을 감싸는 컨테이너 */
 .solve-section-container {
   display: flex;
-  justify-content: center; /* 가운데 정렬 */
-  align-items: center; /* 수직 가운데 정렬 */
+  flex-direction: column; /* 아이템들을 세로로 정렬 (카드, 입력란, 버튼) */
+  justify-content: center; /* 세로축 가운데 정렬 */
+  align-items: center; /* 가로축 가운데 정렬 (핵심 변경) */
   width: 100%;
   max-width: 600px; /* 화살표 버튼 포함한 전체 너비 */
   position: relative; /* 내부 요소 (화살표) 절대 위치 기준점 */
 }
 
-.solve-card-container {
+.problem-card-wrapper { /* ProblemSolveCard를 감싸는 새로운 래퍼 */
   width: 100%;
-  max-width: 250px; /* 트럼프 카드처럼 좁게 */
+  max-width: 280px; /* ProblemCard의 기존 너비 (필요에 따라 조절) */
   text-align: center;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 20px; /* ProblemSolveCard와 AnswerInputSection 사이 간격 */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  /* solve-section-container가 중앙 정렬하므로 margin: auto 제거 */
+  align-items: center; /* 내부 ProblemSolveCard를 중앙 정렬 */
 }
 
 /* 새롭게 추가된 화살표 버튼 스타일 */
@@ -269,8 +267,8 @@ export default {
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
   position: absolute; /* solve-section-container 기준 절대 위치 */
-  top: 50%; /* 수직 중앙 */
-  transform: translateY(-50%); /* 정확한 수직 중앙 정렬 */
+  top: 35%; /* 수직 위치를 위로 조정 (예: 35% 또는 40%) */
+  transform: translateY(-50%); /* 정확한 수직 중앙 정렬을 위해 자신의 높이의 절반만큼 위로 이동 */
   z-index: 10; /* 카드보다 위에 오도록 */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
 }
@@ -294,6 +292,7 @@ export default {
   justify-content: center; /* 학습 완료 버튼을 중앙에 정렬 */
   gap: 10px;
   width: 100%;
+  max-width: 400px; /* AnswerInputSection과 시각적 통일성을 위해 추가 */
 }
 
 .nav-button {

@@ -9,7 +9,7 @@
       class="answer-input"
       :disabled="isDisabled"
     />
-    <button @click="$emit('submit-answer')" class="submit-button" :disabled="isDisabled">정답 제출</button>
+    <button @click="$emit('submit-answer')" class="submit-button" :disabled="isDisabled">정답<br>제출</button>
   </div>
 </template>
 
@@ -33,16 +33,20 @@ export default {
 .answer-section {
   display: flex;
   gap: 10px;
-  width: 100%;
-  margin-top: 40px; /* 카드와 정답 입력란 사이 간격 증가 */
+  justify-content: center; /* input과 button을 중앙 정렬 */
+  align-items: center; /* 세로 중앙 정렬 (선택 사항) */
+  width: 100%; /* 부모(solve-section-container)의 100% 너비를 차지 */
+  max-width: 400px; /* 최대 너비를 설정하여 너무 넓어지지 않도록 */
+  margin-top: 20px; /* 상단 마진 유지 */
 }
 
 .answer-input {
-  flex-grow: 1;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 1rem;
+  flex-grow: 1; /* 남은 공간을 채우도록 함 */
+  max-width: 250px; /* 입력 필드 자체의 최대 너비 제한 (넘치지 않도록) */
 }
 
 .answer-input:disabled {
@@ -55,12 +59,13 @@ export default {
   color: white;
   border: none;
   border-radius: 0.5rem; /* StartButton의 border-radius */
-  padding: 0.375rem 1rem; /* StartButton의 padding */
+  padding: 0.5rem 1rem; /* 세로 패딩을 늘려 버튼 높이 증가 */
   font-size: 0.875rem; /* StartButton의 font-size */
   font-weight: 600; /* StartButton의 font-weight */
   cursor: pointer;
   transition: background-color 0.2s; /* StartButton의 transition */
-  flex-shrink: 0;
+  line-height: 1; /* 텍스트 줄 간격을 조절하여 버튼 높이 줄이기 */
+  text-align: center; /* 두 줄 텍스트 중앙 정렬 */
 }
 
 .submit-button:disabled {
