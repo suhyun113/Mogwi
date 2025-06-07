@@ -1,5 +1,5 @@
 <template>
-  <button class="start-btn" @click="$emit('click')">시작</button>
+  <button class="start-button" @click="$emit('click')">시작</button>
 </template>
 
 <script>
@@ -7,17 +7,21 @@ export default {}
 </script>
 
 <style scoped>
-.start-btn {
-  margin-top: 1rem;
-  background-color: #a855f7;
+.start-button {
+  background-color: #a471ff;
   color: white;
-  padding: 0.5rem 2rem;
-  border-radius: 9999px;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4);
-  transition: background-color 0.2s ease;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.375rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: fit-content;
+  margin: 1rem auto 0;
 }
-.start-btn:hover {
-  background-color: #9333ea;
+
+.start-button:hover {
+  background-color: #8b5cf6;
 }
 </style>
