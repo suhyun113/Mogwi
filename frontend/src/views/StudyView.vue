@@ -1,15 +1,13 @@
 <template>
   <div class="study-view">
     <div v-if="!problem" class="loading">문제를 불러오는 중입니다...</div>
-    <div v-else class="study-main">
-      <div class="card-box">
-        <ProblemCard
-          :problem="problem"
-          @like="toggleLike"
-          @scrap="toggleScrap"
-        />
-        <StartButton @click="startStudy" />
-      </div>
+    <div v-else class="card-box">
+      <ProblemCard
+        :problem="problem"
+        @like="toggleLike"
+        @scrap="toggleScrap"
+      />
+      <StartButton @click="startStudy" />
     </div>
     <StudyStartModal
       v-if="showStudyStartModal"
@@ -98,17 +96,17 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #fdf8f4;
+  overflow: hidden;
 }
 .loading {
   color: #9ca3af;
   font-size: 1.25rem;
-}
-.study-main {
-  width: 100%;
-  display: flex;
-  justify-content: center;
 }
 .card-box {
   width: 280px;
