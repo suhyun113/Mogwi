@@ -29,6 +29,13 @@
         v-if="showLoginModal"
         @close="showLoginModal = false"
       />
+
+      <StudyStartModal
+        v-if="showStudyStartModal"
+        @go-preview="showStudyStartModal = false"
+        @go-study="goToStudy"
+      />
+
     </div>
   </div>
 </template>
@@ -43,9 +50,10 @@ import SearchBar from '@/components/SearchBar.vue'
 import ProblemSummary from '@/components/ProblemSummary.vue'
 import LoginPromptModal from '@/components/LoginPromptModal.vue'
 import LoginModal from '@/components/LoginModal.vue'
+import StudyStartModal from '@/components/StudyStartModal.vue'
 
 export default {
-  components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal },
+  components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal, StudyStartModal },
   emits: ['open-login'],
   setup() {
     const store = useStore()
@@ -58,6 +66,8 @@ export default {
     const showLoginPrompt = ref(false)
     const showLoginModal = ref(false)
     const selectedProblem = ref(null)
+    const showStudyStartModal = ref(false)
+    const selectedProblemId = ref(null)
     const query = ref('')
     const selectedCategory = ref('#전체')
     const categories = ref(['#전체', '#수학', '#AI', '#컴퓨터', '#과학', '#역사', '#기타'])
@@ -86,11 +96,17 @@ export default {
 
     const handleSolve = (problem) => {
       if (isAuthenticated.value) {
-        router.push(`/study/${problem.id}`)
+        selectedProblemId.value = problem.id
+        showStudyStartModal.value = true
       } else {
         selectedProblem.value = problem
         showLoginPrompt.value = true
       }
+    }
+
+    const goToStudy = () => {
+      showStudyStartModal.value = false
+      router.push(`/study/${selectedProblemId.value}`)
     }
 
     const handleAuthRequired = () => {
@@ -141,6 +157,8 @@ export default {
       selectedProblem,
       handleSearch,
       handleSolve,
+      goToStudy,
+      showStudyStartModal,
       handleAuthRequired,
       openLoginModal,
       handleUpdateLike,
