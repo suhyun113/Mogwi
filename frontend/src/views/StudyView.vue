@@ -57,7 +57,7 @@ export default {
     },
     goToSolveView() {
       this.showStudyStartModal = false;
-      this.$router.push(`/study/${this.$route.params.id}/solve`);
+      this.$router.push(`/study/${this.$route.params.id}/cards`);
     },
     toggleLike() {
       if (!this.problem) return;
