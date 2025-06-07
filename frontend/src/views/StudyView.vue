@@ -11,6 +11,11 @@
         <StartButton @click="startStudy" />
       </div>
     </div>
+    <StudyStartModal
+      v-if="showStudyStartModal"
+      @go-preview="showStudyStartModal = false"
+      @go-study="goToSolveView"
+    />
   </div>
 </template>
 
@@ -18,13 +23,14 @@
 import axios from 'axios';
 import StartButton from '@/components/StartButton.vue';
 import ProblemCard from '@/components/ProblemCard.vue';
+import StudyStartModal from '@/components/StudyStartModal.vue';
 
 export default {
-  components: { StartButton, ProblemCard },
+  components: { StartButton, ProblemCard, StudyStartModal },
   data() {
     return {
-      started: false,
-      problem: null
+      problem: null,
+      showStudyStartModal: false
     };
   },
   created() {
@@ -47,7 +53,11 @@ export default {
   },
   methods: {
     startStudy() {
-      this.started = true;
+      this.showStudyStartModal = true;
+    },
+    goToSolveView() {
+      this.showStudyStartModal = false;
+      this.$router.push(`/study/${this.$route.params.id}/solve`);
     },
     toggleLike() {
       if (!this.problem) return;

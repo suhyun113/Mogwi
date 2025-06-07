@@ -97,7 +97,7 @@ export default {
     const handleSolve = (problem) => {
       if (isAuthenticated.value) {
         selectedProblemId.value = problem.id
-        showStudyStartModal.value = true
+        router.push(`/study/${selectedProblemId.value}`);
       } else {
         selectedProblem.value = problem
         showLoginPrompt.value = true
