@@ -172,26 +172,49 @@ export default {
 .main-view-wrapper {
   display: flex;
   justify-content: center;
+  padding-top: 130px;
 }
 
 .main-inner {
   width: 100%;
   max-width: 720px;
+  position: relative;
 }
 
 .sticky-search {
-  position: sticky;
-  top: 64px; /* 헤더 높이 고려 */
+  position: fixed;
+  top: 74px;
+  left: 0;
+  right: 0;
   background-color: #fdf8f4;
   z-index: 999;
   padding: 12px 0;
-  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: center;
+}
+
+.sticky-search::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background-color: #fdf8f4;
+}
+
+.sticky-search > * {
+  width: 100%;
+  max-width: 720px;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .problem-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 10px;
+  padding: 0 16px;
 }
 </style>

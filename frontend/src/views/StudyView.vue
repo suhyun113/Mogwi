@@ -2,13 +2,13 @@
   <div class="study-view">
     <div v-if="!problem" class="loading">문제를 불러오는 중입니다...</div>
     <div v-else class="card-box">
-      <ProblemCard
-        :problem="problem"
-        @like="toggleLike"
-        @scrap="toggleScrap"
-      />
-      <StartButton @click="startStudy" />
-    </div>
+        <ProblemCard
+          :problem="problem"
+          @like="toggleLike"
+          @scrap="toggleScrap"
+        />
+        <StartButton @click="startStudy" />
+      </div>
     <StudyStartModal
       v-if="showStudyStartModal"
       @go-preview="showStudyStartModal = false"
