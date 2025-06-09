@@ -78,5 +78,74 @@ public class CardController {
         }
     }
 
+    /**
+     * 특정 카드의 사용자 학습 상태를 업데이트합니다.
+     * POST /api/cards/{cardId}/status
+     *
+     * @param cardId 상태를 업데이트할 카드의 ID
+     * @param data 사용자 ID (userId), 새로운 카드 상태 (cardStatus), 문제 ID (problemId)를 포함하는 맵
+     * @return 처리 결과 상태 (OK 또는 ERROR)
+     */
+    @PostMapping("/solve/{cardId}/status")
+    public ResponseEntity<Map<String, Object>> updateCardStatus(
+            @PathVariable Long cardId,
+            @RequestBody Map<String, Object> data) {
 
+        String userId = (String) data.get("userId");
+        String cardStatus = (String) data.get("cardStatus"); // "unsolved", "solved", "review" 중 하나
+        Long problemId = ((Number) data.get("problemId")).longValue(); // 해당 카드가 속한 문제 ID
+
+        // 입력값 유효성 검사
+        if (userId == null || cardStatus == null || cardId == null || problemId == null ||
+                (!cardStatus.equals("perfect") && !cardStatus.equals("vague") && !cardStatus.equals("forgotten") && !cardStatus.equals("new"))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("status", "ERROR", "message", "유효하지 않은 상태"));
+
+        }
+
+        try {
+            // 사용자 내부 ID 조회
+            List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
+                    .setParameter(1, userId)
+                    .getResultList();
+
+            if (userResult.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자 없음"));
+            }
+
+            Long internalUserId = ((Number) userResult.get(0)).longValue();
+
+            // user_card_status 테이블에 상태 저장 또는 업데이트
+            List<?> existing = entityManager.createNativeQuery(
+                            "SELECT id FROM user_card_status WHERE user_id = ?1 AND card_id = ?2 AND problem_id = ?3")
+                    .setParameter(1, internalUserId)
+                    .setParameter(2, cardId)
+                    .setParameter(3, problemId)
+                    .getResultList();
+
+            if (existing.isEmpty()) {
+                // 새로운 상태이므로 INSERT
+                entityManager.createNativeQuery(
+                                "INSERT INTO user_card_status (user_id, card_id, problem_id, card_status) VALUES (?1, ?2, ?3, ?4)")
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, cardId)
+                        .setParameter(3, problemId)
+                        .setParameter(4, cardStatus) // ENUM 값 그대로 사용
+                        .executeUpdate();
+            } else {
+                // 이미 존재하는 상태이므로 UPDATE
+                entityManager.createNativeQuery(
+                                "UPDATE user_card_status SET card_status = ?1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?2 AND card_id = ?3 AND problem_id = ?4")
+                        .setParameter(1, cardStatus) // ENUM 값 그대로 사용
+                        .setParameter(2, internalUserId)
+                        .setParameter(3, cardId)
+                        .setParameter(4, problemId)
+                        .executeUpdate();
+            }
+
+            return ResponseEntity.ok(Map.of("status", "OK"));
+        } catch (Exception e) {
+            log.error("카드 학습 상태 업데이트 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
+        }
+    }
 }
