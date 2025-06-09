@@ -1,21 +1,43 @@
 <template>
   <div class="card" :class="getCardStatusClass(problem.cardStatus)">
-    <div class="card-header">
-      <!-- 이 부분은 ProblemCard와 동일한 디자인을 위한 것이므로, problem_id만 표시하는 대신
-           ProblemSolveCard의 목적에 맞게 문제(question)를 강조합니다. -->
-    </div>
-    <div class="card-content">
+    <div class="card-content with-image">
       <h3 class="card-question">{{ problem.question }}</h3>
-      <!-- 정답 확인 후 정답을 보여줄 수 있는 버튼/로직 추가 -->
-      <button v-if="hasSubmitted && !isCorrectAnswer" @click="$emit('toggle-show-answer')" class="show-answer-button">
+
+      <!-- 항상 image-wrapper는 유지 -->
+      <div class="image-wrapper">
+        <template v-if="!problem.imageUrl">
+          <!-- 말풍선을 이미지 위에 위치시키되, 일반 flow 안에서 먼저 배치 -->
+          <div class="speech-bubble">정답을 맞춰봐!</div>
+          <img
+            :src="require('@/assets/mogwi-character.png')"
+            class="problem-image"
+            alt="모귀 캐릭터"
+          />
+        </template>
+        <template v-else>
+          <img
+            :src="problem.imageUrl"
+            class="problem-image"
+            alt="문제 이미지"
+          />
+        </template>
+      </div>
+
+      <button
+        v-if="hasSubmitted && !isCorrectAnswer"
+        @click="$emit('toggle-show-answer')"
+        class="show-answer-button"
+      >
         {{ showAnswer ? '정답 숨기기' : '정답 보기' }}
       </button>
+
       <div v-if="showAnswer && !isCorrectAnswer" class="correct-answer-display">
         정답: {{ problem.correct }}
       </div>
     </div>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -56,7 +78,7 @@ export default {
 <style scoped>
 .card {
   background: white;
-  border: 3px solid #a471ff; /* 메인 보라색 테두리 */
+  border: 3px solid #a471ff;
   border-radius: 0.75rem;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   padding: 1rem;
@@ -70,18 +92,21 @@ export default {
   min-height: 250px;
 }
 
-/* 카드 상태별 배경색 */
-.card-solved {
-  background-color: #e6ffe6;
-  border-color: #7a4cb8;
+.card-content {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.card-unsolved {
-  background-color: #f9f9f9;
-  border-color: #7a4cb8;
+
+.card-content.no-image {
+  justify-content: center; /* 이미지 없으면 텍스트 중앙 정렬 */
+  flex-grow: 1;
 }
-.card-review {
-  background-color: #fff3e6;
-  border-color: #7a4cb8;
+
+.card-content.with-image {
+  justify-content: flex-start; /* 이미지 있으면 위에서 아래로 정렬 */
 }
 
 .card-question {
@@ -89,21 +114,56 @@ export default {
   font-weight: bold;
   color: #333;
   line-height: 1.4;
-  margin-top: 0.5rem;
-  text-align: center;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   word-break: keep-all;
-  overflow-y: auto;
+  margin-bottom: 10px;
   padding: 5px;
 }
 
-.card-content {
-  width: 100%;
+.problem-image {
+  width: 100px; /* 기존보다 작게 */
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* 이미지 + 말풍선을 감싸는 래퍼 */
+.image-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column; /* 세로 정렬 */
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* 말풍선 스타일 */
+.speech-bubble {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0;
+  background: #f3f4f6;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  position: relative; 
+  max-width: 200px;
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 6px; /* 모귀와 간격 약간 */
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #f3f4f6;
 }
 
 .show-answer-button {
@@ -131,4 +191,5 @@ export default {
   color: #28a745;
   font-weight: bold;
 }
+
 </style>
