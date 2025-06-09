@@ -12,45 +12,46 @@
           @click="prevCard"
           class="nav-arrow-button left-arrow"
         >
-          &#9664; <!-- 왼쪽 화살표 문자 -->
+          &#9664;
         </button>
 
-      <!-- 새로 분리된 카드 수 표시 컴포넌트 -->
-      <CardCountDisplay
-        :current-card-index="currentCardIndex"
-        :total-cards="shuffledProblemCards.length"
-      />
-
-      <div class="problem-card-wrapper">
-        <!-- 문제 카드 컴포넌트 -->
-        <ProblemSolveCard
-          :problem="currentProblemCard"
-          :has-submitted="hasSubmitted"
-          :is-correct-answer="isCorrectAnswer"
-          :show-answer="showAnswer"
-          @toggle-show-answer="toggleShowAnswer"
+        <CardCountDisplay
+          :current-card-index="currentCardIndex"
+          :total-cards="shuffledProblemCards.length"
         />
-      </div>
 
-        <!-- 정답 입력란 컴포넌트를 solve-section-container의 직접 자식으로 배치 -->
+        <div class="problem-card-wrapper">
+          <ProblemSolveCard
+            :problem="currentProblemCard"
+            :has-submitted="hasSubmitted"
+            :is-correct-answer="isCorrectAnswer"
+            :show-answer="showAnswer"
+            @toggle-show-answer="toggleShowAnswer"
+          />
+        </div>
+
         <AnswerInputSection
           v-model="userAnswer"
           :is-disabled="hasSubmitted"
           @submit-answer="submitAnswer"
         />
 
-      <!-- 학습 완료 버튼을 solve-section-container의 직접 자식으로 배치 -->
-      <div class="navigation-buttons">
-        <button v-if="hasSubmitted && currentCardIndex === shuffledProblemCards.length - 1" @click="finishStudy" class="nav-button finish-button">학습 완료</button>
-      </div>
+        <div class="navigation-buttons">
+          <button
+            v-if="hasSubmitted && currentCardIndex === shuffledProblemCards.length - 1"
+            @click="finishStudy"
+            class="nav-button finish-button"
+          >학습 완료</button>
+        </div>
 
         <!-- 다음 카드 버튼 -->
         <button
+          :disabled="!hasSubmitted"
           v-if="currentCardIndex < shuffledProblemCards.length - 1"
           @click="nextCard"
           class="nav-arrow-button right-arrow"
         >
-          &#9654; <!-- 오른쪽 화살표 문자 -->
+          &#9654;
         </button>
       </div>
     </div>
@@ -89,29 +90,24 @@ export default {
 
     const currentUserId = computed(() => store.state.store_userid);
 
-    const currentProblemCard = computed(() => {
-      return shuffledProblemCards.value[currentCardIndex.value];
-    });
+    const currentProblemCard = computed(() => shuffledProblemCards.value[currentCardIndex.value]);
 
     const fetchProblemCards = async () => {
       const problemId = router.currentRoute.value.params.id;
       const requestUrl = `/api/study/${problemId}/cards`;
-      console.log('DEBUG: axios.get 요청 URL:', requestUrl);
 
       try {
         const response = await axios.get(requestUrl, {
-          params: {
-            currentUserId: currentUserId.value
-          }
+          params: { currentUserId: currentUserId.value }
         });
-        allProblemCards.value = response.data;
+        allProblemCards.value = response.data.map(card => ({
+          ...card,
+          cardStatus: card.cardStatus || 'new'
+        }));
         shuffleCards();
         loading.value = false;
-        console.log('DEBUG: 카드 불러오기 성공:', response.data);
       } catch (error) {
-        console.error("문제 카드 불러오기 실패:", error.response ? error.response.data : error.message);
-        console.error("에러 상태 코드:", error.response ? error.response.status : 'N/A');
-        console.error("요청 URL:", error.config ? error.config.url : 'N/A');
+        console.error("문제 카드 불러오기 실패:", error);
         loading.value = false;
         alert("문제 카드 불러오기 실패했습니다. 콘솔을 확인해주세요.");
         router.push(`/card/${problemId}`);
@@ -119,7 +115,7 @@ export default {
     };
 
     const shuffleCards = () => {
-      let array = [...allProblemCards.value];
+      const array = [...allProblemCards.value];
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
@@ -140,15 +136,15 @@ export default {
       const correct = currentProblemCard.value.correct.trim().toLowerCase();
       const submittedAnswer = userAnswer.value.trim().toLowerCase();
 
-      let newCardStatus = 'unsolved';
+      let newCardStatus = 'forgotten';
       if (submittedAnswer === correct) {
         alert("정답입니다!");
         isCorrectAnswer.value = true;
-        newCardStatus = 'solved';
+        newCardStatus = 'perfect';
       } else {
         alert(`오답입니다. 정답은 "${currentProblemCard.value.correct}" 입니다.`);
         isCorrectAnswer.value = false;
-        newCardStatus = 'review';
+        newCardStatus = 'vague';
         showAnswer.value = true;
       }
 
@@ -156,12 +152,11 @@ export default {
         await axios.post(`/api/cards/${cardId}/status`, {
           userId: currentUserId.value,
           cardStatus: newCardStatus,
-          problemId: problemId
+          problemId
         });
         currentProblemCard.value.cardStatus = newCardStatus;
-        console.log(`카드 ${cardId} 상태 업데이트 성공: ${newCardStatus}`);
       } catch (error) {
-        console.error(`카드 ${cardId} 상태 업데이트 실패:`, error.response || error);
+        console.error("카드 상태 업데이트 실패:", error);
         alert("카드 상태 업데이트에 실패했습니다. 콘솔을 확인해주세요.");
       }
     };
@@ -203,14 +198,11 @@ export default {
       const problemId = router.currentRoute.value.params.id;
       try {
         const problemResponse = await axios.get(`/api/problems/${problemId}`, {
-          params: {
-            currentUserId: currentUserId.value
-          }
+          params: { currentUserId: currentUserId.value }
         });
         problemTitle.value = problemResponse.data.title;
-        console.log('DEBUG: 문제 제목 불러오기 성공:', problemTitle.value);
       } catch (error) {
-        console.error("문제 제목 불러오기 실패:", error.response ? error.response.data : error.message);
+        console.error("문제 제목 불러오기 실패:", error);
       }
     });
 
@@ -237,6 +229,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .solve-view {
@@ -305,18 +298,27 @@ export default {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
+.nav-arrow-button:hover {
+  background-color: #8b5cf6; /* StartButton의 hover 색상 */
+  transform: translateY(-50%) scale(1.1); /* 호버 시 더 크게 확대 */
+}
+
+.nav-arrow-button:disabled {
+  background-color: #d3d3d3; /* 연한 회색 */
+  color: #888888;            /* 글씨도 흐리게 */
+  cursor: not-allowed;       /* 클릭 불가 느낌 */
+  transform: translateY(-50%) scale(1); /* 호버 확대 비활성 */
+  box-shadow: none;          /* 그림자 제거 */
+  pointer-events: none;      /* hover 효과 차단 */
+}
+
+
 .nav-arrow-button.left-arrow {
   left: 40px; /* 화면 왼쪽 끝에서 떨어진 거리 */
 }
 
 .nav-arrow-button.right-arrow {
   right: 40px; /* 화면 오른쪽 끝에서 떨어진 거리 */
-}
-
-
-.nav-arrow-button:hover {
-  background-color: #8b5cf6; /* StartButton의 hover 색상 */
-  transform: translateY(-50%) scale(1.1); /* 호버 시 더 크게 확대 */
 }
 
 .navigation-buttons {
