@@ -135,7 +135,8 @@ export default {
   flex-direction: column; /* 세로 정렬 */
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px;
+  margin-top: 20px;
+  margin-bottom: 0px;
 }
 
 /* 말풍선 스타일 */
