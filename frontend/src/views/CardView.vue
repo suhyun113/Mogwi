@@ -359,10 +359,10 @@ export default {
   font-size: 1.6rem;
   font-weight: bold;
   color: #4a3f69;
-  margin-bottom: 30px;
+  margin: 0 auto 30px;  /* 가운데 정렬 + 아래 여백 */
   text-align: center;
   width: 100%;
-  max-width: 550px;
+  max-width: 300px;
   line-height: 1.4;
 
   background-color: #e6d6ff; /* 아주 연한 보라색 배경 */
