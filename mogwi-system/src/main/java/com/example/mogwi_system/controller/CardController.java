@@ -38,26 +38,20 @@ public class CardController {
             @RequestParam(required = false) String currentUserId
     ) {
         try {
-            // ProblemController의 방식을 따라 currentUserId가 null이면 빈 문자열로 처리하여
-            // 항상 쿼리 파라미터로 바인딩되도록 합니다.
             String effectiveCurrentUserId = (currentUserId != null) ? currentUserId : "";
 
-            // cards 테이블과 user_card_status 테이블을 조인하여 카드 정보와 사용자 학습 상태를 가져옵니다.
-            // user_id 조회를 서브쿼리로 직접 포함하고, 'currentUserId' 파라미터를 메인 쿼리에 바인딩합니다.
             StringBuilder sql = new StringBuilder(
-                    "SELECT c.id, c.question, c.correct, " +
-                            "IFNULL(ucs.card_status, 'forgotten') AS card_status " + // 사용자별 학습 상태 (기본값 'unsolved')
+                    "SELECT c.id, c.question, c.correct, c.image_url, " + // ✅ image_url 추가
+                            "IFNULL(ucs.card_status, 'new') AS card_status " +
                             "FROM cards c " +
                             "LEFT JOIN user_card_status ucs ON c.id = ucs.card_id AND ucs.problem_id = :problemId " +
-                            // user_id를 서브쿼리로 직접 조회하도록 변경
                             "AND ucs.user_id = (SELECT id FROM users WHERE userid = :currentUserId) " +
                             "WHERE c.problem_id = :problemId " +
-                            "ORDER BY c.id ASC" // 카드 순서는 DB ID 순으로 가져오되, 프론트엔드에서 랜덤 셔플
+                            "ORDER BY c.id ASC"
             );
 
             var queryObj = entityManager.createNativeQuery(sql.toString());
             queryObj.setParameter("problemId", problemId);
-            // 'currentUserId' 파라미터를 메인 쿼리에 직접 바인딩
             queryObj.setParameter("currentUserId", effectiveCurrentUserId);
 
             List<Object[]> results = queryObj.getResultList();
@@ -67,13 +61,14 @@ public class CardController {
                 Map<String, Object> card = new HashMap<>();
                 card.put("id", ((Number) row[0]).longValue());
                 card.put("question", row[1]);
-                card.put("answer", row[2]); // DB의 'correct' 필드를 프론트엔드의 'answer'로 매핑
-                card.put("cardStatus", row[3].toString()); // 사용자 학습 상태 (예: "forgotten", "mastered", "fuzzy")
+                card.put("answer", row[2]);
+                card.put("imageUrl", row[3]); // ✅ 프론트엔드로 이미지 URL 전달
+                card.put("cardStatus", row[4].toString());
                 cards.add(card);
             }
 
             if (cards.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // 해당 문제에 대한 카드가 없음
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
 
             return ResponseEntity.ok(cards);
@@ -83,5 +78,5 @@ public class CardController {
         }
     }
 
-    
+
 }
