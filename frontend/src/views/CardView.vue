@@ -279,7 +279,7 @@ export default {
   width: 100%;
   max-width: 300px; /* 카드 자체의 너비 조절 */
   text-align: center;
-  margin-bottom: 25px; /* ProblemSolveCard와 AnswerInputSection 사이 간격 증가 */
+  margin-bottom: 0px; /* ProblemSolveCard와 AnswerInputSection 사이 간격 증가 */
   display: flex;
   flex-direction: column;
   align-items: center; /* 내부 ProblemSolveCard를 중앙 정렬 */

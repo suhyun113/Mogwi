@@ -34,7 +34,7 @@ export default {
   display: flex;
   gap: 10px;
   width: 100%;
-  margin-top: 40px; /* 카드와 정답 입력란 사이 간격 증가 */
+  margin-top: 20px; /* 카드와 정답 입력란 사이 간격 증가 */
 }
 
 .answer-input {
