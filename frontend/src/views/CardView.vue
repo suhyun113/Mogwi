@@ -92,6 +92,7 @@ export default {
 
     const currentProblemCard = computed(() => shuffledProblemCards.value[currentCardIndex.value]);
 
+    // 문제 카드 불러오기기
     const fetchProblemCards = async () => {
       const problemId = router.currentRoute.value.params.id;
       const requestUrl = `/api/study/${problemId}/cards`;
@@ -133,8 +134,8 @@ export default {
       hasSubmitted.value = true;
       const problemId = router.currentRoute.value.params.id;
       const cardId = currentProblemCard.value.id;
-      const correct = currentProblemCard.value.correct.trim().toLowerCase();
-      const submittedAnswer = userAnswer.value.trim().toLowerCase();
+      const correct = (currentProblemCard.value.correct || '').trim().toLowerCase();
+      const submittedAnswer = (userAnswer.value || '').trim().toLowerCase();
 
       let newCardStatus = 'forgotten';
       if (submittedAnswer === correct) {
@@ -207,7 +208,7 @@ export default {
     });
 
     return {
-      loading,
+loading,
       allProblemCards,
       shuffledProblemCards,
       currentCardIndex,
@@ -304,14 +305,12 @@ export default {
 }
 
 .nav-arrow-button:disabled {
-  background-color: #d3d3d3; /* 연한 회색 */
-  color: #888888;            /* 글씨도 흐리게 */
-  cursor: not-allowed;       /* 클릭 불가 느낌 */
-  transform: translateY(-50%) scale(1); /* 호버 확대 비활성 */
-  box-shadow: none;          /* 그림자 제거 */
-  pointer-events: none;      /* hover 효과 차단 */
+  background-color: #d3d3d3;
+  color: #888888;
+  cursor: not-allowed;
+  transform: translateY(-50%) scale(1);
+  pointer-events: none;
 }
-
 
 .nav-arrow-button.left-arrow {
   left: 40px; /* 화면 왼쪽 끝에서 떨어진 거리 */

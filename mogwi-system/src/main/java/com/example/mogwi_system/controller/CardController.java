@@ -61,7 +61,7 @@ public class CardController {
                 Map<String, Object> card = new HashMap<>();
                 card.put("id", ((Number) row[0]).longValue());
                 card.put("question", row[1]);
-                card.put("answer", row[2]);
+                card.put("correct", row[2]);
                 card.put("imageUrl", row[3]); // ✅ 프론트엔드로 이미지 URL 전달
                 card.put("cardStatus", row[4].toString());
                 cards.add(card);
