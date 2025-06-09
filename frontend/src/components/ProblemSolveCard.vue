@@ -16,7 +16,8 @@
       </div>
 
       <!-- 기억 상태 선택 드롭다운 (오른쪽 상단) -->
-      <select v-if="hasSubmitted" v-model="selectedStatus" class="status-dropdown">
+      <select v-model="selectedStatus" class="status-dropdown" :disabled="!hasSubmitted">
+        <option value="new" disabled>새로운 기억</option>
         <option value="perfect">완벽한 기억</option>
         <option value="vague">희미한 기억</option>
         <option value="forgotten">사라진 기억</option>
@@ -31,22 +32,22 @@ import { ref } from 'vue';
 export default {
   props: {
     problem: { type: Object, required: true },
-    showAnswer: { type: Boolean, default: false }
+    showAnswer: { type: Boolean, default: false },
+    hasSubmitted: { type: Boolean, default: false }
   },
   emits: ['toggle-show-answer', 'next'],
-  setup() {
-    const hasSubmitted = ref(true); // 테스트 위해 true, 실제는 외부에서 변경
-    const selectedStatus = ref('');
+  setup(props) {
+    const selectedStatus = ref(props.problem.cardStatus || 'new');
 
     const getCardStatusClass = (status) => {
-      if (status === 'perfect') return 'card-solved';
-      if (status === 'vague') return 'card-review';
-      if (status === 'forgotten') return 'card-unsolved';
+      if (status === 'perfect') return 'card-perfect';
+      if (status === 'vague') return 'card-vague';
+      if (status === 'forgotten') return 'card-forgotten';
+      if (status === 'new') return 'card-new';
       return '';
     };
 
     return {
-      hasSubmitted,
       selectedStatus,
       getCardStatusClass
     };
@@ -68,16 +69,20 @@ export default {
   transition: border-color 0.3s ease;
 }
 
-.card-solved {
+.card-perfect {
   border-color: #28a745; /* 초록 */
 }
 
-.card-review {
+.card-vague {
   border-color: #ffc107; /* 노랑 */
 }
 
-.card-unsolved {
+.card-forgotten {
   border-color: #dc3545; /* 빨강 */
+}
+
+.card-new {
+  border-color: #a471ff; /* 회색: 새로운 카드 */
 }
 
 .card-content {
@@ -87,6 +92,7 @@ export default {
   align-items: center;
   height: 100%;
   justify-content: space-between;
+  margin-top: 20px;
 }
 
 .card-question {
