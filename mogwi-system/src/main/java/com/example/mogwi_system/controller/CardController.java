@@ -46,7 +46,7 @@ public class CardController {
             // user_id 조회를 서브쿼리로 직접 포함하고, 'currentUserId' 파라미터를 메인 쿼리에 바인딩합니다.
             StringBuilder sql = new StringBuilder(
                     "SELECT c.id, c.question, c.correct, " +
-                            "IFNULL(ucs.card_status, 'unsolved') AS card_status " + // 사용자별 학습 상태 (기본값 'unsolved')
+                            "IFNULL(ucs.card_status, 'forgotten') AS card_status " + // 사용자별 학습 상태 (기본값 'unsolved')
                             "FROM cards c " +
                             "LEFT JOIN user_card_status ucs ON c.id = ucs.card_id AND ucs.problem_id = :problemId " +
                             // user_id를 서브쿼리로 직접 조회하도록 변경
@@ -68,7 +68,7 @@ public class CardController {
                 card.put("id", ((Number) row[0]).longValue());
                 card.put("question", row[1]);
                 card.put("answer", row[2]); // DB의 'correct' 필드를 프론트엔드의 'answer'로 매핑
-                card.put("cardStatus", row[3].toString()); // 사용자 학습 상태 (예: "unsolved", "solved", "review")
+                card.put("cardStatus", row[3].toString()); // 사용자 학습 상태 (예: "forgotten", "mastered", "fuzzy")
                 cards.add(card);
             }
 
@@ -83,5 +83,5 @@ public class CardController {
         }
     }
 
-
+    
 }
