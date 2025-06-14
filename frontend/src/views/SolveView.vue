@@ -54,6 +54,15 @@
       </div>
     </div>
     <div v-else class="no-problems">카드를 찾을 수 없습니다.</div>
+
+    <StudyResultModal
+      :is-visible="showResultModal"
+      :perfect-count="perfectCount"
+      :vague-count="vagueCount"
+      :forgotten-count="forgottenCount"
+      :total-cards="allProblemCards.length"
+      @close="closeResultModal"
+    />
   </div>
 </template>
 
@@ -65,14 +74,18 @@ import { useRouter } from 'vue-router';
 import ProblemSolveCard from '@/components/Solve/ProblemSolveCard.vue';
 import AnswerInputSection from '@/components/Solve/AnswerInputSection.vue';
 import CardCountDisplay from '@/components/Solve/CardCountDisplay.vue';
+import StudyResultModal from '@/components/Study/StudyResultModal.vue'; // Corrected path based on your latest import
 
 export default {
+  // This is where you define the component's options
   components: {
     ProblemSolveCard,
     AnswerInputSection,
-    CardCountDisplay
+    CardCountDisplay,
+    StudyResultModal
   },
   setup() {
+    // All your existing Composition API logic goes here
     const store = useStore();
     const router = useRouter();
 
@@ -85,6 +98,12 @@ export default {
     const isCorrectAnswer = ref(false);
     const showAnswer = ref(false);
     const problemTitle = ref('');
+
+    const showResultModal = ref(false);
+    const perfectCount = ref(0);
+    const vagueCount = ref(0);
+    const forgottenCount = ref(0);
+    const disablePrevButtonAfterFirstNext = ref(false);
 
     const currentUserId = computed(() => store.state.store_userid);
     const currentProblemCard = computed(() => shuffledProblemCards.value[currentCardIndex.value]);
@@ -117,6 +136,7 @@ export default {
       }
       shuffledProblemCards.value = array;
       currentCardIndex.value = 0;
+      disablePrevButtonAfterFirstNext.value = false;
     };
 
     const submitAnswer = () => {
@@ -130,24 +150,24 @@ export default {
       const correct = (currentProblemCard.value.correct || '').trim().toLowerCase();
       const submittedAnswer = (userAnswer.value || '').trim().toLowerCase();
 
-      // Only set initial status based on correct/incorrect.
-      // The user can then change it via dropdown.
       if (submittedAnswer === correct) {
         isCorrectAnswer.value = true;
-        currentProblemCard.value.cardStatus = 'perfect';
+        if (currentProblemCard.value.cardStatus !== 'perfect' && currentProblemCard.value.cardStatus !== 'vague') {
+             currentProblemCard.value.cardStatus = 'perfect';
+        }
       } else {
         isCorrectAnswer.value = false;
-        currentProblemCard.value.cardStatus = 'forgotten';
+        if (currentProblemCard.value.cardStatus !== 'forgotten') {
+            currentProblemCard.value.cardStatus = 'forgotten';
+        }
         showAnswer.value = true;
       }
-      // Save status immediately after submission, before moving to next card.
       saveCardStatus();
     };
 
-    // Modified to be async and save status immediately
     const updateCardStatus = async (newStatus) => {
       currentProblemCard.value.cardStatus = newStatus;
-      await saveCardStatus(); // Save status to DB immediately when dropdown changes
+      await saveCardStatus();
     };
 
     const saveCardStatus = async () => {
@@ -157,7 +177,6 @@ export default {
       const cardStatus = card.cardStatus;
       const userId = currentUserId.value;
 
-      // Only save if the status is one of the valid memory states
       if (!['perfect', 'forgotten', 'vague'].includes(cardStatus)) return;
 
       try {
@@ -173,11 +192,10 @@ export default {
     };
 
     const nextCard = async () => {
-      // Status is already saved by submitAnswer or updateCardStatus.
-      // No need to save again here unless there's a specific reason.
       if (currentCardIndex.value < shuffledProblemCards.value.length - 1) {
         currentCardIndex.value++;
         resetCardState();
+        disablePrevButtonAfterFirstNext.value = true;
       } else {
         finishStudy();
       }
@@ -197,8 +215,19 @@ export default {
       showAnswer.value = false;
     };
 
+    const calculateStudyResults = () => {
+      perfectCount.value = allProblemCards.value.filter(card => card.cardStatus === 'perfect').length;
+      vagueCount.value = allProblemCards.value.filter(card => card.cardStatus === 'vague').length;
+      forgottenCount.value = allProblemCards.value.filter(card => card.cardStatus === 'forgotten').length;
+    };
+
     const finishStudy = () => {
-      alert("학습을 완료했습니다. 수고하셨습니다!");
+      calculateStudyResults();
+      showResultModal.value = true;
+    };
+
+    const closeResultModal = () => {
+      showResultModal.value = false;
       router.push(`/card/${router.currentRoute.value.params.id}`);
     };
 
@@ -219,6 +248,7 @@ export default {
       }
     });
 
+    // Return all reactive properties and functions to be exposed to the template
     return {
       loading,
       allProblemCards,
@@ -231,12 +261,18 @@ export default {
       currentProblemCard,
       currentUserId,
       problemTitle,
+      disablePrevButtonAfterFirstNext,
+      showResultModal,
+      perfectCount,
+      vagueCount,
+      forgottenCount,
       fetchProblemCards,
       shuffleCards,
       submitAnswer,
       prevCard,
       nextCard,
       finishStudy,
+      closeResultModal,
       toggleShowAnswer,
       updateCardStatus
     };
@@ -245,6 +281,7 @@ export default {
 </script>
 
 <style scoped>
+/* (스타일은 변경 없음) */
 .solve-view {
   display: flex;
   flex-direction: column;
@@ -372,15 +409,15 @@ export default {
   font-size: 1.6rem;
   font-weight: bold;
   color: #4a3f69;
-  margin: 0 auto 30px;  /* 가운데 정렬 + 아래 여백 */
+  margin: 0 auto 30px;    /* 가운데 정렬 + 아래 여백 */
   text-align: center;
   width: 100%;
   max-width: 300px;
   line-height: 1.4;
 
   background-color: #e6d6ff; /* 아주 연한 보라색 배경 */
-  padding: 10px 20px;         /* 살짝 얇게 */
-  border-radius: 8px;         /* 카드, 버튼과 통일된 둥글기 */
+  padding: 10px 20px;        /* 살짝 얇게 */
+  border-radius: 8px;        /* 카드, 버튼과 통일된 둥글기 */
   border: 1px solid #c9b3ff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 은은한 그림자 */
   box-sizing: border-box;
