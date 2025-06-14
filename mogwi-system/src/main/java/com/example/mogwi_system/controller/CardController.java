@@ -32,7 +32,7 @@ public class CardController {
      * @param currentUserId 현재 로그인한 사용자의 ID (users 테이블의 userid 필드)
      * @return 문제 카드 목록과 각 카드의 학습 상태를 포함하는 응답
      */
-    @GetMapping("/study/{problemId}/cards")
+    @GetMapping("/study/{problemId}/solve")
     public ResponseEntity<List<Map<String, Object>>> getCardsForProblem(
             @PathVariable Long problemId,
             @RequestParam(required = false) String currentUserId
@@ -86,7 +86,7 @@ public class CardController {
      * @param data 사용자 ID (userId), 새로운 카드 상태 (cardStatus), 문제 ID (problemId)를 포함하는 맵
      * @return 처리 결과 상태 (OK 또는 ERROR)
      */
-    @PostMapping("/cards/{cardId}/status")
+    @PostMapping("/solve/{cardId}/status")
     public ResponseEntity<Map<String, Object>> updateCardStatus(
             @PathVariable Long cardId,
             @RequestBody Map<String, Object> data) {

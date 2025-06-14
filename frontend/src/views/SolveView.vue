@@ -92,7 +92,7 @@ export default {
     const fetchProblemCards = async () => {
       const problemId = router.currentRoute.value.params.id;
       try {
-        const response = await axios.get(`/api/study/${problemId}/cards`, {
+        const response = await axios.get(`/api/study/${problemId}/solve`, {
           params: { currentUserId: currentUserId.value }
         });
         allProblemCards.value = response.data.map(card => ({
@@ -161,7 +161,7 @@ export default {
       if (!['perfect', 'forgotten', 'vague'].includes(cardStatus)) return;
 
       try {
-        await axios.post(`/api/cards/${cardId}/status`, {
+        await axios.post(`/api/solve/${cardId}/status`, {
           userId,
           cardStatus,
           problemId

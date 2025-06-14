@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import MainView from '@/views/MainView.vue'
 import MyStudyView from '@/views/MyStudyView.vue'
 import StudyView from '@/views/StudyView.vue'
-import CardView from '../views/CardView.vue'
+import SolveView from '@/views/SolveView.vue'
 
 const routes = [
   { 
@@ -20,9 +20,9 @@ const routes = [
     component: MyStudyView 
   },
   {
-    path: '/study/:id/cards',
-    name: 'CardView',
-    component: CardView
+    path: '/study/:id/solve',
+    name: 'SolveView',
+    component: SolveView
   }
 ]
 
