@@ -13,9 +13,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import NavBar from '@/components/NavBar.vue'
-import LoginModal from '@/components/LoginModal.vue'
-import RegisterModal from '@/components/RegisterModal.vue'
+import NavBar from '@/components/Main/NavBar.vue'
+import LoginModal from '@/components/Login/LoginModal.vue'
+import RegisterModal from '@/components/Register/RegisterModal.vue'
 
 const showLogin = ref(false)
 const showRegister = ref(false)

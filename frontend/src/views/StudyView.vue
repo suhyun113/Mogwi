@@ -20,8 +20,8 @@
 <script>
 import axios from 'axios';
 import StartButton from '@/components/StartButton.vue';
-import ProblemCard from '@/components/ProblemCard.vue';
-import StudyStartModal from '@/components/StudyStartModal.vue';
+import ProblemCard from '@/components/Study/ProblemCard.vue';
+import StudyStartModal from '@/components/Study/StudyStartModal.vue';
 
 export default {
   components: { StartButton, ProblemCard, StudyStartModal },

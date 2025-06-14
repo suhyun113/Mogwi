@@ -46,11 +46,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-import SearchBar from '@/components/SearchBar.vue'
-import ProblemSummary from '@/components/ProblemSummary.vue'
-import LoginPromptModal from '@/components/LoginPromptModal.vue'
-import LoginModal from '@/components/LoginModal.vue'
-import StudyStartModal from '@/components/StudyStartModal.vue'
+import SearchBar from '@/components/Main/SearchBar.vue'
+import ProblemSummary from '@/components/Main/ProblemSummary.vue'
+import LoginPromptModal from '@/components/Login/LoginPromptModal.vue'
+import LoginModal from '@/components/Login/LoginModal.vue'
+import StudyStartModal from '@/components/Study/StudyStartModal.vue'
 
 export default {
   components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal, StudyStartModal },

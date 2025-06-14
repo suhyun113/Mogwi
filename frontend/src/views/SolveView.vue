@@ -62,9 +62,9 @@ import axios from 'axios';
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import ProblemSolveCard from '@/components/ProblemSolveCard.vue';
-import AnswerInputSection from '@/components/AnswerInputSection.vue';
-import CardCountDisplay from '@/components/CardCountDisplay.vue';
+import ProblemSolveCard from '@/components/Solve/ProblemSolveCard.vue';
+import AnswerInputSection from '@/components/Solve/AnswerInputSection.vue';
+import CardCountDisplay from '@/components/Solve/CardCountDisplay.vue';
 
 export default {
   components: {
