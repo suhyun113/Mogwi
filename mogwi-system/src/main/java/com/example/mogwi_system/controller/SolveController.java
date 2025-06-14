@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 @Transactional
 @RequestMapping("/api") // 모든 엔드포인트의 기본 경로를 /api로 설정
-public class CardController {
+public class SolveController {
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -80,7 +80,7 @@ public class CardController {
 
     /**
      * 특정 카드의 사용자 학습 상태를 업데이트합니다.
-     * POST /api/cards/{cardId}/status
+     * POST /api/solve/{cardId}/status
      *
      * @param cardId 상태를 업데이트할 카드의 ID
      * @param data 사용자 ID (userId), 새로운 카드 상태 (cardStatus), 문제 ID (problemId)를 포함하는 맵
