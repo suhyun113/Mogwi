@@ -2,11 +2,9 @@
   <div class="solve-view">
     <div v-if="loading" class="loading">문제 카드들을 불러오는 중입니다...</div>
     <div v-else-if="currentProblemCard">
-      <!-- 문제 제목을 카드 위에 표시 -->
       <h1 v-if="problemTitle" class="problem-title">{{ problemTitle }}</h1>
 
       <div class="solve-section-container">
-        <!-- 이전 카드 버튼 -->
         <button
           v-if="currentCardIndex > 0"
           @click="prevCard"
@@ -27,6 +25,7 @@
             :is-correct-answer="isCorrectAnswer"
             :show-answer="showAnswer"
             @toggle-show-answer="toggleShowAnswer"
+            @status-changed="updateCardStatus"
           />
         </div>
 
@@ -44,7 +43,6 @@
           >학습 완료</button>
         </div>
 
-        <!-- 다음 카드 버튼 -->
         <button
           :disabled="!hasSubmitted"
           v-if="currentCardIndex < shuffledProblemCards.length - 1"
@@ -89,16 +87,12 @@ export default {
     const problemTitle = ref('');
 
     const currentUserId = computed(() => store.state.store_userid);
-
     const currentProblemCard = computed(() => shuffledProblemCards.value[currentCardIndex.value]);
 
-    // 문제 카드 불러오기기
     const fetchProblemCards = async () => {
       const problemId = router.currentRoute.value.params.id;
-      const requestUrl = `/api/study/${problemId}/cards`;
-
       try {
-        const response = await axios.get(requestUrl, {
+        const response = await axios.get(`/api/study/${problemId}/cards`, {
           params: { currentUserId: currentUserId.value }
         });
         allProblemCards.value = response.data.map(card => ({
@@ -110,7 +104,7 @@ export default {
       } catch (error) {
         console.error("문제 카드 불러오기 실패:", error);
         loading.value = false;
-        alert("문제 카드 불러오기 실패했습니다. 콘솔을 확인해주세요.");
+        alert("문제 카드 불러오기 실패");
         router.push(`/card/${problemId}`);
       }
     };
@@ -125,40 +119,67 @@ export default {
       currentCardIndex.value = 0;
     };
 
-    const submitAnswer = async () => {
+    const submitAnswer = () => {
       if (!userAnswer.value.trim()) {
         alert("정답을 입력해주세요!");
         return;
       }
 
       hasSubmitted.value = true;
-      const problemId = router.currentRoute.value.params.id;
-      const cardId = currentProblemCard.value.id;
+
       const correct = (currentProblemCard.value.correct || '').trim().toLowerCase();
       const submittedAnswer = (userAnswer.value || '').trim().toLowerCase();
 
-      let newCardStatus = 'forgotten';
+      // Only set initial status based on correct/incorrect.
+      // The user can then change it via dropdown.
       if (submittedAnswer === correct) {
-        alert("정답입니다!");
         isCorrectAnswer.value = true;
-        newCardStatus = 'perfect';
+        currentProblemCard.value.cardStatus = 'perfect';
       } else {
-        alert(`오답입니다. 정답은 "${currentProblemCard.value.correct}" 입니다.`);
         isCorrectAnswer.value = false;
-        newCardStatus = 'vague';
+        currentProblemCard.value.cardStatus = 'forgotten';
         showAnswer.value = true;
       }
+      // Save status immediately after submission, before moving to next card.
+      saveCardStatus();
+    };
+
+    // Modified to be async and save status immediately
+    const updateCardStatus = async (newStatus) => {
+      currentProblemCard.value.cardStatus = newStatus;
+      await saveCardStatus(); // Save status to DB immediately when dropdown changes
+    };
+
+    const saveCardStatus = async () => {
+      const card = currentProblemCard.value;
+      const problemId = parseInt(router.currentRoute.value.params.id);
+      const cardId = card.id;
+      const cardStatus = card.cardStatus;
+      const userId = currentUserId.value;
+
+      // Only save if the status is one of the valid memory states
+      if (!['perfect', 'forgotten', 'vague'].includes(cardStatus)) return;
 
       try {
         await axios.post(`/api/cards/${cardId}/status`, {
-          userId: currentUserId.value,
-          cardStatus: newCardStatus,
+          userId,
+          cardStatus,
           problemId
         });
-        currentProblemCard.value.cardStatus = newCardStatus;
       } catch (error) {
-        console.error("카드 상태 업데이트 실패:", error);
-        alert("카드 상태 업데이트에 실패했습니다. 콘솔을 확인해주세요.");
+        console.error("카드 상태 저장 실패:", error);
+        alert("카드 상태 저장 중 오류 발생");
+      }
+    };
+
+    const nextCard = async () => {
+      // Status is already saved by submitAnswer or updateCardStatus.
+      // No need to save again here unless there's a specific reason.
+      if (currentCardIndex.value < shuffledProblemCards.value.length - 1) {
+        currentCardIndex.value++;
+        resetCardState();
+      } else {
+        finishStudy();
       }
     };
 
@@ -166,15 +187,6 @@ export default {
       if (currentCardIndex.value > 0) {
         currentCardIndex.value--;
         resetCardState();
-      }
-    };
-
-    const nextCard = () => {
-      if (currentCardIndex.value < shuffledProblemCards.value.length - 1) {
-        currentCardIndex.value++;
-        resetCardState();
-      } else {
-        finishStudy();
       }
     };
 
@@ -186,7 +198,7 @@ export default {
     };
 
     const finishStudy = () => {
-      alert("학습을 완료했습니다! 수고하셨습니다.");
+      alert("학습을 완료했습니다. 수고하셨습니다!");
       router.push(`/card/${router.currentRoute.value.params.id}`);
     };
 
@@ -196,7 +208,7 @@ export default {
 
     onMounted(async () => {
       await fetchProblemCards();
-      const problemId = router.currentRoute.value.params.id;
+      const problemId = parseInt(router.currentRoute.value.params.id);
       try {
         const problemResponse = await axios.get(`/api/problems/${problemId}`, {
           params: { currentUserId: currentUserId.value }
@@ -208,7 +220,7 @@ export default {
     });
 
     return {
-loading,
+      loading,
       allProblemCards,
       shuffledProblemCards,
       currentCardIndex,
@@ -225,12 +237,12 @@ loading,
       prevCard,
       nextCard,
       finishStudy,
-      toggleShowAnswer
+      toggleShowAnswer,
+      updateCardStatus
     };
   }
 };
 </script>
-
 
 <style scoped>
 .solve-view {
@@ -367,11 +379,10 @@ loading,
   line-height: 1.4;
 
   background-color: #e6d6ff; /* 아주 연한 보라색 배경 */
-  padding: 10px 20px;        /* 살짝 얇게 */
-  border-radius: 8px;       /* 카드, 버튼과 통일된 둥글기 */
-  border: 1px solid #c9b3ff; 
+  padding: 10px 20px;         /* 살짝 얇게 */
+  border-radius: 8px;         /* 카드, 버튼과 통일된 둥글기 */
+  border: 1px solid #c9b3ff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 은은한 그림자 */
   box-sizing: border-box;
 }
-
-</style> 
+</style>
