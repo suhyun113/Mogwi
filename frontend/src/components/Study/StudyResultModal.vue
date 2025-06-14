@@ -22,19 +22,17 @@
         </div>
       </div>
 
-      <button @click="closeModal" class="modal-close-button">확인</button>
+      <div class="modal-buttons"> <button @click="restartStudy" class="modal-button secondary">다시 학습</button>
+        <button @click="goToMyStudy" class="modal-button primary">나의 학습</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-// No need for 'defineProps' or 'defineEmits' imports here
-// computed is still needed as it's a Composition API utility you might use
-// or you could use standard methods and data for simpler scenarios.
-
+import { useRouter } from 'vue-router'; // Import useRouter for navigation
 
 export default {
-  // Define the props directly in the 'props' option
   props: {
     isVisible: {
       type: Boolean,
@@ -55,11 +53,18 @@ export default {
     totalCards: {
       type: Number,
       default: 0
+    },
+    // You'll need to pass the problemId to the modal for navigation
+    problemId: {
+      type: [String, Number],
+      required: true // Ensure problemId is always provided
     }
   },
-  // Define emitted events in the 'emits' option
   emits: ['close'],
-  // Define computed properties in the 'computed' option
+  setup() { // Use setup for useRouter
+    const router = useRouter();
+    return { router }; // Return router to be accessible in methods
+  },
   computed: {
     perfectPercentage() {
       return this.totalCards > 0 ? ((this.perfectCount / this.totalCards) * 100).toFixed(1) : 0;
@@ -71,18 +76,29 @@ export default {
       return this.totalCards > 0 ? ((this.forgottenCount / this.totalCards) * 100).toFixed(1) : 0;
     }
   },
-  // Define methods in the 'methods' option
   methods: {
     closeModal() {
-      // Use 'this.$emit' to emit events in Options API
       this.$emit('close');
+    },
+    restartStudy() {
+      this.$emit('close'); // Close the modal first
+      // Navigate back to the StudyView for the current problem
+      // This will cause the StudyView to re-fetch cards, essentially restarting
+      this.router.push({ name: 'StudyDetail', params: { id: this.problemId } });
+    },
+    goToMyStudy() {
+      this.$emit('close'); // Close the modal first
+      // Navigate to MyStudyView. You'll need to define this route in your router/index.js
+      // and create the MyStudyView component.
+      // Assuming MyStudyView might need the problemId to show specific stats.
+      this.router.push({ name: 'MyStudy', params: { id: this.problemId } });
     }
   }
 };
 </script>
 
 <style scoped>
-/* (Style is unchanged) */
+/* (Existing styles remain the same) */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -172,23 +188,45 @@ h2 {
   border-top: 1px dashed #ddd;
 }
 
-.modal-close-button {
-  background-color: #a471ff;
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  width: 100%;
-  max-width: 200px;
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
   margin-top: 20px;
+  width: 100%;
 }
 
-.modal-close-button:hover {
+.modal-button {
+  flex: 1;
+  border: none;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  /* Removed 'transform 0.2s ease' from transition */
+  transition: background-color 0.2s ease;
+  font-weight: 600;
+}
+
+.modal-button.primary {
+  background-color: #a471ff;
+  color: white;
+}
+
+.modal-button.primary:hover {
   background-color: #8b5cf6;
-  transform: translateY(-2px);
+  /* Removed transform property */
+}
+
+.modal-button.secondary {
+  background-color: #f0f0f0;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.modal-button.secondary:hover {
+  background-color: #e0e0e0;
+  /* Removed transform property */
 }
 
 @keyframes fadeInScale {
