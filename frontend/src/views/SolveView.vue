@@ -6,7 +6,7 @@
 
       <div class="solve-section-container">
         <button
-          v-if="currentCardIndex > 0"
+          v-if="currentCardIndex > 0 && !disablePrevButtonAfterFirstNext"
           @click="prevCard"
           class="nav-arrow-button left-arrow"
         >
@@ -61,23 +61,22 @@
       :vague-count="vagueCount"
       :forgotten-count="forgottenCount"
       :total-cards="allProblemCards.length"
-      @close="closeResultModal"
+      :problem-id="parseInt($route.params.id)" @close="closeResultModal"
     />
   </div>
 </template>
 
 <script>
 import axios from 'axios';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue'; // Import 'watch'
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router'; // Import 'useRoute'
 import ProblemSolveCard from '@/components/Solve/ProblemSolveCard.vue';
 import AnswerInputSection from '@/components/Solve/AnswerInputSection.vue';
 import CardCountDisplay from '@/components/Solve/CardCountDisplay.vue';
-import StudyResultModal from '@/components/Study/StudyResultModal.vue'; // Corrected path based on your latest import
+import StudyResultModal from '@/components/Study/StudyResultModal.vue';
 
 export default {
-  // This is where you define the component's options
   components: {
     ProblemSolveCard,
     AnswerInputSection,
@@ -85,9 +84,9 @@ export default {
     StudyResultModal
   },
   setup() {
-    // All your existing Composition API logic goes here
     const store = useStore();
     const router = useRouter();
+    const route = useRoute(); // Initialize useRoute
 
     const loading = ref(true);
     const allProblemCards = ref([]);
@@ -108,9 +107,33 @@ export default {
     const currentUserId = computed(() => store.state.store_userid);
     const currentProblemCard = computed(() => shuffledProblemCards.value[currentCardIndex.value]);
 
-    const fetchProblemCards = async () => {
-      const problemId = router.currentRoute.value.params.id;
+    const initializeStudy = async () => {
+      loading.value = true;
+      console.log('Initializing study session...');
+
+      currentCardIndex.value = 0;
+      userAnswer.value = '';
+      hasSubmitted.value = false;
+      isCorrectAnswer.value = false;
+      showAnswer.value = false;
+      perfectCount.value = 0;
+      vagueCount.value = 0;
+      forgottenCount.value = 0;
+      allProblemCards.value = [];
+      shuffledProblemCards.value = [];
+      showResultModal.value = false; // Ensure modal is closed
+      disablePrevButtonAfterFirstNext.value = false; // Reset prev button state
+
+      const problemId = route.params.id;
+      if (!problemId) {
+        console.error("문제 ID를 찾을 수 없습니다.");
+        loading.value = false;
+        router.push('/'); // Or some error page
+        return;
+      }
+
       try {
+        console.log(`Fetching cards for problem ID: ${problemId} with user ID: ${currentUserId.value}`);
         const response = await axios.get(`/api/study/${problemId}/solve`, {
           params: { currentUserId: currentUserId.value }
         });
@@ -118,13 +141,20 @@ export default {
           ...card,
           cardStatus: card.cardStatus || 'new'
         }));
-        shuffleCards();
-        loading.value = false;
+        shuffleCards(); // 3. Shuffle them immediately after fetching
+
+        // Also fetch problem title
+        const problemResponse = await axios.get(`/api/problems/${problemId}`, {
+          params: { currentUserId: currentUserId.value }
+        });
+        problemTitle.value = problemResponse.data.title;
+
       } catch (error) {
         console.error("문제 카드 불러오기 실패:", error);
+        alert("문제 카드 불러오기 실패: " + (error.response?.data?.message || error.message));
+        router.push(`/card/${problemId}`); // Fallback
+      } finally {
         loading.value = false;
-        alert("문제 카드 불러오기 실패");
-        router.push(`/card/${problemId}`);
       }
     };
 
@@ -135,11 +165,12 @@ export default {
         [array[i], array[j]] = [array[j], array[i]];
       }
       shuffledProblemCards.value = array;
+      // After shuffling, ensure we are at the first card
       currentCardIndex.value = 0;
-      disablePrevButtonAfterFirstNext.value = false;
+      console.log('Cards shuffled. Starting from index:', currentCardIndex.value);
     };
 
-    const submitAnswer = () => {
+    const submitAnswer = async () => {
       if (!userAnswer.value.trim()) {
         alert("정답을 입력해주세요!");
         return;
@@ -152,17 +183,19 @@ export default {
 
       if (submittedAnswer === correct) {
         isCorrectAnswer.value = true;
+        // Only change status to 'perfect' if it's not already perfect or vague
         if (currentProblemCard.value.cardStatus !== 'perfect' && currentProblemCard.value.cardStatus !== 'vague') {
-             currentProblemCard.value.cardStatus = 'perfect';
+          currentProblemCard.value.cardStatus = 'perfect';
         }
       } else {
         isCorrectAnswer.value = false;
+        // Only change status to 'forgotten' if it's not already forgotten
         if (currentProblemCard.value.cardStatus !== 'forgotten') {
-            currentProblemCard.value.cardStatus = 'forgotten';
+          currentProblemCard.value.cardStatus = 'forgotten';
         }
         showAnswer.value = true;
       }
-      saveCardStatus();
+      await saveCardStatus(); // Await saving status before moving on
     };
 
     const updateCardStatus = async (newStatus) => {
@@ -172,7 +205,7 @@ export default {
 
     const saveCardStatus = async () => {
       const card = currentProblemCard.value;
-      const problemId = parseInt(router.currentRoute.value.params.id);
+      const problemId = parseInt(route.params.id); // Use route here
       const cardId = card.id;
       const cardStatus = card.cardStatus;
       const userId = currentUserId.value;
@@ -192,6 +225,13 @@ export default {
     };
 
     const nextCard = async () => {
+      // Ensure current card status is saved before moving to the next
+      if (!hasSubmitted.value) {
+        // Force submission or alert if user tries to skip without submitting
+        alert("먼저 답을 제출해주세요!");
+        return;
+      }
+
       if (currentCardIndex.value < shuffledProblemCards.value.length - 1) {
         currentCardIndex.value++;
         resetCardState();
@@ -216,6 +256,8 @@ export default {
     };
 
     const calculateStudyResults = () => {
+      // Iterate through the allProblemCards to get final counts
+      // This is important because individual card statuses are updated live
       perfectCount.value = allProblemCards.value.filter(card => card.cardStatus === 'perfect').length;
       vagueCount.value = allProblemCards.value.filter(card => card.cardStatus === 'vague').length;
       forgottenCount.value = allProblemCards.value.filter(card => card.cardStatus === 'forgotten').length;
@@ -228,27 +270,38 @@ export default {
 
     const closeResultModal = () => {
       showResultModal.value = false;
-      router.push(`/card/${router.currentRoute.value.params.id}`);
+      // After closing modal, optionally navigate away or do nothing.
+      // If you want to go to a default problem list or home:
+      // router.push(`/card/${route.params.id}`); // This would just reload the same study view.
+      // router.push('/some-other-route'); // e.g., to the problem list
     };
 
     const toggleShowAnswer = () => {
       showAnswer.value = !showAnswer.value;
     };
 
-    onMounted(async () => {
-      await fetchProblemCards();
-      const problemId = parseInt(router.currentRoute.value.params.id);
-      try {
-        const problemResponse = await axios.get(`/api/problems/${problemId}`, {
-          params: { currentUserId: currentUserId.value }
-        });
-        problemTitle.value = problemResponse.data.title;
-      } catch (error) {
-        console.error("문제 제목 불러오기 실패:", error);
+    // --- Watchers for route changes ---
+    watch(() => route.params.id, async (newId, oldId) => {
+      if (newId && newId !== oldId) {
+        console.log(`Route param ID changed from ${oldId} to ${newId}. Triggering initializeStudy.`);
+        await initializeStudy();
+      }
+    }, { immediate: true }); // immediate: true to run on initial component mount
+
+    watch(() => route.query.reset, async (newVal, oldVal) => {
+      if (newVal && newVal !== oldVal) {
+        console.log(`Reset query param detected (${oldVal} -> ${newVal}). Triggering initializeStudy.`);
+        await initializeStudy();
       }
     });
 
-    // Return all reactive properties and functions to be exposed to the template
+    // --- On Mounted (for initial fetch, but now mostly handled by immediate watcher) ---
+    // onMounted(async () => {
+    //   // This might not be strictly necessary with immediate: true on the watcher
+    //   // but can act as a fallback or for other one-time setups.
+    //   // await initializeStudy();
+    // });
+
     return {
       loading,
       allProblemCards,
@@ -266,7 +319,7 @@ export default {
       perfectCount,
       vagueCount,
       forgottenCount,
-      fetchProblemCards,
+      fetchProblemCards: initializeStudy,
       shuffleCards,
       submitAnswer,
       prevCard,
@@ -416,8 +469,8 @@ export default {
   line-height: 1.4;
 
   background-color: #e6d6ff; /* 아주 연한 보라색 배경 */
-  padding: 10px 20px;        /* 살짝 얇게 */
-  border-radius: 8px;        /* 카드, 버튼과 통일된 둥글기 */
+  padding: 10px 20px;         /* 살짝 얇게 */
+  border-radius: 8px;         /* 카드, 버튼과 통일된 둥글기 */
   border: 1px solid #c9b3ff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 은은한 그림자 */
   box-sizing: border-box;

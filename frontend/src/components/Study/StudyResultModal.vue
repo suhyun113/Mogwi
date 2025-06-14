@@ -22,7 +22,8 @@
         </div>
       </div>
 
-      <div class="modal-buttons"> <button @click="restartStudy" class="modal-button secondary">다시 학습</button>
+      <div class="modal-buttons">
+        <button @click="restartStudy" class="modal-button secondary">다시 학습</button>
         <button @click="goToMyStudy" class="modal-button primary">나의 학습</button>
       </div>
     </div>
@@ -30,7 +31,7 @@
 </template>
 
 <script>
-import { useRouter } from 'vue-router'; // Import useRouter for navigation
+import { useRouter } from 'vue-router';
 
 export default {
   props: {
@@ -54,16 +55,15 @@ export default {
       type: Number,
       default: 0
     },
-    // You'll need to pass the problemId to the modal for navigation
     problemId: {
       type: [String, Number],
-      required: true // Ensure problemId is always provided
+      required: true
     }
   },
   emits: ['close'],
-  setup() { // Use setup for useRouter
+  setup() {
     const router = useRouter();
-    return { router }; // Return router to be accessible in methods
+    return { router };
   },
   computed: {
     perfectPercentage() {
@@ -82,23 +82,23 @@ export default {
     },
     restartStudy() {
       this.$emit('close'); // Close the modal first
-      // Navigate back to the StudyView for the current problem
-      // This will cause the StudyView to re-fetch cards, essentially restarting
-      this.router.push({ name: 'StudyDetail', params: { id: this.problemId } });
+      // Navigate to the SolveView for the current problem, adding a 'reset' query param
+      this.router.push({
+        name: 'SolveView',
+        params: { id: this.problemId },
+        query: { reset: Date.now() } // Use Date.now() to ensure a unique key and force a reset
+      });
     },
     goToMyStudy() {
       this.$emit('close'); // Close the modal first
-      // Navigate to MyStudyView. You'll need to define this route in your router/index.js
-      // and create the MyStudyView component.
-      // Assuming MyStudyView might need the problemId to show specific stats.
-      this.router.push({ name: 'MyStudy', params: { id: this.problemId } });
+      this.router.push({ name: 'mystudy' });
     }
   }
 };
 </script>
 
 <style scoped>
-/* (Existing styles remain the same) */
+/* (Styles remain the same as the last iteration) */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -203,7 +203,6 @@ h2 {
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
-  /* Removed 'transform 0.2s ease' from transition */
   transition: background-color 0.2s ease;
   font-weight: 600;
 }
@@ -215,7 +214,6 @@ h2 {
 
 .modal-button.primary:hover {
   background-color: #8b5cf6;
-  /* Removed transform property */
 }
 
 .modal-button.secondary {
@@ -226,7 +224,6 @@ h2 {
 
 .modal-button.secondary:hover {
   background-color: #e0e0e0;
-  /* Removed transform property */
 }
 
 @keyframes fadeInScale {
