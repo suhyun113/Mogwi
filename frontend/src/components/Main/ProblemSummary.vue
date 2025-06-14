@@ -147,11 +147,12 @@ export default {
     },
     handleSolveClick() {
       if (this.isAuthenticated) {
-        this.$router.push(`/study/${this.localProblem.id}`)
+        this.$emit('solve', this.localProblem) // 전체 problem 객체 전달
       } else {
         this.$emit('auth-required')
       }
     }
+
   }
 }
 </script>

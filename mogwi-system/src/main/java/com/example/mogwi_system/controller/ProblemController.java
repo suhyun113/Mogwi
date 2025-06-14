@@ -4,10 +4,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -205,5 +207,84 @@ public class ProblemController {
             return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
+    // 문제 상세 조회 (문제 + 카드 목록)
+    @GetMapping("/api/problems/{id}")
+    public ResponseEntity<Map<String, Object>> getProblemDetail(
+            @PathVariable Long id,
+            @RequestParam(required = false) String currentUserId) {
+        try {
+            StringBuilder sql = new StringBuilder(
+                    "SELECT p.id, p.title, p.description, u.username AS author_name, u.userid AS author_id, p.card_count, " +
+                            "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1), 0) AS likes, " +
+                            "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_scrapped = 1), 0) AS scraps, " +
+                            "IFNULL(ups.is_liked, 0) AS liked, " +
+                            "IFNULL(ups.is_scrapped, 0) AS scrapped " +
+                            "FROM problems p " +
+                            "JOIN users u ON p.author_id = u.id " +
+                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserId) " +
+                            "WHERE p.id = :id"
+            );
+
+            var queryObj = entityManager.createNativeQuery(sql.toString());
+            queryObj.setParameter("id", id);
+            if (currentUserId == null) currentUserId = "";
+            queryObj.setParameter("currentUserId", currentUserId);
+
+            List<Object[]> problemResults = queryObj.getResultList();
+            if (problemResults.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("status", "ERROR", "message", "문제를 찾을 수 없음"));
+            }
+
+            Object[] row = problemResults.get(0);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", ((Number) row[0]).longValue());
+            response.put("title", row[1]);
+            response.put("description", row[2]);
+            response.put("author", row[3]);
+            response.put("authorId", row[4]);
+            response.put("cardCount", row[5]);
+            response.put("likes", row[6]);
+            response.put("scraps", row[7]);
+            response.put("liked", ((Number) row[8]).intValue() == 1);
+            response.put("scrapped", ((Number) row[9]).intValue() == 1);
+
+            // 카테고리 조회
+            List<?> categoryResults = entityManager.createNativeQuery(
+                            "SELECT c.tag_name FROM problem_categories pc " +
+                                    "JOIN categories c ON pc.category_id = c.id " +
+                                    "WHERE pc.problem_id = ?1")
+                    .setParameter(1, id)
+                    .getResultList();
+
+            List<String> categories = categoryResults.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+            response.put("categories", categories);
+
+            // 카드 리스트 조회
+            List<?> cardResults = entityManager.createNativeQuery(
+                            "SELECT question, correct FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
+                    .setParameter(1, id)
+                    .getResultList();
+
+            List<Map<String, Object>> cards = new ArrayList<>();
+            for (Object result : cardResults) {
+                Object[] cardRow = (Object[]) result;
+                Map<String, Object> card = new HashMap<>();
+                card.put("question", cardRow[0]);
+                card.put("correct", cardRow[1]);
+                cards.add(card);
+            }
+
+            response.put("cards", cards);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("문제 상세 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
+        }
+    }
+
+
 
 }
