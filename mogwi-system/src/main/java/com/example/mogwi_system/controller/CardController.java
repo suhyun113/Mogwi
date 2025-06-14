@@ -86,7 +86,7 @@ public class CardController {
      * @param data 사용자 ID (userId), 새로운 카드 상태 (cardStatus), 문제 ID (problemId)를 포함하는 맵
      * @return 처리 결과 상태 (OK 또는 ERROR)
      */
-    @PostMapping("/solve/{cardId}/status")
+    @PostMapping("/cards/{cardId}/status")
     public ResponseEntity<Map<String, Object>> updateCardStatus(
             @PathVariable Long cardId,
             @RequestBody Map<String, Object> data) {
@@ -97,7 +97,7 @@ public class CardController {
 
         // 입력값 유효성 검사
         if (userId == null || cardStatus == null || cardId == null || problemId == null ||
-                (!cardStatus.equals("perfect") && !cardStatus.equals("vague") && !cardStatus.equals("forgotten") && !cardStatus.equals("new"))) {
+                (!cardStatus.equals("perfect") && !cardStatus.equals("vague") && !cardStatus.equals("forgotten"))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("status", "ERROR", "message", "유효하지 않은 상태"));
 
         }
