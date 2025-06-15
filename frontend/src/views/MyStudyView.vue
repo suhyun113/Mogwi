@@ -4,35 +4,32 @@
             {{ isLoggedIn ? `${username}님의 학습 페이지` : '나의 학습 페이지' }}
         </h1>
 
+        <OverallStudySummary
+            :overallPerfectCount="overallPerfectCount"
+            :overallVagueCount="overallVagueCount"
+            :overallForgottenCount="overallForgottenCount"
+            :overallTotalCards="overallTotalCards"
+            :isLoggedIn="isLoggedIn"
+            class="overall-summary-placement"
+        />
+
         <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
         <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
-        <div v-else-if="!isLoggedIn" class="not-logged-in-message">
-            <p>로그인이 필요한 서비스입니다.</p>
-            <p>로그인하시면 학습 현황을 확인하실 수 있습니다.</p>
-        </div>
 
-        <div v-else>
-            <OverallStudySummary
-                :overallPerfectCount="overallPerfectCount"
-                :overallVagueCount="overallVagueCount"
-                :overallForgottenCount="overallForgottenCount"
-                :overallTotalCards="overallTotalCards"
-            />
+        <ProblemListSection
+            :ongoingProblems="ongoingProblems"
+            :completedProblems="completedProblems"
+            :isLoggedIn="isLoggedIn"
+            :currentUserId="currentUserId"
+            @go-to-study="goToStudy"
+            @auth-required="handleAuthRequired"
+            @refresh-problems="fetchMyStudyData" />
 
-            <ProblemListSection
-                :ongoingProblems="ongoingProblems"
-                :completedProblems="completedProblems"
-                :isLoggedIn="isLoggedIn"
-                :currentUserId="currentUserId"
-                @go-to-study="goToStudy"
-                @auth-required="$emit('auth-required')"
-                @refresh-problems="fetchMyStudyData" />
-        </div>
     </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -54,7 +51,7 @@ export default {
         const currentUserId = computed(() => store.state.store_userid);
         const isLoggedIn = computed(() => !!currentUserId.value);
 
-        const loading = ref(true);
+        const loading = ref(false);
         const error = ref(null);
 
         const overallPerfectCount = ref(0);
@@ -71,14 +68,20 @@ export default {
         );
 
         const fetchMyStudyData = async () => {
-            loading.value = true;
-            error.value = null;
-
             if (!isLoggedIn.value) {
-                console.warn("User not logged in. Cannot fetch my study data.");
+                console.log("User not logged in. Not fetching study data.");
+                overallPerfectCount.value = 0;
+                overallVagueCount.value = 0;
+                overallForgottenCount.value = 0;
+                overallTotalCards.value = 0;
+                allUserProblems.value = [];
                 loading.value = false;
+                error.value = null;
                 return;
             }
+
+            loading.value = true;
+            error.value = null;
 
             try {
                 console.log(`Fetching study summary for userId: ${currentUserId.value}`);
@@ -103,14 +106,6 @@ export default {
                         console.warn("Received null or undefined problem in the list, skipping.", problem);
                         return null;
                     }
-                    let computedAuthorId = problem.authorId;
-                    if (computedAuthorId === undefined || computedAuthorId === '' || computedAuthorId === null) {
-                        if (problem.authorNickname && problem.authorNickname === username.value) {
-                            computedAuthorId = currentUserId.value;
-                        } else {
-                            computedAuthorId = '';
-                        }
-                    }
                     return {
                         ...problem,
                         isLiked: !!problem.isLiked,
@@ -118,7 +113,7 @@ export default {
                         authorNickname: problem.authorNickname || '알 수 없음',
                         categories: Array.isArray(problem.categories) ? problem.categories : [],
                         id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
-                        authorId: computedAuthorId,
+                        authorId: problem.authorId,
                         perfectCount: problem.perfectCount || 0,
                         vagueCount: problem.vagueCount || 0,
                         forgottenCount: problem.forgottenCount || 0,
@@ -156,8 +151,18 @@ export default {
             router.push({ name: 'SolveView', params: { problemId: problemId } });
         };
 
+        const handleAuthRequired = () => {
+            alert("로그인이 필요한 서비스입니다.");
+        };
+
         onMounted(() => {
             fetchMyStudyData();
+        });
+
+        watch(isLoggedIn, (newVal, oldVal) => {
+            if (newVal !== oldVal) {
+                fetchMyStudyData();
+            }
         });
 
         return {
@@ -174,57 +179,89 @@ export default {
             completedProblems,
             goToStudy,
             fetchMyStudyData,
+            handleAuthRequired,
         };
     }
 };
 </script>
 
 <style scoped>
-/* 동일한 스타일 유지 */
 .mystudy {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
+    align-items: center; /* 전체 콘텐츠 중앙 정렬 유지 */
+    padding: 40px 20px; /* 전체 페이지 패딩 */
     background-color: #fdf8f4;
     min-height: 100vh;
     font-family: 'Pretendard', sans-serif;
+    position: relative;
 }
 
+/* 페이지 제목: 왼쪽 상단 고정 */
 .page-title {
     color: #5a2e87;
     font-size: 2.2rem;
     font-weight: 700;
-    margin-bottom: 40px;
-    text-align: center;
-    padding: 10px 20px;
-    background-color: #e6d6ff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    /* 배경 및 그림자 제거 (이전 답변에서 적용) */
+    background-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    /* 왼쪽 상단 배치 (이전 답변에서 적용) */
+    position: absolute;
+    top: 40px; /* mystudy의 padding-top과 일치 */
+    left: 40px; /* mystudy의 padding-left와 일치 */
+    margin: 0;
+    text-align: left;
+    width: auto;
+    z-index: 10; /* 다른 요소 위에 오도록 */
 }
 
-.loading-message, .error-message, .no-data-message {
+/* OverallStudySummary 컴포넌트 배치 조정 */
+/* OverallStudySummary에 직접 적용할 클래스 */
+.overall-summary-placement {
+    /* position: relative; (선택 사항: MyStudyView에서 z-index 관리가 필요할 때) */
+    z-index: 5; /* 제목보다 낮은 z-index */
+    margin-top: 100px; /* 페이지 제목과의 간격을 줘서 겹치지 않게 */
+    /* MyStudyView 내에서 중앙 정렬을 위해 */
+    width: 100%; /* 부모 너비를 따라가되, 컴포넌트 내부에서 max-width가 적용됨 */
+    max-width: 800px; /* OverallStudySummary의 max-width와 동일하게 맞춤 */
+    box-sizing: border-box; /* 패딩, 보더 포함 너비 계산 */
+    padding: 0 20px; /* mystudy의 좌우 패딩을 고려하여 내용물 중앙 정렬 */
+}
+
+/* ProblemListSection 배치 조정 */
+.problem-list-section {
+    position: relative;
+    z-index: 5;
+    margin-top: 40px; /* OverallStudySummary와의 간격 */
+    width: 100%;
+    max-width: 800px; /* MyStudyView 내에서 중앙 정렬을 위해 */
+    box-sizing: border-box;
+    padding: 0 20px;
+}
+
+.loading-message, .error-message {
     color: #6c757d;
     font-size: 1.1rem;
     margin-top: 30px;
     text-align: center;
 }
 
-.not-logged-in-message {
-    text-align: center;
-    margin-top: 50px;
-    padding: 30px;
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    border-radius: 10px;
-    color: #856404;
-    font-size: 1.1rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-.not-logged-in-message p {
-    margin-bottom: 15px;
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.8rem;
+        top: 20px;
+        left: 20px;
+    }
+    .overall-summary-placement {
+        margin-top: 70px; /* 모바일에서 제목과의 간격 줄임 */
+        padding: 0 10px; /* 모바일에서 좌우 패딩 조정 */
+    }
+    .problem-list-section {
+        margin-top: 30px;
+        padding: 0 10px;
+    }
 }
 </style>
