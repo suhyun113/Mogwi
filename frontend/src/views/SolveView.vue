@@ -205,16 +205,10 @@ export default {
 
       if (submittedAnswer === correct) {
         isCorrectAnswer.value = true;
-        // Only change status to 'perfect' if it's not already perfect or vague
-        if (currentProblemCard.value.cardStatus !== 'perfect' && currentProblemCard.value.cardStatus !== 'vague') {
-          currentProblemCard.value.cardStatus = 'perfect';
-        }
+        currentProblemCard.value.cardStatus = 'perfect'; // 항상 perfect로
       } else {
         isCorrectAnswer.value = false;
-        // Only change status to 'forgotten' if it's not already forgotten
-        if (currentProblemCard.value.cardStatus !== 'forgotten') {
-          currentProblemCard.value.cardStatus = 'forgotten';
-        }
+        currentProblemCard.value.cardStatus = 'forgotten'; // 항상 forgotten으로
         showAnswer.value = true;
       }
       await saveCardStatus(); // Await saving status before moving on
