@@ -148,7 +148,7 @@ export default {
         };
 
         const goToStudy = (problemId) => {
-            router.push({ name: 'SolveView', params: { problemId: problemId } });
+            router.push({ name: 'SolveView', params: { id: problemId } });
         };
 
         const handleAuthRequired = () => {
