@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors; // Unused, can be removed if not used elsewhere
 
 @RestController
 @Slf4j
@@ -139,11 +139,17 @@ public class MyStudyController {
                     "IFNULL(ups.problem_status, 'new') AS study_status, " + // problem_status, NULL이면 'new'
                     // 총 좋아요 수와 총 스크랩 수 추가
                     "(SELECT COUNT(*) FROM user_problem_status ups_likes WHERE ups_likes.problem_id = p.id AND ups_likes.is_liked = 1) AS total_likes, " +
-                    "(SELECT COUNT(*) FROM user_problem_status ups_scraps WHERE ups_scraps.problem_id = p.id AND ups_scraps.is_scrapped = 1) AS total_scraps " +
+                    "(SELECT COUNT(*) FROM user_problem_status ups_scraps WHERE ups_scraps.problem_id = p.id AND ups_scraps.is_scrapped = 1) AS total_scraps, " +
+                    // 각 문제별 카드 학습 상태 카운트 추가 (perfectCount, vagueCount, forgottenCount)
+                    "COALESCE(SUM(CASE WHEN ucs.card_status = 'perfect' AND ucs.problem_id = p.id THEN 1 ELSE 0 END), 0) AS perfect_count, " +
+                    "COALESCE(SUM(CASE WHEN ucs.card_status = 'vague' AND ucs.problem_id = p.id THEN 1 ELSE 0 END), 0) AS vague_count, " +
+                    "COALESCE(SUM(CASE WHEN ucs.card_status = 'forgotten' AND ucs.problem_id = p.id THEN 1 ELSE 0 END), 0) AS forgotten_count " +
                     "FROM problems p " +
                     "JOIN users u ON p.author_id = u.id " + // users 테이블 조인
                     "LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ?1 " + // user_problem_status LEFT JOIN
+                    "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?1 " + // user_card_status LEFT JOIN
                     "WHERE ups.user_id = ?1 " + // 현재 사용자가 학습한 문제만 포함하도록 명시적으로 필터링
+                    "GROUP BY p.id, p.title, p.description, p.card_count, u.username, ups.is_liked, ups.is_scrapped, ups.problem_status " + // 그룹 바이 추가
                     "ORDER BY p.id ASC";
 
             List<Object[]> problemResults = entityManager.createNativeQuery(problemSql)
@@ -166,6 +172,10 @@ public class MyStudyController {
                 problem.put("isCompleted", "completed".equals(row[7].toString()));
                 problem.put("totalLikes", ((Number) row[8]).intValue());   // 총 좋아요 수
                 problem.put("totalScraps", ((Number) row[9]).intValue()); // 총 스크랩 수
+                // 추가된 카드 학습 상태 카운트
+                problem.put("perfectCount", ((Number) row[10]).intValue());
+                problem.put("vagueCount", ((Number) row[11]).intValue());
+                problem.put("forgottenCount", ((Number) row[12]).intValue());
 
 
                 // 해당 문제의 태그(카테고리) 조회
