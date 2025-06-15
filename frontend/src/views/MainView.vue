@@ -60,8 +60,9 @@ export default {
     const router = useRouter()
     const problems = ref([])
 
+    // Vuex 스토어의 실제 키값인 'store_userid'를 사용합니다.
     const isAuthenticated = computed(() => !!store.state.store_userid)
-    const currentUserId = computed(() => store.state.store_userid)
+    const currentUserId = computed(() => store.state.store_userid) // 변경됨
 
     const showLoginPrompt = ref(false)
     const showLoginModal = ref(false)
@@ -79,7 +80,7 @@ export default {
           params: {
             query: query.value,
             category: selectedCategory.value,
-            currentUserId: currentUserId.value
+            currentUserId: currentUserId.value // currentUserId가 null/undefined일 수 있음을 고려
           }
         })
         problems.value = response.data
@@ -120,17 +121,23 @@ export default {
 
     const handleUpdateLike = (problem) => {
       const target = problems.value.find(p => p.id === problem.id)
-      if (target && target.authorId !== currentUserId.value) {
+      if (target && target.authorId !== currentUserId.value) { // 로그인 안 된 상태에서는 좋아요/스크랩 못하게
         target.liked = !target.liked
         target.likes += target.liked ? 1 : -1
+      } else if (!currentUserId.value) {
+        // 로그인 필요 메시지
+        alert("로그인 후 이용할 수 있습니다.");
       }
     }
 
     const handleUpdateScrap = (problem) => {
       const target = problems.value.find(p => p.id === problem.id)
-      if (target && target.authorId !== currentUserId.value) {
+      if (target && target.authorId !== currentUserId.value) { // 로그인 안 된 상태에서는 좋아요/스크랩 못하게
         target.scrapped = !target.scrapped
         target.scraps += target.scrapped ? 1 : -1
+      } else if (!currentUserId.value) {
+        // 로그인 필요 메시지
+        alert("로그인 후 이용할 수 있습니다.");
       }
     }
 
