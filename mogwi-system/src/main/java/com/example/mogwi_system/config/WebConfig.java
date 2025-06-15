@@ -8,25 +8,30 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    // TODO: FileUploadController의 UPLOAD_DIR과 일치하도록 경로를 변경하세요.
-    // 윈도우 경로: "file:///C:/mogwi_uploads/images/" (슬래시 3개)
-    // Linux/macOS 경로: "file:/home/user/mogwi_uploads/images/" 또는 "file:///var/lib/mogwi_uploads/images/"
-    private final String UPLOAD_DIR_PATH = "file:///C:/mogwi_uploads/images/";
+    // UPLOAD_DIR_PATH를 public static final로 변경하여 외부에서 바로 접근 가능하게 하거나,
+    // static getter를 통해 접근하게 합니다. 여기서는 static getter를 선호합니다.
+    private static final String UPLOAD_DIR_PATH = "file:///E:/internetDB/images/"; // Windows 예시
+    // Linux/macOS 경로: private static final String UPLOAD_DIR_PATH = "file:/home/user/mogwi_uploads/images/";
+    // 또는 private static final String UPLOAD_DIR_PATH = "file:///var/lib/mogwi_uploads/images/";
+
+    // UPLOAD_DIR_PATH의 물리적 경로를 반환하는 static 메서드 추가
+    public static String getUploadDirPath() {
+        // "file:///" 접두사를 제거하고 순수 물리적 경로만 반환
+        return UPLOAD_DIR_PATH.replace("file:///", "").replace("file:/", "");
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // '/images/**' URL 패턴으로 들어오는 요청을 UPLOAD_DIR_PATH (물리적 파일 경로)에서 찾도록 매핑
         registry.addResourceHandler("/images/**")
                 .addResourceLocations(UPLOAD_DIR_PATH);
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // 모든 엔드포인트에 CORS 적용
-                .allowedOrigins("http://localhost:8080", "http://127.0.0.1:8080") // Vue.js 개발 서버의 오리진 허용
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 허용할 HTTP 메서드
-                .allowedHeaders("*") // 모든 헤더 허용
-                .allowCredentials(true) // 자격 증명(쿠키, 인증 헤더 등) 허용
-                .maxAge(3600); // Preflight 요청 캐싱 시간 (초)
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:8080") // Vue.js 개발 서버 주소
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }

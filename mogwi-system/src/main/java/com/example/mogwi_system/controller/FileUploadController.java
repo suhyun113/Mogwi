@@ -1,10 +1,13 @@
-package com.example.mogwi_system.controller;
+package com.example.mogwi_system.controller; // 패키지명 확인
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.mogwi_system.config.WebConfig; // WebConfig 임포트
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -13,23 +16,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.UUID; // UUID 임포트
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class FileUploadController {
 
-    private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
-
-    // TODO: 실제 환경에 맞게 이미지 저장 경로를 변경하세요.
-    // 운영 환경에서는 이 경로를 외부 스토리지(AWS S3 등)로 변경하는 것을 권장합니다.
-    private final String UPLOAD_DIR = "C:/mogwi_uploads/images/"; // Windows 예시
-    // private final String UPLOAD_DIR = "/app/uploads/images/"; // Linux/Docker 예시
+    // WebConfig의 static 메서드를 사용하여 업로드 디렉토리의 물리적 경로를 가져옵니다.
+    private final String uploadBaseDir = WebConfig.getUploadDirPath();
 
     @PostMapping("/upload-image")
     public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         Map<String, String> response = new HashMap<>();
-
         if (file.isEmpty()) {
             response.put("status", "FAIL");
             response.put("message", "업로드할 파일이 없습니다.");
@@ -37,44 +36,45 @@ public class FileUploadController {
         }
 
         try {
-            // 업로드 디렉토리 생성 (없으면)
-            Path uploadPath = Paths.get(UPLOAD_DIR);
+            // 파일을 저장할 최종 물리적 경로를 구성합니다.
+            // 예: C:/mogwi_uploads/images/
+            Path uploadPath = Paths.get(uploadBaseDir);
+
             if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-                log.info("이미지 업로드 디렉토리 생성: {}", UPLOAD_DIR);
+                Files.createDirectories(uploadPath); // 디렉토리가 없으면 생성
+                log.info("이미지 업로드 디렉토리 생성: {}", uploadPath.toString());
             }
 
-            // 고유한 파일명 생성 (겹치지 않도록 UUID 사용)
-            String originalFileName = file.getOriginalFilename();
+            // 고유한 파일 이름 생성
+            String originalFilename = file.getOriginalFilename();
             String fileExtension = "";
-            if (originalFileName != null && originalFileName.contains(".")) {
-                fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
-            String newFileName = UUID.randomUUID().toString() + fileExtension;
-            Path filePath = uploadPath.resolve(newFileName);
+            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+            Path filePath = uploadPath.resolve(uniqueFileName); // 최종 파일 경로
 
-            // 파일 저장
-            Files.copy(file.getInputStream(), filePath);
+            Files.copy(file.getInputStream(), filePath); // 파일 저장
             log.info("이미지 파일 저장 성공: {}", filePath.toString());
 
-            // 저장된 이미지에 접근할 수 있는 URL 생성
-            // 이 URL은 Spring Boot의 정적 리소스 설정과 일치해야 합니다.
-            // 예: "http://localhost:8000/images/" + newFileName
-            String imageUrl = "/images/" + newFileName; // 서버의 정적 리소스 매핑 경로
+            // 클라이언트에서 접근할 수 있는 URL 반환
+            // WebConfig의 addResourceHandlers에서 설정한 URL 패턴과 일치해야 합니다.
+            // WebConfig가 "/images/**"를 매핑하므로, 여기서는 "/images/"로 시작해야 합니다.
+            String imageUrl = "/images/" + uniqueFileName;
 
             response.put("status", "OK");
+            response.put("imageUrl", imageUrl); // 클라이언트에 반환할 이미지 URL
             response.put("message", "이미지 업로드 성공");
-            response.put("imageUrl", imageUrl); // 클라이언트에 URL 반환
             return ResponseEntity.ok(response);
 
         } catch (IOException e) {
-            log.error("이미지 저장 중 오류 발생: {}", e.getMessage(), e);
-            response.put("status", "ERROR");
-            response.put("message", "이미지 저장 중 오류가 발생했습니다.");
+            log.error("이미지 업로드 실패: {}", e.getMessage(), e);
+            response.put("status", "FAIL");
+            response.put("message", "이미지 업로드 중 오류 발생: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         } catch (Exception e) {
             log.error("이미지 업로드 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
-            response.put("status", "ERROR");
+            response.put("status", "FAIL");
             response.put("message", "이미지 업로드 중 예상치 못한 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
