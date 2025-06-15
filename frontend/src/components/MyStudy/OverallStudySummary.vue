@@ -1,56 +1,13 @@
-<script>
-import { computed } from 'vue';
-
-export default {
-    name: 'OverallStudySummary',
-    props: {
-        overallPerfectCount: {
-            type: Number,
-            default: 0
-        },
-        overallVagueCount: {
-            type: Number,
-            default: 0
-        },
-        overallForgottenCount: {
-            type: Number,
-            default: 0
-        },
-        overallTotalCards: {
-            type: Number,
-            default: 0
-        },
-        isLoggedIn: { // 새로 추가된 prop
-            type: Boolean,
-            default: false
-        }
-    },
-    setup(props) {
-        // Define Computed properties
-        const overallPerfectPercentage = computed(() =>
-            props.overallTotalCards > 0 ? ((props.overallPerfectCount / props.overallTotalCards) * 100).toFixed(1) : 0
-        );
-        const overallVaguePercentage = computed(() =>
-            props.overallTotalCards > 0 ? ((props.overallVagueCount / props.overallTotalCards) * 100).toFixed(1) : 0
-        );
-        const overallForgottenPercentage = computed(() =>
-            props.overallTotalCards > 0 ? ((props.overallForgottenCount / props.overallTotalCards) * 100).toFixed(1) : 0
-        );
-
-        // Return all reactive data and functions that need to be exposed to the template
-        return {
-            overallPerfectPercentage,
-            overallVaguePercentage,
-            overallForgottenPercentage,
-            // props.isLoggedIn을 사용할 것이므로, setup에서 props를 직접 참조하는 것으로 충분합니다.
-        };
-    }
-};
-</script>
-
 <template>
     <section class="overall-summary-section">
-        <h2>전체 학습 현황</h2>
+        <h2 class="section-title">
+            <template v-if="isLoggedIn">
+                <span class="username-underline">{{ username }}</span>님의 전체 학습 현황
+            </template>
+            <template v-else>
+                전체 학습 현황
+            </template>
+        </h2>
         <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-stats">
             <div class="stat-item perfect">
                 <span class="label">완벽한 기억:</span>
@@ -111,6 +68,57 @@ export default {
     </section>
 </template>
 
+<script>
+import { computed } from 'vue';
+
+export default {
+    name: 'OverallStudySummary',
+    props: {
+        overallPerfectCount: {
+            type: Number,
+            default: 0
+        },
+        overallVagueCount: {
+            type: Number,
+            default: 0
+        },
+        overallForgottenCount: {
+            type: Number,
+            default: 0
+        },
+        overallTotalCards: {
+            type: Number,
+            default: 0
+        },
+        isLoggedIn: {
+            type: Boolean,
+            default: false
+        },
+        username: {
+            type: String,
+            default: '사용자'
+        }
+    },
+    setup(props) {
+        const overallPerfectPercentage = computed(() =>
+            props.overallTotalCards > 0 ? ((props.overallPerfectCount / props.overallTotalCards) * 100).toFixed(1) : 0
+        );
+        const overallVaguePercentage = computed(() =>
+            props.overallTotalCards > 0 ? ((props.overallVagueCount / props.overallTotalCards) * 100).toFixed(1) : 0
+        );
+        const overallForgottenPercentage = computed(() =>
+            props.overallTotalCards > 0 ? ((props.overallForgottenCount / props.overallTotalCards) * 100).toFixed(1) : 0
+        );
+
+        return {
+            overallPerfectPercentage,
+            overallVaguePercentage,
+            overallForgottenPercentage,
+        };
+    }
+};
+</script>
+
 <style scoped>
 .overall-summary-section {
     width: 100%;
@@ -123,13 +131,23 @@ export default {
     border: 1px solid #e0d0ff; /* Subtle border */
 }
 
-.overall-summary-section h2 {
+.overall-summary-section h2.section-title {
     color: #5a2e87;
     font-size: 1.8rem;
     font-weight: 600;
     margin-bottom: 25px;
     padding-bottom: 10px;
+    text-align: left; /* Changed from center to left */
 }
+
+/* Add style for the username underline */
+.username-underline {
+    text-decoration: underline;
+    text-underline-offset: 4px; /* Adjust this value as needed for better spacing */
+    text-decoration-color: #a471ff; /* Optional: Change underline color */
+    text-decoration-thickness: 2px; /* Optional: Make underline thicker */
+}
+
 
 .summary-stats {
     display: flex;
@@ -171,8 +189,8 @@ export default {
 
 .progress-bar-container {
     width: 100%;
-    height: 30px; /* Height of the bar */
-    background-color: #e9ecef; /* Background for the empty part */
+    height: 30px;
+    background-color: #e9ecef;
     border-radius: 15px;
     overflow: hidden;
     display: flex;
@@ -183,7 +201,7 @@ export default {
 .progress-bar {
     height: 100%;
     transition: width 0.5s ease-in-out;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0;
 }
 
 .progress-bar.perfect { background-color: #28a745; }
@@ -237,23 +255,21 @@ export default {
 
 .no-data-icon {
     font-size: 3rem;
-    color: #ccc; /* 기본 회색 */
+    color: #ccc;
 }
 
-/* 로그인 필요 아이콘 색상 */
 .no-study-data-message .fa-user-lock {
-    color: #a471ff; /* 보라색 */
+    color: #a471ff;
 }
 
-/* 학습 데이터 없음 아이콘 색상 */
 .no-study-data-message .fa-book-open {
-    color: #5cb85c; /* 초록색 (긍정적인 의미) */
+    color: #5cb85c;
 }
 
 .progress-labels .label.no-data-label {
     color: #a471ff;
     font-weight: 500;
-    margin-left: auto; /* 오른쪽 정렬 */
+    margin-left: auto;
     margin-right: auto;
 }
 </style>

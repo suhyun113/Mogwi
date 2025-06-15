@@ -1,7 +1,14 @@
 <template>
     <div class="problem-list-section">
         <div class="section-header">
-            <h2 class="section-title">학습 현황</h2>
+            <h2 class="section-title">
+                <template v-if="isLoggedIn">
+                    <span class="username-underline">{{ username }}</span>님의 학습 현황
+                </template>
+                <template v-else>
+                    학습 현황
+                </template>
+            </h2>
             <div class="header-buttons">
                 <button
                     v-if="!isSelectionMode"
@@ -124,6 +131,11 @@ export default {
         currentUserId: {
             type: [String, Number],
             default: null,
+        },
+        // Add username prop here
+        username: {
+            type: String,
+            default: '사용자',
         },
     },
     emits: ['go-to-study', 'auth-required', 'refresh-problems'],
@@ -345,7 +357,17 @@ export default {
     font-size: 1.8rem;
     font-weight: 600;
     margin: 5;
+    text-align: left; /* Ensure left alignment */
 }
+
+/* Add style for the username underline */
+.username-underline {
+    text-decoration: underline;
+    text-underline-offset: 4px; /* Adjust this value as needed for better spacing */
+    text-decoration-color: #a471ff; /* Optional: Change underline color */
+    text-decoration-thickness: 2px; /* Optional: Make underline thicker */
+}
+
 
 .header-buttons {
     display: flex;
