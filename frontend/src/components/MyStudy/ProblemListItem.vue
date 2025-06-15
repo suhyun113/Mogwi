@@ -3,10 +3,16 @@
     <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
-        <span class="author">작성자: {{ localProblem.authorNickname }}</span> </div>
+        <span class="author">작성자: {{ localProblem.authorNickname }}</span>
+      </div>
       <div class="card-count">
         <img :src="cardIcon" alt="card icon" class="icon card-icon" />
         {{ localProblem.cardCount }} 카드
+      </div>
+      <div class="study-status">
+        <span :class="getStatusClass(localProblem.studyStatus)">
+          {{ getStatusText(localProblem.studyStatus) }}
+        </span>
       </div>
     </div>
 
@@ -64,33 +70,32 @@ import heartOn from '@/assets/icons/like_filled.png'
 import scrapOff from '@/assets/icons/scrap_outline.png'
 import scrapOn from '@/assets/icons/scrap_filled.png'
 import cardIcon from '@/assets/icons/card.png'
-import ProblemTag from './ProblemTag.vue' // Import the ProblemTag component
+import ProblemTag from './ProblemTag.vue'
 
 export default {
-  name: 'ProblemListItem', // Changed name to ProblemListItem
+  name: 'ProblemListItem',
   components: {
-    ProblemTag // Register ProblemTag for use in this template
+    ProblemTag
   },
   props: {
-    problem: { // The problem object comes from ProblemListSection
+    problem: {
       type: Object,
       required: true
     },
-    isAuthenticated: { // From parent
+    isAuthenticated: {
       type: Boolean,
       default: false
     },
-    currentUserId: { // From parent
+    currentUserId: {
       type: String,
       default: ''
     }
   },
-  // Define events this component can emit
-  emits: ['auth-required', 'update-problem-data', 'go-to-study'], // 'update-problem-data' for any change, 'go-to-study' for solve button
+  emits: ['auth-required', 'update-problem-data', 'go-to-study'],
 
   data() {
     return {
-      localProblem: { ...this.problem }, // Create a local copy to manage reactivity for likes/scraps
+      localProblem: { ...this.problem },
       heartOff,
       heartOn,
       scrapOff,
@@ -98,22 +103,18 @@ export default {
       cardIcon
     }
   },
-  // Watch for changes in the 'problem' prop from the parent
-  // This ensures localProblem stays in sync if the parent updates the original problem object
   watch: {
     problem: {
       handler(newVal) {
         this.localProblem = { ...newVal }
       },
-      deep: true, // Watch for nested changes in the problem object
-      immediate: true // Run handler immediately on component mount
+      deep: true,
+      immediate: true
     }
   },
   methods: {
-    // Method to get background color for tags
     getColor(tag) {
-      // **태그 이름의 양쪽 공백을 제거하여 정확한 매칭을 유도합니다.**
-      const trimmedTag = tag ? tag.trim() : ''; // null 또는 undefined 방지
+      const trimmedTag = tag ? tag.trim() : '';
       const colors = {
         '수학': '#ffd54f',
         'AI': '#81c784',
@@ -125,13 +126,37 @@ export default {
         '자료구조': '#f06292',
         '전체': '#b0bec5'
       }
-      // 일치하는 색상이 없으면 기본 회색을 반환합니다.
-      return colors[trimmedTag] || '#ccc' 
+      return colors[trimmedTag] || '#ccc'
+    },
+    // 학습 상태 텍스트 반환 메서드 추가
+    getStatusText(status) {
+      switch (status) {
+        case 'new':
+          return '진행 전';
+        case 'ongoing':
+          return '진행 중';
+        case 'completed':
+          return '완료';
+        default:
+          return ''; // 알 수 없는 상태일 경우
+      }
+    },
+    // 학습 상태에 따른 CSS 클래스 반환 메서드 추가
+    getStatusClass(status) {
+      switch (status) {
+        case 'new':
+          return 'status-new';
+        case 'ongoing':
+          return 'status-ongoing';
+        case 'completed':
+          return 'status-completed';
+        default:
+          return '';
+      }
     },
     async toggleLike() {
-      // Logic for checking authentication and if it's the author's own problem
       if (!this.isAuthenticated) {
-        this.$emit('auth-required'); // Emit event to parent to handle auth prompt
+        this.$emit('auth-required');
         return;
       }
       if (this.localProblem.authorId === this.currentUserId) {
@@ -140,7 +165,6 @@ export default {
       }
 
       const newLiked = !this.localProblem.isLiked;
-      // Optimistic UI update
       this.localProblem.isLiked = newLiked;
       this.localProblem.totalLikes += newLiked ? 1 : -1;
 
@@ -149,11 +173,9 @@ export default {
           userId: this.currentUserId,
           liked: newLiked
         });
-        // On success, notify parent if needed (e.g., to update a global store or parent list)
         this.$emit('update-problem-data', this.localProblem);
       } catch (error) {
         console.error('좋아요 반영 실패:', error);
-        // Rollback on error
         this.localProblem.isLiked = !newLiked;
         this.localProblem.totalLikes += newLiked ? -1 : 1;
         alert("좋아요 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -170,7 +192,6 @@ export default {
       }
 
       const newScrapped = !this.localProblem.isScrapped;
-      // Optimistic UI update
       this.localProblem.isScrapped = newScrapped;
       this.localProblem.totalScraps += newScrapped ? 1 : -1;
 
@@ -179,25 +200,22 @@ export default {
           userId: this.currentUserId,
           scrapped: newScrapped
         });
-        // On success, notify parent
         this.$emit('update-problem-data', this.localProblem);
       } catch (error) {
         console.error('스크랩 반영 실패:', error);
-        // Rollback on error
         this.localProblem.isScrapped = !newScrapped;
         this.localProblem.totalScraps += newScrapped ? -1 : 1;
         alert("스크랩 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     },
     handleEditClick() {
-      // Assuming you have Vue Router setup
       this.$router.push(`/edit/${this.localProblem.id}`);
     },
     handleSolveClick() {
       if (this.isAuthenticated) {
-        this.$emit('go-to-study', this.localProblem.id); // Emit just the problem ID for navigation
+        this.$emit('go-to-study', this.localProblem.id);
       } else {
-        this.$emit('auth-required'); // Ask parent to handle authentication
+        this.$emit('auth-required');
       }
     }
   }
@@ -207,13 +225,13 @@ export default {
 <style scoped>
 .problem-summary {
   padding: 16px;
-  border: 1px solid #e0d0ff; /* Adjusted from #ccc for theme consistency */
+  border: 1px solid #e0d0ff;
   border-radius: 8px;
-  background: #ffffff; /* Changed from #fafafa for brightness */
+  background: #ffffff;
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 15px; /* Add margin between items */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  margin-bottom: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -225,17 +243,20 @@ export default {
 .problem-summary h3 {
   margin: 0;
   font-size: 18px;
-  color: #5a2e87; /* Dark purple for titles */
+  color: #5a2e87;
 }
 .title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  /* 학습 상태 추가로 인한 flex-wrap 및 gap 추가 */
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .title-left {
   display: flex;
-  align-items: baseline; /* Align problem title and author nicely */
+  align-items: baseline;
   gap: 12px;
 }
 .problem-title {
@@ -244,13 +265,13 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70%; /* Prevent title from pushing author too much */
+  max-width: 70%;
 }
 .author {
   font-size: 13px;
   color: #888;
   white-space: nowrap;
-  flex-shrink: 0; /* Prevent author from shrinking */
+  flex-shrink: 0;
 }
 .card-count {
   font-size: 13px;
@@ -259,22 +280,48 @@ export default {
   align-items: center;
   gap: 4px;
   white-space: nowrap;
+  flex-shrink: 0; /* 카운트가 줄어들지 않도록 설정 */
 }
+/* 학습 상태 스타일 추가 */
+.study-status {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-new {
+  background-color: #e0e0e0; /* 회색 (진행 전) */
+  color: #616161;
+}
+
+.status-ongoing {
+  background-color: #ffe082; /* 노란색 (진행 중) */
+  color: #c66900;
+}
+
+.status-completed {
+  background-color: #a5d6a7; /* 초록색 (완료) */
+  color: #2e7d32;
+}
+
+
 .category-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  flex-wrap: wrap; /* Allow tags to wrap */
-  gap: 8px; /* Gap for category tags and button wrapper */
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .category-tags {
   display: flex;
-  flex-wrap: wrap; /* Allow tags to wrap within their container */
+  flex-wrap: wrap;
   gap: 8px;
-  flex-grow: 1; /* Allow tags to take up available space */
+  flex-grow: 1;
 }
-/* .tag style is now handled by ProblemTag.vue */
 
 .meta {
   margin-top: 10px;
@@ -301,7 +348,7 @@ export default {
 .icon-wrapper.disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  pointer-events: none; /* Disable click events entirely */
+  pointer-events: none;
 }
 .icon {
   width: 20px;
@@ -314,7 +361,7 @@ export default {
 .btn-wrapper {
   display: flex;
   gap: 6px;
-  flex-shrink: 0; /* Prevent buttons from shrinking */
+  flex-shrink: 0;
 }
 .edit-btn, .solve-btn {
   padding: 6px 12px;
@@ -327,7 +374,7 @@ export default {
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 .edit-btn {
-  background-color: #ffc107; /* Brighter yellow */
+  background-color: #ffc107;
   color: #343a40;
 }
 .edit-btn:hover {
@@ -353,6 +400,14 @@ export default {
     .problem-title {
         max-width: 100%;
     }
+    .study-status { /* 작은 화면에서 오른쪽 정렬 */
+        align-self: flex-end;
+        margin-top: 4px;
+    }
+    .card-count { /* 작은 화면에서 study-status와 줄바꿈되도록 여유 공간 부여 */
+        align-self: flex-start;
+        margin-bottom: 4px;
+    }
     .category-row {
         flex-direction: column;
         align-items: flex-start;
@@ -363,7 +418,7 @@ export default {
         justify-content: flex-end;
     }
     .edit-btn, .solve-btn {
-        flex-grow: 1; /* Make buttons take full width of wrapper on small screens */
+        flex-grow: 1;
     }
 }
 </style>
