@@ -8,8 +8,8 @@
     <div class="author">작성자: {{ problem.author }}</div>
     
     <div class="tags">
-      <span v-for="tag in problemCategories" :key="tag" class="tag" :style="{ backgroundColor: getTagColor(tag) }">
-        {{ tag }}
+      <span v-for="tag in problemCategories" :key="tag.id || tag.tag_name" class="tag" :style="{ backgroundColor: getTagColor(tag) }">
+        {{ formatTagName(tag.tag_name) }}
       </span>
     </div>
 
@@ -75,8 +75,8 @@ export default {
     problemCategories() {
       if (!this.problem.categories) return [];
       return Array.isArray(this.problem.categories) 
-        ? this.problem.categories 
-        : [this.problem.categories];
+        ? this.problem.categories.map(cat => typeof cat === 'string' ? { tag_name: cat } : cat) 
+        : [typeof this.problem.categories === 'string' ? { tag_name: this.problem.categories } : this.problem.categories];
     },
     problemLikes() {
       return parseInt(this.problem.likes || 0);
@@ -92,6 +92,10 @@ export default {
     }
   },
   methods: {
+    formatTagName(tagName) {
+      const cleanedTagName = tagName.startsWith('#') ? tagName.substring(1) : tagName;
+      return `#${cleanedTagName}`;
+    },
     getTagColor(tag) {
       return tag.color_code || '#e0e0e0';
     }
