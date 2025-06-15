@@ -1,25 +1,27 @@
+// src/main/java/com/example/mogwi_system/controller/ProblemController.java
 package com.example.mogwi_system.controller;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.parsing.Problem;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigInteger; // AUTO_INCREMENT ID를 처리하기 위해 추가
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
-@Transactional
+@Transactional // 컨트롤러 레벨에서 트랜잭션 관리
 public class ProblemController {
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    // 문제 목록 조회 API
+    // --- 기존 문제 목록 조회 API ---
     @GetMapping("/api/problems")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
@@ -90,11 +92,11 @@ public class ProblemController {
             return ResponseEntity.ok(new ArrayList<>(problemMap.values()));
         } catch (Exception e) {
             log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    // 좋아요 상태 변경 api
+    // --- 기존 좋아요 상태 변경 API ---
     @PostMapping("/api/like/{problemId}")
     public ResponseEntity<Map<String, Object>> toggleLike(
             @PathVariable Long problemId,
@@ -114,7 +116,7 @@ public class ProblemController {
                     .getResultList();
 
             if (userResult.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("status", "ERROR", "message", "사용자 없음"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자 없음"));
             }
 
             Long internalUserId = ((Number) userResult.get(0)).longValue();
@@ -147,11 +149,11 @@ public class ProblemController {
             return ResponseEntity.ok(Map.of("status", "OK"));
         } catch (Exception e) {
             log.error("좋아요 처리 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
 
-    // 스크랩 상태 변경 api
+    // --- 기존 스크랩 상태 변경 API ---
     @PostMapping("/api/scrap/{problemId}")
     public ResponseEntity<Map<String, Object>> toggleScrap(
             @PathVariable Long problemId,
@@ -171,7 +173,7 @@ public class ProblemController {
                     .getResultList();
 
             if (userResult.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("status", "ERROR", "message", "사용자 없음"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자 없음"));
             }
 
             Long internalUserId = ((Number) userResult.get(0)).longValue();
@@ -204,10 +206,11 @@ public class ProblemController {
             return ResponseEntity.ok(Map.of("status", "OK"));
         } catch (Exception e) {
             log.error("스크랩 처리 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
-    // 문제 상세 조회 (문제 + 카드 목록)
+
+    // --- 기존 문제 상세 조회 API ---
     @GetMapping("/api/problems/{id}")
     public ResponseEntity<Map<String, Object>> getProblemDetail(
             @PathVariable Long id,
@@ -232,7 +235,7 @@ public class ProblemController {
 
             List<Object[]> problemResults = queryObj.getResultList();
             if (problemResults.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("status", "ERROR", "message", "문제를 찾을 수 없음"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "문제를 찾을 수 없음"));
             }
 
             Object[] row = problemResults.get(0);
@@ -261,9 +264,10 @@ public class ProblemController {
                     .collect(Collectors.toList());
             response.put("categories", categories);
 
-            // 카드 리스트 조회
+            // 카드 리스트 조회 (정답 컬럼은 'answer'로 가정, 스키마에 따라 'correct'일 수 있음)
+            // Vue.js 코드에 'card.answer'와 'card.image_url'이 있으므로 이에 맞춰 수정
             List<?> cardResults = entityManager.createNativeQuery(
-                            "SELECT question, correct FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
+                            "SELECT question, answer, image_url FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
                     .setParameter(1, id)
                     .getResultList();
 
@@ -272,7 +276,8 @@ public class ProblemController {
                 Object[] cardRow = (Object[]) result;
                 Map<String, Object> card = new HashMap<>();
                 card.put("question", cardRow[0]);
-                card.put("correct", cardRow[1]);
+                card.put("answer", cardRow[1]);
+                card.put("image_url", cardRow[2]); // image_url 추가
                 cards.add(card);
             }
 
@@ -281,10 +286,143 @@ public class ProblemController {
 
         } catch (Exception e) {
             log.error("문제 상세 조회 중 오류 발생: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("status", "ERROR", "message", "서버 오류"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
 
+    // --- 새로운 API: 카테고리 목록 조회 (CreateView.vue 용) ---
+    // Vue.js의 `allCategories` 배열에 매핑될 수 있도록 Map 형태로 반환
+    @GetMapping("/api/categories")
+    public ResponseEntity<List<Map<String, Object>>> getAllCategories() {
+        try {
+            List<?> results = entityManager.createNativeQuery("SELECT id, tag_name FROM categories ORDER BY tag_name ASC")
+                    .getResultList();
 
+            List<Map<String, Object>> categories = new ArrayList<>();
+            for (Object result : results) {
+                Object[] row = (Object[]) result;
+                Map<String, Object> categoryMap = new HashMap<>();
+                categoryMap.put("id", ((Number) row[0]).longValue());
+                categoryMap.put("tag_name", row[1].toString());
+                categories.add(categoryMap);
+            }
+            return ResponseEntity.ok(categories);
+        } catch (Exception e) {
+            log.error("카테고리 목록 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
+    // --- 새로운 API: 문제 생성 (CreateView.vue 용) ---
+    @PostMapping("/api/problems")
+    public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            // 1. 요청 데이터 파싱 및 기본 유효성 검사
+            String title = (String) requestBody.get("title");
+            String authorIdString = (String) requestBody.get("author_id"); // Vue에서 넘어오는 userId (String)
+            String description = (String) requestBody.get("description");
+            Boolean isPublicBool = (Boolean) requestBody.get("is_public");
+            @SuppressWarnings("unchecked")
+            List<Integer> categoryIds = (List<Integer>) requestBody.get("categories"); // Vue에서 태그 ID 배열 (Integer 리스트)
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> cards = (List<Map<String, Object>>) requestBody.get("cards"); // 카드 목록
+
+            if (title == null || title.trim().isEmpty()) {
+                response.put("status", "FAIL");
+                response.put("message", "문제 제목은 필수입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (authorIdString == null || authorIdString.trim().isEmpty()) {
+                response.put("status", "FAIL");
+                response.put("message", "작성자 정보가 누락되었습니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (categoryIds == null || categoryIds.isEmpty()) {
+                response.put("status", "FAIL");
+                response.put("message", "태그는 최소 1개 이상 선택해야 합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (categoryIds.size() > 3) {
+                response.put("status", "FAIL");
+                response.put("message", "태그는 최대 3개까지 선택할 수 있습니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (cards == null || cards.isEmpty()) {
+                response.put("status", "FAIL");
+                response.put("message", "카드는 최소 1개 이상 추가해야 합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            for (Map<String, Object> card : cards) {
+                String question = (String) card.get("question");
+                String answer = (String) card.get("answer");
+                if (question == null || question.trim().isEmpty() || answer == null || answer.trim().isEmpty()) {
+                    response.put("status", "FAIL");
+                    response.put("message", "모든 카드에 질문과 정답을 입력해주세요.");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+
+            // 2. Vue의 author_id (userid 문자열)를 실제 users 테이블의 id (Long)로 변환
+            Long authorInternalId;
+            List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
+                    .setParameter(1, authorIdString)
+                    .getResultList();
+
+            if (userResult.isEmpty()) {
+                response.put("status", "FAIL");
+                response.put("message", "존재하지 않는 사용자입니다.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            authorInternalId = ((Number) userResult.get(0)).longValue();
+
+            // 3. problems 테이블에 문제 삽입
+            String insertProblemSql = "INSERT INTO problems (title, description, author_id, card_count, is_public) VALUES (?1, ?2, ?3, ?4, ?5)";
+            entityManager.createNativeQuery(insertProblemSql)
+                    .setParameter(1, title)
+                    .setParameter(2, description != null && !description.isEmpty() ? description : null) // 빈 문자열 대신 null 저장
+                    .setParameter(3, authorInternalId)
+                    .setParameter(4, cards.size()) // card_count는 카드 개수로 설정
+                    .setParameter(5, isPublicBool != null && isPublicBool ? 1 : 0) // true:1, false:0
+                    .executeUpdate();
+
+            // 삽입된 문제의 ID 조회 (auto_increment 된 ID)
+            BigInteger problemIdBigInt = (BigInteger) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult();
+            Long problemId = problemIdBigInt.longValue();
+
+            // 4. problem_categories 테이블에 카테고리 연결
+            String insertProblemCategorySql = "INSERT INTO problem_categories (problem_id, category_id) VALUES (?1, ?2)";
+            for (Integer categoryId : categoryIds) {
+                entityManager.createNativeQuery(insertProblemCategorySql)
+                        .setParameter(1, problemId)
+                        .setParameter(2, categoryId.longValue()) // Integer를 Long으로 변환
+                        .executeUpdate();
+            }
+
+            // 5. cards 테이블에 학습 카드 삽입
+            String insertCardSql = "INSERT INTO cards (problem_id, question, answer, image_url) VALUES (?1, ?2, ?3, ?4)";
+            for (Map<String, Object> card : cards) {
+                String question = (String) card.get("question");
+                String answer = (String) card.get("answer");
+                String imageUrl = (String) card.get("image_url"); // 이미지 URL은 null일 수 있음
+
+                entityManager.createNativeQuery(insertCardSql)
+                        .setParameter(1, problemId)
+                        .setParameter(2, question)
+                        .setParameter(3, answer)
+                        .setParameter(4, imageUrl != null && !imageUrl.isEmpty() ? imageUrl : null) // 빈 문자열 대신 null 저장
+                        .executeUpdate();
+            }
+
+            response.put("status", "OK");
+            response.put("message", "문제가 성공적으로 생성되었습니다.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            log.error("문제 생성 중 오류 발생: {}", e.getMessage(), e); // 스택 트레이스 로깅
+            response.put("status", "ERROR");
+            response.put("message", "문제 생성 중 서버 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
