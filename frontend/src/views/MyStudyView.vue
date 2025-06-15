@@ -1,3 +1,36 @@
+<template>
+    <div class="mystudy">
+        <h1 class="page-title">
+            {{ isLoggedIn ? `${username}님의 학습 페이지` : '나의 학습 페이지' }}
+        </h1>
+
+        <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
+        <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
+        <div v-else-if="!isLoggedIn" class="not-logged-in-message">
+            <p>로그인이 필요한 서비스입니다.</p>
+            <p>로그인하시면 학습 현황을 확인하실 수 있습니다.</p>
+        </div>
+
+        <div v-else>
+            <OverallStudySummary
+                :overallPerfectCount="overallPerfectCount"
+                :overallVagueCount="overallVagueCount"
+                :overallForgottenCount="overallForgottenCount"
+                :overallTotalCards="overallTotalCards"
+            />
+
+            <ProblemListSection
+                :ongoingProblems="ongoingProblems"
+                :completedProblems="completedProblems"
+                :isLoggedIn="isLoggedIn"
+                :currentUserId="currentUserId"
+                @go-to-study="goToStudy"
+                @auth-required="$emit('auth-required')"
+                @refresh-problems="fetchMyStudyData" />
+        </div>
+    </div>
+</template>
+
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
@@ -70,7 +103,6 @@ export default {
                         console.warn("Received null or undefined problem in the list, skipping.", problem);
                         return null;
                     }
-                    // 임시 패치: authorId가 없으면, authorNickname이 내 닉네임과 같을 때 currentUserId로 세팅
                     let computedAuthorId = problem.authorId;
                     if (computedAuthorId === undefined || computedAuthorId === '' || computedAuthorId === null) {
                         if (problem.authorNickname && problem.authorNickname === username.value) {
@@ -81,20 +113,20 @@ export default {
                     }
                     return {
                         ...problem,
-                        isLiked: problem.isLiked,
-                        isScrapped: problem.isScrapped,
+                        isLiked: !!problem.isLiked,
+                        isScrapped: !!problem.isScrapped,
                         authorNickname: problem.authorNickname || '알 수 없음',
                         categories: Array.isArray(problem.categories) ? problem.categories : [],
                         id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
-                        authorId: computedAuthorId, // authorId를 위에서 계산한 값으로 세팅
+                        authorId: computedAuthorId,
                         perfectCount: problem.perfectCount || 0,
                         vagueCount: problem.vagueCount || 0,
                         forgottenCount: problem.forgottenCount || 0,
-                        cardCount: problem.cardCount || 0, // cardCount도 추가 (ProblemListItem에서 사용)
+                        cardCount: problem.cardCount || 0,
                     };
                 }).filter(problem => problem !== null);
 
-                console.log("MyStudy: Processed allUserProblems (with categories and card counts):", allUserProblems.value);
+                console.log("MyStudy: Processed allUserProblems:", allUserProblems.value);
 
             } catch (err) {
                 console.error("나의 학습 데이터 불러오기 실패:", err);
@@ -141,46 +173,14 @@ export default {
             ongoingProblems,
             completedProblems,
             goToStudy,
-            fetchMyStudyData, // ProblemListSection에서 재호출할 수 있도록 노출
+            fetchMyStudyData,
         };
     }
 };
 </script>
 
-<template>
-    <div class="mystudy">
-        <h1 class="page-title">
-            {{ isLoggedIn ? `${username}님의 학습 페이지` : '나의 학습 페이지' }}
-        </h1>
-
-        <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
-        <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
-        <div v-else-if="!isLoggedIn" class="not-logged-in-message">
-            <p>로그인이 필요한 서비스입니다.</p>
-            <p>로그인하시면 학습 현황을 확인하실 수 있습니다.</p>
-        </div>
-
-        <div v-else>
-            <OverallStudySummary
-                :overallPerfectCount="overallPerfectCount"
-                :overallVagueCount="overallVagueCount"
-                :overallForgottenCount="overallForgottenCount"
-                :overallTotalCards="overallTotalCards"
-            />
-
-            <ProblemListSection
-                :ongoingProblems="ongoingProblems"
-                :completedProblems="completedProblems"
-                :isLoggedIn="isLoggedIn"
-                :currentUserId="currentUserId"
-                @go-to-study="goToStudy"
-                @auth-required="$emit('auth-required')"
-                @refresh-problems="fetchMyStudyData" />
-        </div>
-    </div>
-</template>
-
 <style scoped>
+/* 동일한 스타일 유지 */
 .mystudy {
     display: flex;
     flex-direction: column;
