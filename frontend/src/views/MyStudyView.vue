@@ -4,27 +4,54 @@
             {{ isLoggedIn ? `${username}님의 학습 페이지` : '나의 학습 페이지' }}
         </h1>
 
-        <OverallStudySummary
-            :overallPerfectCount="overallPerfectCount"
-            :overallVagueCount="overallVagueCount"
-            :overallForgottenCount="overallForgottenCount"
-            :overallTotalCards="overallTotalCards"
-            :isLoggedIn="isLoggedIn"
-            class="overall-summary-placement"
+        <template v-if="isLoggedIn">
+            <OverallStudySummary
+                :overallPerfectCount="overallPerfectCount"
+                :overallVagueCount="overallVagueCount"
+                :overallForgottenCount="overallForgottenCount"
+                :overallTotalCards="overallTotalCards"
+                :isLoggedIn="isLoggedIn"
+                class="overall-summary-placement"
+            />
+
+            <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
+            <div v-else-if="error" class="error-message">{{ error }}</div>
+
+            <ProblemListSection
+                :ongoingProblems="ongoingProblems"
+                :completedProblems="completedProblems"
+                :isLoggedIn="isLoggedIn"
+                :currentUserId="currentUserId"
+                @go-to-study="goToStudy"
+                @auth-required="handleAuthRequired"
+                @refresh-problems="fetchMyStudyData" />
+        </template>
+
+        <div v-else class="logged-out-state">
+            <img src="@/assets/mogwi-character.png" alt="모그위 캐릭터" class="mogwi-character" />
+            <p class="logged-out-message">
+                나만의 학습 현황을 확인하고 싶으신가요?
+                <br>
+                로그인하고 나만의 학습 공간을 만들어보세요!
+            </p>
+            <div class="logged-out-actions">
+                <button @click="goToLogin" class="action-button login-button">로그인</button>
+                <button @click="goToRegister" class="action-button register-button">회원가입</button>
+            </div>
+            <p class="logged-out-hint">비회원도 문제 풀이는 가능하지만, 학습 기록은 저장되지 않아요.</p>
+        </div>
+
+        <LoginModal
+            v-if="showLoginModal"
+            @close="showLoginModal = false"
+            @login-success="handleLoginSuccess"
+            @open-register="handleOpenRegister"
         />
 
-        <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
-        <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
-
-        <ProblemListSection
-            :ongoingProblems="ongoingProblems"
-            :completedProblems="completedProblems"
-            :isLoggedIn="isLoggedIn"
-            :currentUserId="currentUserId"
-            @go-to-study="goToStudy"
-            @auth-required="handleAuthRequired"
-            @refresh-problems="fetchMyStudyData" />
-
+        <RegisterModal
+            v-if="showRegisterModal"
+            @close="showRegisterModal = false" @registration-success="handleRegistrationSuccess"
+            @open-login="handleOpenLogin" />
     </div>
 </template>
 
@@ -36,12 +63,17 @@ import axios from 'axios';
 
 import OverallStudySummary from '@/components/MyStudy/OverallStudySummary.vue';
 import ProblemListSection from '@/components/MyStudy/ProblemListSection.vue';
+import LoginModal from '@/components/Login/LoginModal.vue'; // Corrected path
+import RegisterModal from '@/components/Register/RegisterModal.vue'; // Corrected path
+
 
 export default {
     name: 'MyStudy',
     components: {
         OverallStudySummary,
-        ProblemListSection
+        ProblemListSection,
+        LoginModal,
+        RegisterModal,
     },
     setup() {
         const store = useStore();
@@ -53,6 +85,9 @@ export default {
 
         const loading = ref(false);
         const error = ref(null);
+
+        const showLoginModal = ref(false);
+        const showRegisterModal = ref(false);
 
         const overallPerfectCount = ref(0);
         const overallVagueCount = ref(0);
@@ -153,7 +188,46 @@ export default {
 
         const handleAuthRequired = () => {
             alert("로그인이 필요한 서비스입니다.");
+            showLoginModal.value = true; // Changed to show login modal
         };
+
+        // 로그인 버튼 클릭 시 로그인 모달 열기
+        const goToLogin = () => {
+            showLoginModal.value = true;
+        };
+
+        // 회원가입 버튼 클릭 시 회원가입 모달 열기
+        const goToRegister = () => {
+            showRegisterModal.value = true;
+        };
+
+        // 로그인 성공 시 처리 (예: 모달 닫고 데이터 다시 불러오기)
+        const handleLoginSuccess = () => {
+            showLoginModal.value = false;
+            // LoginModal에서 Vuex 상태를 업데이트했으므로, 여기서는 데이터 새로고침만 하면 됩니다.
+            // store.dispatch('checkLoginStatusAndFetchUserData'); // 이 부분은 LoginModal에서 이미 처리되었다고 가정합니다.
+            fetchMyStudyData(); // 학습 데이터 다시 불러오기
+        };
+
+        // 회원가입 성공 시 처리 (예: 모달 닫고 로그인 모달 띄우기 또는 안내 메시지)
+        const handleRegistrationSuccess = () => {
+            showRegisterModal.value = false;
+            alert("회원가입이 완료되었습니다. 로그인 해주세요!");
+            showLoginModal.value = true; // 회원가입 후 바로 로그인 모달 띄우기
+        };
+
+        // LoginModal에서 '회원가입' 링크 클릭 시 호출
+        const handleOpenRegister = () => {
+            showLoginModal.value = false;
+            showRegisterModal.value = true;
+        };
+
+        // RegisterModal에서 '로그인' 링크 클릭 시 호출 (이벤트 추가 필요)
+        const handleOpenLogin = () => {
+            showRegisterModal.value = false;
+            showLoginModal.value = true;
+        };
+
 
         onMounted(() => {
             fetchMyStudyData();
@@ -180,12 +254,21 @@ export default {
             goToStudy,
             fetchMyStudyData,
             handleAuthRequired,
+            goToLogin,
+            goToRegister,
+            showLoginModal,
+            showRegisterModal,
+            handleLoginSuccess,
+            handleRegistrationSuccess,
+            handleOpenRegister, // Expose to template
+            handleOpenLogin,    // Expose to template
         };
     }
 };
 </script>
 
 <style scoped>
+/* (Your existing styles remain unchanged) */
 .mystudy {
     display: flex;
     flex-direction: column;
@@ -232,15 +315,13 @@ export default {
 /* OverallStudySummary 컴포넌트 배치 조정 */
 /* OverallStudySummary에 직접 적용할 클래스 */
 .overall-summary-placement {
-    /* position: relative; (선택 사항: MyStudyView에서 z-index 관리가 필요할 때) */
     z-index: 5; /* 제목보다 낮은 z-index */
     margin-top: 160px;
-    /* MyStudyView 내에서 중앙 정렬을 위해 */
-    width: 100%; /* 부모 너비를 따라가되, 컴포넌트 내부에서 max-width가 적용됨 */
-    max-width: 800px; /* OverallStudySummary의 max-width와 동일하게 맞춤 */
-    box-sizing: border-box; /* 패딩, 보더 포함 너비 계산 */
-    padding: 0 20px; /* mystudy의 좌우 패딩을 고려하여 내용물 중앙 정렬 */
-    margin-bottom: 5px; /* 15px에서 5px로 줄임 */
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+    padding: 0 20px;
+    margin-bottom: 5px;
 }
 
 /* ProblemListSection 배치 조정 */
@@ -249,7 +330,7 @@ export default {
     z-index: 5;
     margin-top: 15px;
     width: 100%;
-    max-width: 800px; /* MyStudyView 내에서 중앙 정렬을 위해 */
+    max-width: 800px;
     box-sizing: border-box;
     padding: 0 20px;
 }
@@ -261,6 +342,127 @@ export default {
     text-align: center;
 }
 
+/* 로그아웃 상태 UI 개선 */
+.logged-out-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    padding: 100px 30px;
+    margin-top: 200px;
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid #d0c0ee;
+    transition: all 0.3s ease-in-out;
+}
+
+.logged-out-state:hover {
+    transform: translateY(-5px); /* 호버 시 살짝 위로 */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.mogwi-character {
+    width: 180px;
+    height: auto;
+    margin-bottom: 5px; /* 15px에서 5px로 줄임 */
+    animation: bounceIn 1s ease-out;
+}
+
+@keyframes bounceIn {
+    0%, 20%, 40%, 60%, 80%, 100% {
+        transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+    }
+    0% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    20% {
+        transform: scale3d(1.1, 1.1, 1.1);
+    }
+    40% {
+        transform: scale3d(0.9, 0.9, 0.9);
+    }
+    60% {
+        opacity: 1;
+        transform: scale3d(1.03, 1.03, 1.03);
+    }
+    80% {
+        transform: scale3d(0.97, 0.97, 0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+
+.logged-out-message {
+    font-size: 1.6rem;
+    color: #4a1e77;
+    margin-bottom: 10px; /* 20px에서 10px로 줄임 */
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    max-width: 600px;
+}
+
+.logged-out-hint {
+    font-size: 1rem;
+    color: #777;
+    margin-top: 5px; /* 15px에서 5px로 줄임 */
+    line-height: 1.4;
+    border-top: 1px dashed #eee;
+    padding-top: 10px; /* 20px에서 10px로 줄임 */
+    width: 80%;
+}
+
+.logged-out-actions {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 5px; /* 10px에서 5px로 줄임 */
+}
+
+.action-button {
+    padding: 15px 35px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-radius: 10px; /* 30px에서 10px로 줄임 */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    min-width: 180px;
+}
+
+.login-button {
+    background-image: linear-gradient(to right, #a471ff 0%, #8c5dff 100%); /* 그라데이션 */
+    color: white;
+    box-shadow: 0 8px 20px rgba(164, 113, 255, 0.4);
+}
+
+.login-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(164, 113, 255, 0.6);
+    background-position: right center; /* 그라데이션 이동 효과 */
+}
+
+.register-button {
+    background-color: #f0f0f0;
+    color: #5a2e87;
+    border: 2px solid #a471ff; /* 보라색 테두리 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.register-button:hover {
+    background-color: #e8e8e8;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .page-title {
@@ -269,12 +471,41 @@ export default {
         left: 20px;
     }
     .overall-summary-placement {
-        margin-top: 70px; /* 모바일에서 제목과의 간격 줄임 */
-        padding: 0 10px; /* 모바일에서 좌우 패딩 조정 */
+        margin-top: 70px;
+        padding: 0 10px;
     }
     .problem-list-section {
         margin-top: 30px;
         padding: 0 10px;
+    }
+
+    .logged-out-state {
+        padding: 30px 20px;
+        margin-top: 70px;
+        min-height: auto; /* 모바일에서 높이 자동 조절 */
+    }
+
+    .mogwi-character {
+        width: 120px; /* 모바일에서 캐릭터 크기 줄임 */
+        margin-bottom: 25px;
+    }
+
+    .logged-out-message {
+        font-size: 1.3rem; /* 모바일에서 폰트 크기 줄임 */
+        margin-bottom: 30px;
+    }
+
+    .logged-out-actions {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .action-button {
+        width: 90%; /* 모바일에서 버튼 너비 조정 */
+        margin: 0 auto;
+        font-size: 1.1rem;
+        padding: 12px 25px;
     }
 }
 </style>

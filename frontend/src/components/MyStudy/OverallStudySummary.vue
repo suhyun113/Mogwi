@@ -1,10 +1,8 @@
-// OverallStudySummary.vue
 <script>
-import { computed } from 'vue'; // defineProps is globally available in setup, no need to import it explicitly here in Vue 3 (though importing doesn't hurt)
+import { computed } from 'vue';
 
 export default {
     name: 'OverallStudySummary',
-    // props option is defined here, OUTSIDE of setup()
     props: {
         overallPerfectCount: {
             type: Number,
@@ -21,9 +19,13 @@ export default {
         overallTotalCards: {
             type: Number,
             default: 0
+        },
+        isLoggedIn: { // 새로 추가된 prop
+            type: Boolean,
+            default: false
         }
     },
-    setup(props) { // props are passed as the first argument to setup()
+    setup(props) {
         // Define Computed properties
         const overallPerfectPercentage = computed(() =>
             props.overallTotalCards > 0 ? ((props.overallPerfectCount / props.overallTotalCards) * 100).toFixed(1) : 0
@@ -40,13 +42,7 @@ export default {
             overallPerfectPercentage,
             overallVaguePercentage,
             overallForgottenPercentage,
-            // You don't need to explicitly return individual props if you define them in the 'props' option
-            // They are automatically exposed to the template.
-            // If you still want to explicitly pass them for clarity or further manipulation, you can:
-            // overallPerfectCount: props.overallPerfectCount,
-            // overallVagueCount: props.overallVagueCount,
-            // overallForgottenCount: props.overallForgottenCount,
-            // overallTotalCards: props.overallTotalCards,
+            // props.isLoggedIn을 사용할 것이므로, setup에서 props를 직접 참조하는 것으로 충분합니다.
         };
     }
 };
@@ -55,7 +51,7 @@ export default {
 <template>
     <section class="overall-summary-section">
         <h2>전체 학습 현황</h2>
-        <div class="summary-stats">
+        <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-stats">
             <div class="stat-item perfect">
                 <span class="label">완벽한 기억:</span>
                 <span class="value">{{ overallPerfectCount }}개</span>
@@ -72,6 +68,14 @@ export default {
                 <span class="label">총 학습 카드:</span>
                 <span class="value">{{ overallTotalCards }}개</span>
             </div>
+        </div>
+        <div v-else-if="isLoggedIn && overallTotalCards === 0" class="no-study-data-message">
+            <font-awesome-icon :icon="['fas', 'book-open']" class="no-data-icon" />
+            <p>아직 학습한 문제가 없어요. 새로운 문제를 시작해보세요!</p>
+        </div>
+        <div v-else class="no-study-data-message">
+            <font-awesome-icon :icon="['fas', 'user-lock']" class="no-data-icon" />
+            <p>로그인하시면 학습 현황을 확인할 수 있습니다.</p>
         </div>
 
         <div class="progress-bar-container">
@@ -93,18 +97,21 @@ export default {
                 :style="{ width: overallForgottenPercentage + '%' }"
                 title="사라진 기억"
             ></div>
-            <div v-if="overallTotalCards === 0" class="progress-bar no-data">학습 데이터 없음</div>
+            <div v-if="overallTotalCards === 0 || !isLoggedIn" class="progress-bar no-data">
+                {{ isLoggedIn ? '학습 데이터 없음' : '로그인 필요' }}
+            </div>
         </div>
         <p class="progress-labels">
             <span v-if="overallPerfectPercentage > 0" class="label perfect">완벽 {{ overallPerfectPercentage }}%</span>
             <span v-if="overallVaguePercentage > 0" class="label vague">희미 {{ overallVaguePercentage }}%</span>
             <span v-if="overallForgottenPercentage > 0" class="label forgotten">사라짐 {{ overallForgottenPercentage }}%</span>
+            <span v-else-if="overallTotalCards === 0 && isLoggedIn" class="label no-data-label">새로운 학습을 시작해보세요!</span>
+            <span v-else-if="!isLoggedIn" class="label no-data-label">로그인 후 확인 가능합니다</span>
         </p>
     </section>
 </template>
 
 <style scoped>
-/* (Your existing styles remain unchanged) */
 .overall-summary-section {
     width: 100%;
     max-width: 800px;
@@ -190,6 +197,7 @@ export default {
     align-items: center;
     color: white;
     font-weight: bold;
+    font-size: 0.95rem;
 }
 
 .progress-labels {
@@ -205,4 +213,47 @@ export default {
 .progress-labels .label.perfect { color: #28a745; }
 .progress-labels .label.vague { color: #ffc107; }
 .progress-labels .label.forgotten { color: #dc3545; }
+
+.no-study-data-message {
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 1.1rem;
+    color: #777;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.no-study-data-message p {
+    margin: 0;
+    line-height: 1.5;
+    color: #666;
+}
+
+.no-data-icon {
+    font-size: 3rem;
+    color: #ccc; /* 기본 회색 */
+}
+
+/* 로그인 필요 아이콘 색상 */
+.no-study-data-message .fa-user-lock {
+    color: #a471ff; /* 보라색 */
+}
+
+/* 학습 데이터 없음 아이콘 색상 */
+.no-study-data-message .fa-book-open {
+    color: #5cb85c; /* 초록색 (긍정적인 의미) */
+}
+
+.progress-labels .label.no-data-label {
+    color: #a471ff;
+    font-weight: 500;
+    margin-left: auto; /* 오른쪽 정렬 */
+    margin-right: auto;
+}
 </style>
