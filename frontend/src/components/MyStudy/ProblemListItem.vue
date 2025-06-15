@@ -1,5 +1,6 @@
 <template>
-  <div class="problem-list-item"> <div class="title-row">
+  <div class="problem-list-item">
+    <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
         <span class="author">작성자: {{ localProblem.authorNickname }}</span>
@@ -57,7 +58,7 @@
       </div>
 
       <div class="meta-right-group">
-        <div class="study-card-summary">
+        <div class="study-card-summary" v-if="localProblem.studyStatus !== 'new'">
           <span class="perfect-count" :title="`${localProblem.perfectCount}개 - 완벽한 기억`">{{ localProblem.perfectCount }}</span> /
           <span class="vague-count" :title="`${localProblem.vagueCount}개 - 희미한 기억`">{{ localProblem.vagueCount }}</span> /
           <span class="forgotten-count" :title="`${localProblem.forgottenCount}개 - 사라진 기억`">{{ localProblem.forgottenCount }}</span>
@@ -99,7 +100,7 @@ export default {
       default: ''
     }
   },
-  emits: ['auth-required', 'problem-action-success', 'go-to-study'],
+  emits: ['auth-required', 'problem-action-success', 'go-to-study'], // Keep go-to-study for MainView interaction
 
   data() {
     return {
@@ -130,6 +131,7 @@ export default {
   mounted() {
     console.log('[ProblemListItem] mounted - authorId:', this.localProblem.authorId, typeof this.localProblem.authorId);
     console.log('[ProblemListItem] mounted - currentUserId:', this.currentUserId, typeof this.currentUserId);
+    console.log('[ProblemListItem] mounted - studyStatus:', this.localProblem.studyStatus); // Check studyStatus
   },
   methods: {
     getColor(tag) {
@@ -230,7 +232,8 @@ export default {
     },
     handleSolveClick() {
       if (this.isAuthenticated) {
-        this.$emit('go-to-study', this.localProblem.id);
+        // Emit the problem object to the parent for more complex logic
+        this.$emit('go-to-study', this.localProblem); // Emit the whole problem object
       } else {
         this.$emit('auth-required');
       }
@@ -240,7 +243,7 @@ export default {
 </script>
 
 <style scoped>
-.problem-list-item { /* 클래스 이름 변경: problem-summary -> problem-list-item */
+.problem-list-item {
   padding: 16px;
   border: 1px solid #e0d0ff;
   border-radius: 8px;
@@ -252,12 +255,12 @@ export default {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.problem-list-item:hover { /* 클래스 이름 변경: problem-summary -> problem-list-item */
+.problem-list-item:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
-.problem-list-item h3 { /* 클래스 이름 변경: problem-summary -> problem-list-item */
+.problem-list-item h3 {
   margin: 0;
   font-size: 18px;
   color: #5a2e87;
