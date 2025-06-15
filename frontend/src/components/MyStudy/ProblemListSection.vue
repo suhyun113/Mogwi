@@ -284,13 +284,14 @@ export default {
 /* 기존 스타일 유지 */
 .problem-list-section {
     background-color: #ffffff;
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     padding: 30px;
     margin-top: 40px;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
+    border: 1px solid #e0d0ff; /* Subtle border */
 }
 
 .section-header {
@@ -304,7 +305,7 @@ export default {
     color: #5a2e87;
     font-size: 1.8rem;
     font-weight: 600;
-    margin: 0;
+    margin: 5;
 }
 
 .header-buttons {

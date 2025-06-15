@@ -109,7 +109,7 @@ export default {
     width: 100%;
     max-width: 800px;
     background-color: #ffffff;
-    border-radius: 15px;
+    border-radius: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     padding: 30px;
     margin-bottom: 40px;
@@ -121,9 +121,7 @@ export default {
     font-size: 1.8rem;
     font-weight: 600;
     margin-bottom: 25px;
-    border-bottom: 2px solid #a471ff;
     padding-bottom: 10px;
-    text-align: center;
 }
 
 .summary-stats {
