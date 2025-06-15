@@ -27,18 +27,21 @@
       ></textarea>
     </div>
     <div class="form-group">
-      <label :for="`image-${card.id}`">이미지 URL (선택)</label>
+      <label :for="`image-${card.id}`">이미지 (선택)</label>
       <input
-        type="url"
+        type="file"
         :id="`image-${card.id}`"
-        :value="card.image_url"
-        @input="$emit('update:image_url', $event.target.value)"
-        placeholder="이미지 URL을 입력하세요 (예: https://example.com/image.jpg)"
-        class="form-input"
+        @change="handleImageFileChange"
+        accept="image/*"
+        class="form-input-file"
       />
+      <button v-if="card.image_url" @click="clearImage" class="clear-image-btn">
+        이미지 제거
+      </button>
+
       <div v-if="card.image_url" class="image-preview">
         <img :src="card.image_url" alt="Image Preview" class="preview-img" @error="handleImageError"/>
-        <p v-if="imageLoadError" class="image-error-msg">이미지를 불러올 수 없습니다. URL을 확인해주세요.</p>
+        <p v-if="imageLoadError" class="image-error-msg">이미지를 불러올 수 없습니다. 파일 형식을 확인하거나 다른 이미지를 시도해주세요.</p>
       </div>
     </div>
   </div>
@@ -48,43 +51,81 @@
 import { ref, watch } from 'vue';
 
 export default {
-  // props 정의
   props: {
-    card: Object,
+    card: Object, // card should now also accept a local file preview URL or the final remote URL
     index: Number,
   },
-  // emits 정의 (명시적으로 정의하는 것이 좋습니다)
   emits: [
     'update:question',
     'update:answer',
-    'update:image_url',
+    'update:image_url', // This will now receive a Data URL for preview, or null for clear
+    'update:image_file', // NEW: Emit the File object for actual upload
     'remove-card',
   ],
-  setup(props) { // setup 함수에서 props를 인자로 받습니다. emit은 $emit으로 직접 호출합니다.
+  setup(props, { emit }) {
     const imageLoadError = ref(false);
+
+    const handleImageFileChange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        // Read file for immediate local preview (Data URL)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          emit('update:image_url', e.target.result); // For immediate preview
+          imageLoadError.value = false; // Reset error on new file selection
+        };
+        reader.onerror = () => {
+          imageLoadError.value = true;
+          emit('update:image_url', null); // Clear URL on error
+          emit('update:image_file', null); // Clear file on error
+        };
+        reader.readAsDataURL(file);
+
+        // Emit the File object to the parent for actual upload later
+        emit('update:image_file', file);
+      } else {
+        emit('update:image_url', null); // Clear preview
+        emit('update:image_file', null); // Clear file
+        imageLoadError.value = false; // Reset error
+      }
+    };
 
     const handleImageError = () => {
       imageLoadError.value = true;
     };
 
-    // Reset imageLoadError when image_url changes
+    const clearImage = () => {
+      // Clear the displayed image and the internal file reference
+      emit('update:image_url', null);
+      emit('update:image_file', null);
+      imageLoadError.value = false;
+      // Optionally, clear the file input visually
+      const fileInput = document.getElementById(`image-${props.card.id}`);
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    };
+
+    // Reset imageLoadError when the card's image_url prop changes from parent
     watch(() => props.card.image_url, (newUrl) => {
-      if (newUrl) {
+      // Only reset if a new non-null URL is provided, indicating a successful upload from parent
+      if (newUrl && imageLoadError.value) {
         imageLoadError.value = false;
       }
     });
 
-    // 템플릿에 노출할 데이터와 함수 반환
     return {
       imageLoadError,
+      handleImageFileChange,
       handleImageError,
+      clearImage,
     };
   },
 };
 </script>
 
 <style scoped>
-/* 기존 스타일은 동일하게 유지됩니다. */
+/* 기존 스타일 유지 */
 .card-input-container {
   background-color: #ffffff;
   border: 1px solid #dcdcdc;
@@ -152,6 +193,26 @@ export default {
   margin-left: 4px;
 }
 
+.form-input-file { /* New style for file input */
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #555;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
+
+.form-input-file:focus {
+  border-color: #a471ff;
+  box-shadow: 0 0 0 3px rgba(164, 113, 255, 0.15);
+  outline: none;
+}
+
+
 .form-input, .form-textarea {
   width: 100%;
   padding: 10px 12px;
@@ -200,5 +261,21 @@ export default {
   color: #e74c3c;
   font-size: 0.85rem;
   margin-top: 10px;
+}
+
+.clear-image-btn {
+  background-color: #f4e8f9;
+  color: #5a2e87;
+  border: 1px solid #a471ff;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.clear-image-btn:hover {
+  background-color: #e6d7f0;
 }
 </style>

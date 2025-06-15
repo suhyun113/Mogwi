@@ -22,7 +22,7 @@
             @update:question="value => updateCardField(index, 'question', value)"
             @update:answer="value => updateCardField(index, 'answer', value)"
             @update:image_url="value => updateCardField(index, 'image_url', value)"
-            @remove-card="removeCard(index)"
+            @update:image_file="file => handleImageFile(index, file)" @remove-card="removeCard(index)"
           />
         </div>
         <button @click="addCard" class="add-card-btn">
@@ -34,11 +34,9 @@
         <p v-if="submitError" class="error-msg">{{ submitError }}</p>
         <button
           @click="createProblem"
-          :disabled="!isFormValid"
-          class="create-problem-btn"
+          :disabled="!isFormValid || isUploadingImages" class="create-problem-btn"
         >
-          문제 생성하기
-        </button>
+          {{ isUploadingImages ? '이미지 업로드 중...' : '문제 생성하기' }} </button>
       </div>
     </div>
   </div>
@@ -53,12 +51,10 @@ import ProblemForm from '@/components/Create/ProblemForm.vue';
 import CardInput from '@/components/Create/CardInput.vue';
 
 export default {
-  // 컴포넌트 등록
   components: {
     ProblemForm,
     CardInput
   },
-  // setup 함수: Composition API 로직을 여기서 작성
   setup() {
     const store = useStore();
     const router = useRouter();
@@ -69,26 +65,24 @@ export default {
     const loading = ref(true);
     const error = ref(null);
     const submitError = ref('');
+    const isUploadingImages = ref(false); // NEW: Track image upload status
 
     const allCategories = ref([]);
 
     const problem = ref({
       title: '',
       description: '',
-      is_public: true, // 기본값은 공개
+      is_public: true,
       selectedTags: [],
-      cards: [{ id: 1, question: '', answer: '', image_url: '' }] // 최소 1개의 카드
+      cards: [{ id: 1, question: '', answer: '', image_url: '', image_file: null }] // ADDED image_file
     });
 
-    let nextCardId = 2; // 다음 카드에 할당할 ID
+    let nextCardId = 2;
 
-    // 모든 카테고리 불러오기
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/categories');
-        // 카테고리를 id 순서로 정렬
         allCategories.value = response.data.sort((a, b) => a.id - b.id);
-        console.log("Fetched categories:", allCategories.value);
       } catch (err) {
         console.error('카테고리 불러오기 실패:', err);
         error.value = '카테고리를 불러오는 데 실패했습니다.';
@@ -97,25 +91,19 @@ export default {
       }
     };
 
-    // 필수 입력값 유효성 검사
     const isFormValid = computed(() => {
-      // 로그인 상태 확인
       if (!isLoggedIn.value) {
         return false;
       }
-      // 문제 제목 필수
       if (!problem.value.title.trim()) {
         return false;
       }
-      // 태그 최소 1개 선택 필수
       if (problem.value.selectedTags.length === 0) {
         return false;
       }
-      // 카드 최소 1개 필수
       if (problem.value.cards.length === 0) {
         return false;
       }
-      // 모든 카드에 질문과 정답 필수
       const allCardsValid = problem.value.cards.every(card =>
         card.question.trim() && card.answer.trim()
       );
@@ -125,26 +113,75 @@ export default {
       return true;
     });
 
-    // 카드 추가
     const addCard = () => {
-      problem.value.cards.push({ id: nextCardId++, question: '', answer: '', image_url: '' });
+      problem.value.cards.push({ id: nextCardId++, question: '', answer: '', image_url: '', image_file: null }); // Initialize image_file
     };
 
-    // 카드 제거
     const removeCard = (index) => {
-      if (problem.value.cards.length > 1) { // 최소 1개의 카드는 유지
+      if (problem.value.cards.length > 1) {
         problem.value.cards.splice(index, 1);
       } else {
         alert('최소 하나 이상의 카드가 필요합니다.');
       }
     };
 
-    // 카드 필드 업데이트 헬퍼
     const updateCardField = (index, field, value) => {
       problem.value.cards[index][field] = value;
     };
 
-    // 문제 생성 요청
+    // NEW: Handler for when a file is selected in CardInput
+    const handleImageFile = (index, file) => {
+      problem.value.cards[index].image_file = file;
+      // The image_url for preview is already handled by CardInput and emitted via update:image_url
+    };
+
+    // NEW: Function to upload images before problem creation
+    const uploadImages = async () => {
+        isUploadingImages.value = true;
+        submitError.value = ''; // Clear previous errors
+
+        const uploadPromises = problem.value.cards.map(async (card, index) => {
+            if (card.image_file) {
+                const formData = new FormData();
+                formData.append('image', card.image_file);
+
+                try {
+                    // Replace with your actual image upload API endpoint
+                    // Example: await axios.post('/api/upload-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                    // For now, simulating an upload. In a real app, this would be an actual API call.
+                    console.log(`Uploading image for card ${index + 1}...`);
+                    // This is a placeholder. You NEED to implement a backend endpoint
+                    // that accepts a file upload and returns its public URL.
+                    const response = await axios.post('/api/upload-image', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+
+                    // Assuming your backend returns { imageUrl: '...' }
+                    card.image_url = response.data.imageUrl;
+                    card.image_file = null; // Clear the file after successful upload
+                } catch (uploadErr) {
+                    console.error(`Image upload failed for card ${index + 1}:`, uploadErr);
+                    submitError.value = `카드 ${index + 1} 이미지 업로드에 실패했습니다.`;
+                    // If an image fails to upload, you might want to prevent problem creation
+                    // or allow it but with a null image URL. For this example, we'll stop.
+                    throw new Error(`Image upload failed for card ${index + 1}`);
+                }
+            }
+        });
+
+        try {
+            await Promise.all(uploadPromises);
+            isUploadingImages.value = false;
+            return true; // All images uploaded successfully
+        } catch (e) {
+            isUploadingImages.value = false;
+            // The error message is already set by individual upload failures
+            return false; // Image upload failed
+        }
+    };
+
     const createProblem = async () => {
       if (!isFormValid.value) {
         submitError.value = '모든 필수 정보를 입력하고, 각 카드에 질문과 정답을 입력해주세요.';
@@ -153,11 +190,20 @@ export default {
 
       if (!isLoggedIn.value) {
         alert('로그인 후 문제 생성이 가능합니다.');
-        router.push('/login'); // 로그인 페이지로 리디렉션 또는 로그인 모달 표시
+        router.push('/login');
         return;
       }
 
-      submitError.value = ''; // 에러 메시지 초기화
+      submitError.value = '';
+      isUploadingImages.value = true; // Start global upload indicator
+
+      // First, upload all images
+      const imagesUploaded = await uploadImages();
+      if (!imagesUploaded) {
+          isUploadingImages.value = false;
+          // Error message already set by uploadImages
+          return;
+      }
 
       try {
         const payload = {
@@ -169,7 +215,7 @@ export default {
           cards: problem.value.cards.map(card => ({
             question: card.question,
             answer: card.answer,
-            image_url: card.image_url || null
+            image_url: card.image_url || null // Use the final URL, which might be from upload or kept null
           }))
         };
 
@@ -188,6 +234,8 @@ export default {
         } else {
           submitError.value = '문제 생성 중 알 수 없는 오류가 발생했습니다.';
         }
+      } finally {
+        isUploadingImages.value = false; // End global upload indicator
       }
     };
 
@@ -206,17 +254,18 @@ export default {
       }
     });
 
-    // 템플릿에서 사용될 모든 반응형 데이터, computed 속성, 함수들을 반환합니다.
     return {
       loading,
       error,
       submitError,
+      isUploadingImages, // Return new state
       allCategories,
       problem,
       isFormValid,
       addCard,
       removeCard,
       updateCardField,
+      handleImageFile, // Return new handler
       createProblem
     };
   }
@@ -224,7 +273,7 @@ export default {
 </script>
 
 <style scoped>
-/* 기존 스타일은 동일하게 유지됩니다. */
+/* Your existing styles remain, with added .form-input-file and .clear-image-btn styles */
 .create-view {
   display: flex;
   flex-direction: column;
@@ -239,14 +288,14 @@ export default {
 
 .create-container {
   background: white;
-  border-radius: 0; /* 15px에서 0으로 변경 */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* 그림자 부드럽게 조정 */
-  padding: 40px; /* 기존 30px에서 40px로 늘려 내부 여백 추가 */
+  border-radius: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 40px;
   width: 100%;
   max-width: 800px;
   margin-bottom: 20px;
-  margin-top: 10px;
-  border: 1px solid #eee; /* 은은한 테두리 추가 */
+  margin-top: 20px;
+  border: 1px solid #eee;
 }
 
 .loading-message, .error-message {
@@ -358,6 +407,42 @@ export default {
   font-size: 0.95rem;
   margin-bottom: 15px;
   text-align: center;
+}
+
+/* New style for file input */
+.form-input-file {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #555;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
+
+.form-input-file:focus {
+  border-color: #a471ff;
+  box-shadow: 0 0 0 3px rgba(164, 113, 255, 0.15);
+  outline: none;
+}
+
+.clear-image-btn {
+  background-color: #f4e8f9;
+  color: #5a2e87;
+  border: 1px solid #a471ff;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.clear-image-btn:hover {
+  background-color: #e6d7f0;
 }
 
 /* 반응형 디자인 */
