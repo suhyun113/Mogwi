@@ -22,7 +22,8 @@
             @update:question="value => updateCardField(index, 'question', value)"
             @update:answer="value => updateCardField(index, 'answer', value)"
             @update:image_url="value => updateCardField(index, 'image_url', value)"
-            @update:image_file="file => handleImageFile(index, file)" @remove-card="removeCard(index)"
+            @update:image_file="file => handleImageFile(index, file)"
+            @remove-card="removeCard(index)"
           />
         </div>
         <button @click="addCard" class="add-card-btn">
@@ -34,9 +35,11 @@
         <p v-if="submitError" class="error-msg">{{ submitError }}</p>
         <button
           @click="createProblem"
-          :disabled="!isFormValid || isUploadingImages" class="create-problem-btn"
+          :disabled="!isFormValid || isUploadingImages"
+          class="create-problem-btn"
         >
-          {{ isUploadingImages ? '이미지 업로드 중...' : '문제 생성하기' }} </button>
+          {{ isUploadingImages ? '이미지 업로드 중...' : '문제 생성하기' }}
+        </button>
       </div>
     </div>
   </div>
@@ -65,7 +68,7 @@ export default {
     const loading = ref(true);
     const error = ref(null);
     const submitError = ref('');
-    const isUploadingImages = ref(false); // NEW: Track image upload status
+    const isUploadingImages = ref(false);
 
     const allCategories = ref([]);
 
@@ -74,13 +77,14 @@ export default {
       description: '',
       is_public: true,
       selectedTags: [],
-      cards: [{ id: 1, question: '', answer: '', image_url: '', image_file: null }] // ADDED image_file
+      cards: [{ id: 1, question: '', answer: '', image_url: '', image_file: null }]
     });
 
     let nextCardId = 2;
 
     const fetchCategories = async () => {
       try {
+        // Axios 기본 URL 설정 (main.js 또는 여기에 설정)
         const response = await axios.get('/api/categories');
         allCategories.value = response.data.sort((a, b) => a.id - b.id);
       } catch (err) {
@@ -98,8 +102,9 @@ export default {
       if (!problem.value.title.trim()) {
         return false;
       }
-      if (problem.value.selectedTags.length === 0) {
-        return false;
+      // 태그는 최소 1개 이상, 최대 3개
+      if (problem.value.selectedTags.length === 0 || problem.value.selectedTags.length > 3) {
+          return false;
       }
       if (problem.value.cards.length === 0) {
         return false;
@@ -114,7 +119,7 @@ export default {
     });
 
     const addCard = () => {
-      problem.value.cards.push({ id: nextCardId++, question: '', answer: '', image_url: '', image_file: null }); // Initialize image_file
+      problem.value.cards.push({ id: nextCardId++, question: '', answer: '', image_url: '', image_file: null });
     };
 
     const removeCard = (index) => {
@@ -129,62 +134,61 @@ export default {
       problem.value.cards[index][field] = value;
     };
 
-    // NEW: Handler for when a file is selected in CardInput
     const handleImageFile = (index, file) => {
       problem.value.cards[index].image_file = file;
-      // The image_url for preview is already handled by CardInput and emitted via update:image_url
     };
 
-    // NEW: Function to upload images before problem creation
     const uploadImages = async () => {
         isUploadingImages.value = true;
-        submitError.value = ''; // Clear previous errors
+        submitError.value = '';
 
         const uploadPromises = problem.value.cards.map(async (card, index) => {
             if (card.image_file) {
                 const formData = new FormData();
-                formData.append('image', card.image_file);
+                // 백엔드 FileUploadController의 @RequestParam("file")과 일치시켜야 함
+                formData.append('file', card.image_file);
 
                 try {
-                    // Replace with your actual image upload API endpoint
-                    // Example: await axios.post('/api/upload-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                    // For now, simulating an upload. In a real app, this would be an actual API call.
-                    console.log(`Uploading image for card ${index + 1}...`);
-                    // This is a placeholder. You NEED to implement a backend endpoint
-                    // that accepts a file upload and returns its public URL.
+                    // TODO: 실제 백엔드 서버 URL과 포트로 변경하세요!
+                    // 예시: 'http://localhost:8000/api/upload-image' 또는 '/api/upload-image' (proxy 설정 사용 시)
                     const response = await axios.post('/api/upload-image', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
                     });
 
-                    // Assuming your backend returns { imageUrl: '...' }
-                    card.image_url = response.data.imageUrl;
-                    card.image_file = null; // Clear the file after successful upload
+                    if (response.data.status === 'OK' && response.data.imageUrl) {
+                        card.image_url = response.data.imageUrl; // 서버에서 반환된 URL로 업데이트
+                        card.image_file = null; // 업로드 완료된 파일 객체는 제거
+                        console.log(`Card ${index + 1} image uploaded successfully:`, card.image_url);
+                    } else {
+                        console.error(`이미지 업로드 실패: 카드 ${index + 1} -`, response.data.message);
+                        submitError.value = `카드 ${index + 1} 이미지 업로드에 실패했습니다: ${response.data.message || '알 수 없는 오류'}`;
+                        throw new Error(`이미지 업로드 실패: ${response.data.message || '알 수 없는 오류'}`);
+                    }
                 } catch (uploadErr) {
-                    console.error(`Image upload failed for card ${index + 1}:`, uploadErr);
-                    submitError.value = `카드 ${index + 1} 이미지 업로드에 실패했습니다.`;
-                    // If an image fails to upload, you might want to prevent problem creation
-                    // or allow it but with a null image URL. For this example, we'll stop.
-                    throw new Error(`Image upload failed for card ${index + 1}`);
+                    console.error(`카드 ${index + 1} 이미지 업로드 중 오류 발생:`, uploadErr);
+                    // Network errors or server errors will also be caught here
+                    submitError.value = `카드 ${index + 1} 이미지 업로드 중 오류가 발생했습니다: ${uploadErr.message || '네트워크 오류'}`;
+                    throw uploadErr; // Propagate the error to stop Promise.all
                 }
             }
         });
 
         try {
             await Promise.all(uploadPromises);
-            isUploadingImages.value = false;
             return true; // All images uploaded successfully
         } catch (e) {
-            isUploadingImages.value = false;
-            // The error message is already set by individual upload failures
+            // An error occurred during one of the image uploads, error message already set
             return false; // Image upload failed
+        } finally {
+            isUploadingImages.value = false; // 이미지 업로드 상태 종료
         }
     };
 
     const createProblem = async () => {
       if (!isFormValid.value) {
-        submitError.value = '모든 필수 정보를 입력하고, 각 카드에 질문과 정답을 입력해주세요.';
+        submitError.value = '모든 필수 정보를 입력하고, 각 카드에 질문과 정답을 입력해주세요. 태그는 1~3개 선택해야 합니다.';
         return;
       }
 
@@ -195,27 +199,27 @@ export default {
       }
 
       submitError.value = '';
-      isUploadingImages.value = true; // Start global upload indicator
+      // isUploadingImages는 uploadImages 함수 내부에서 관리되므로 여기서 직접 true로 설정할 필요 없음
 
-      // First, upload all images
+      // 1. 모든 이미지 업로드
       const imagesUploaded = await uploadImages();
       if (!imagesUploaded) {
-          isUploadingImages.value = false;
-          // Error message already set by uploadImages
+          // 이미지 업로드 실패 시 이미 submitError가 설정되어 있으므로 추가 처리 없음
           return;
       }
 
+      // 2. 모든 이미지 URL이 설정된 최종 문제 데이터를 서버에 전송
       try {
         const payload = {
           title: problem.value.title,
           author_id: currentUserId.value,
           description: problem.value.description,
-          is_public: problem.value.is_public ? 1 : 0,
-          categories: problem.value.selectedTags,
+          is_public: problem.value.is_public ? 1 : 0, // 백엔드에서 Integer로 받으므로 1 또는 0으로 변환
+          categories: problem.value.selectedTags, // 이미 ID 배열
           cards: problem.value.cards.map(card => ({
             question: card.question,
             answer: card.answer,
-            image_url: card.image_url || null // Use the final URL, which might be from upload or kept null
+            image_url: card.image_url || null // 업로드된 URL 또는 null
           }))
         };
 
@@ -223,7 +227,7 @@ export default {
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 생성되었습니다!');
-          router.push({ name: 'MyStudy' });
+          router.push({ name: 'MyStudy' }); // 이름으로 라우트 이동
         } else {
           submitError.value = response.data.message || '문제 생성에 실패했습니다.';
         }
@@ -235,15 +239,15 @@ export default {
           submitError.value = '문제 생성 중 알 수 없는 오류가 발생했습니다.';
         }
       } finally {
-        isUploadingImages.value = false; // End global upload indicator
+        // 문제 생성 완료 후에도 isUploadingImages를 false로 설정 (uploadImages에서 이미 했지만 한 번 더 확인)
+        isUploadingImages.value = false;
       }
     };
 
     onMounted(() => {
       fetchCategories();
       if (!isLoggedIn.value) {
-        alert('로그인 후 문제 생성이 가능합니다.');
-        router.push('/login');
+        // router.push('/login'); // 이미 watch에서 처리하고 있으므로 중복 가능
       }
     });
 
@@ -258,14 +262,14 @@ export default {
       loading,
       error,
       submitError,
-      isUploadingImages, // Return new state
+      isUploadingImages,
       allCategories,
       problem,
       isFormValid,
       addCard,
       removeCard,
       updateCardField,
-      handleImageFile, // Return new handler
+      handleImageFile,
       createProblem
     };
   }
@@ -273,7 +277,7 @@ export default {
 </script>
 
 <style scoped>
-/* Your existing styles remain, with added .form-input-file and .clear-image-btn styles */
+/* 기존 스타일은 동일하게 유지됩니다. */
 .create-view {
   display: flex;
   flex-direction: column;
