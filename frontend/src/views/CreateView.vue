@@ -87,7 +87,8 @@ export default {
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/categories');
-        allCategories.value = response.data;
+        // 카테고리를 id 순서로 정렬
+        allCategories.value = response.data.sort((a, b) => a.id - b.id);
         console.log("Fetched categories:", allCategories.value);
       } catch (err) {
         console.error('카테고리 불러오기 실패:', err);

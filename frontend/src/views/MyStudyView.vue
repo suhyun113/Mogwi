@@ -141,12 +141,18 @@ export default {
                         console.warn("Received null or undefined problem in the list, skipping.", problem);
                         return null;
                     }
+
+                    // 카테고리 배열을 id 순서로 정렬
+                    const sortedCategories = Array.isArray(problem.categories)
+                        ? problem.categories.sort((a, b) => a.id - b.id)
+                        : [];
+
                     return {
                         ...problem,
                         isLiked: !!problem.isLiked,
                         isScrapped: !!problem.isScrapped,
                         authorNickname: problem.authorNickname || '알 수 없음',
-                        categories: Array.isArray(problem.categories) ? problem.categories : [],
+                        categories: sortedCategories,
                         id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
                         authorId: problem.authorId,
                         perfectCount: problem.perfectCount || 0,
