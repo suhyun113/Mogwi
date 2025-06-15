@@ -1,6 +1,5 @@
 <template>
   <div class="create-view">
-    <h1 class="page-title">새 문제 생성하기</h1>
     <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
 
@@ -238,24 +237,16 @@ export default {
   font-family: 'Pretendard', sans-serif;
 }
 
-.page-title {
-  color: #5a2e87;
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 30px;
-  text-align: center;
-  width: 100%;
-  max-width: 800px;
-}
-
 .create-container {
   background: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  padding: 30px;
+  border-radius: 0; /* 15px에서 0으로 변경 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* 그림자 부드럽게 조정 */
+  padding: 40px; /* 기존 30px에서 40px로 늘려 내부 여백 추가 */
   width: 100%;
   max-width: 800px;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  border: 1px solid #eee; /* 은은한 테두리 추가 */
 }
 
 .loading-message, .error-message {
