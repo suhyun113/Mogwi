@@ -40,6 +40,18 @@
             </div>
             <p class="logged-out-hint">비회원도 문제 풀이는 가능하지만, 학습 기록은 저장되지 않아요.</p>
         </div>
+
+        <LoginModal
+            v-if="showLoginModal"
+            @close="showLoginModal = false"
+            @login-success="handleLoginSuccess"
+            @open-register="handleOpenRegister"
+        />
+
+        <RegisterModal
+            v-if="showRegisterModal"
+            @close="showRegisterModal = false" @registration-success="handleRegistrationSuccess"
+            @open-login="handleOpenLogin" />
     </div>
 </template>
 
@@ -50,14 +62,18 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 import OverallStudySummary from '@/components/MyStudy/OverallStudySummary.vue';
-import ProblemListSection from '@/components/MyStudy/ProblemListSection.vue'; // ProblemListSection 컴포넌트 경로 확인 필요
+import ProblemListSection from '@/components/MyStudy/ProblemListSection.vue';
+import LoginModal from '@/components/Login/LoginModal.vue'; // Corrected path
+import RegisterModal from '@/components/Register/RegisterModal.vue'; // Corrected path
+
 
 export default {
     name: 'MyStudy',
     components: {
         OverallStudySummary,
         ProblemListSection,
-        // Font Awesome 아이콘은 main.js에서 전역 등록하므로 여기에 별도로 추가하지 않아도 됨
+        LoginModal,
+        RegisterModal,
     },
     setup() {
         const store = useStore();
@@ -69,6 +85,9 @@ export default {
 
         const loading = ref(false);
         const error = ref(null);
+
+        const showLoginModal = ref(false);
+        const showRegisterModal = ref(false);
 
         const overallPerfectCount = ref(0);
         const overallVagueCount = ref(0);
@@ -169,14 +188,44 @@ export default {
 
         const handleAuthRequired = () => {
             alert("로그인이 필요한 서비스입니다.");
+            showLoginModal.value = true; // Changed to show login modal
         };
 
+        // 로그인 버튼 클릭 시 로그인 모달 열기
         const goToLogin = () => {
-            router.push({ name: 'Login' }); // 'Login'은 실제 로그인 페이지의 라우터 이름이어야 합니다.
+            showLoginModal.value = true;
         };
 
+        // 회원가입 버튼 클릭 시 회원가입 모달 열기
         const goToRegister = () => {
-            router.push({ name: 'Register' }); // 'Register'는 실제 회원가입 페이지의 라우터 이름이어야 합니다.
+            showRegisterModal.value = true;
+        };
+
+        // 로그인 성공 시 처리 (예: 모달 닫고 데이터 다시 불러오기)
+        const handleLoginSuccess = () => {
+            showLoginModal.value = false;
+            // LoginModal에서 Vuex 상태를 업데이트했으므로, 여기서는 데이터 새로고침만 하면 됩니다.
+            // store.dispatch('checkLoginStatusAndFetchUserData'); // 이 부분은 LoginModal에서 이미 처리되었다고 가정합니다.
+            fetchMyStudyData(); // 학습 데이터 다시 불러오기
+        };
+
+        // 회원가입 성공 시 처리 (예: 모달 닫고 로그인 모달 띄우기 또는 안내 메시지)
+        const handleRegistrationSuccess = () => {
+            showRegisterModal.value = false;
+            alert("회원가입이 완료되었습니다. 로그인 해주세요!");
+            showLoginModal.value = true; // 회원가입 후 바로 로그인 모달 띄우기
+        };
+
+        // LoginModal에서 '회원가입' 링크 클릭 시 호출
+        const handleOpenRegister = () => {
+            showLoginModal.value = false;
+            showRegisterModal.value = true;
+        };
+
+        // RegisterModal에서 '로그인' 링크 클릭 시 호출 (이벤트 추가 필요)
+        const handleOpenLogin = () => {
+            showRegisterModal.value = false;
+            showLoginModal.value = true;
         };
 
 
@@ -207,12 +256,19 @@ export default {
             handleAuthRequired,
             goToLogin,
             goToRegister,
+            showLoginModal,
+            showRegisterModal,
+            handleLoginSuccess,
+            handleRegistrationSuccess,
+            handleOpenRegister, // Expose to template
+            handleOpenLogin,    // Expose to template
         };
     }
 };
 </script>
 
 <style scoped>
+/* (Your existing styles remain unchanged) */
 .mystudy {
     display: flex;
     flex-direction: column;
