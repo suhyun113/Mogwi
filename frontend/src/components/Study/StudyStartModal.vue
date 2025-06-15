@@ -4,7 +4,7 @@
       <p>나의 학습에 추가되었습니다.<br />이제 이 문제를 학습할 수 있습니다.</p>
       <div class="study-buttons">
         <button @click="$emit('go-preview')">문제 구경하기</button>
-        <button @click="$emit('go-study', problemId)">문제 바로 풀기</button>
+        <button @click="$emit('go-study')">문제 바로 풀기</button>
       </div>
     </div>
   </div>
@@ -13,18 +13,10 @@
 <script>
 export default {
   name: 'StudyStartModal',
-  props: {
-    problemId: {
-      type: [String, Number],
-      required: true
-    }
-  },
-  emits: ['go-preview', 'go-study'] // Declare emits for clarity
 }
 </script>
 
 <style scoped>
-/* 기존 스타일은 동일합니다. */
 .study-modal-backdrop {
   position: fixed;
   top: 0; left: 0;

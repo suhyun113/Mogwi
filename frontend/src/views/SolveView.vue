@@ -137,26 +137,11 @@ export default {
         const response = await axios.get(`/api/study/${problemId}/solve`, {
           params: { currentUserId: currentUserId.value }
         });
-
-        // ⭐⭐⭐ MODIFICATION START ⭐⭐⭐
-        if (response.status === 204) { // Check for No Content status specifically
-            console.log("No cards found for this problem (HTTP 204).");
-            allProblemCards.value = []; // Set to empty array
-            shuffledProblemCards.value = []; // Set to empty array
-        } else if (Array.isArray(response.data)) { // Ensure response.data is an array before mapping
-            allProblemCards.value = response.data.map(card => ({
-                ...card,
-                cardStatus: card.cardStatus || 'new'
-            }));
-            shuffleCards(); // Shuffle them immediately after fetching
-        } else {
-            // Handle unexpected data format (e.g., if server returns something other than array or 204)
-            console.error("Unexpected response data format for cards:", response.data);
-            alert("문제 카드 불러오기 실패: 예상치 못한 데이터 형식");
-            allProblemCards.value = [];
-            shuffledProblemCards.value = [];
-        }
-        // ⭐⭐⭐ MODIFICATION END ⭐⭐⭐
+        allProblemCards.value = response.data.map(card => ({
+          ...card,
+          cardStatus: card.cardStatus || 'new'
+        }));
+        shuffleCards(); // 3. Shuffle them immediately after fetching
 
         // Also fetch problem title
         const problemResponse = await axios.get(`/api/problems/${problemId}`, {
@@ -166,15 +151,8 @@ export default {
 
       } catch (error) {
         console.error("문제 카드 불러오기 실패:", error);
-        // Provide a more specific error message if available
-        const errorMessage = error.response?.data?.message || error.message;
-        alert("문제 카드 불러오기 실패: " + errorMessage);
-        
-        // Ensure card lists are empty on error to display "카드를 찾을 수 없습니다."
-        allProblemCards.value = [];
-        shuffledProblemCards.value = [];
-        
-        // router.push(`/card/${problemId}`); // Fallback - consider if this is the desired behavior on error
+        alert("문제 카드 불러오기 실패: " + (error.response?.data?.message || error.message));
+        router.push(`/card/${problemId}`); // Fallback
       } finally {
         loading.value = false;
       }
@@ -205,10 +183,16 @@ export default {
 
       if (submittedAnswer === correct) {
         isCorrectAnswer.value = true;
-        currentProblemCard.value.cardStatus = 'perfect'; // 항상 perfect로
+        // Only change status to 'perfect' if it's not already perfect or vague
+        if (currentProblemCard.value.cardStatus !== 'perfect' && currentProblemCard.value.cardStatus !== 'vague') {
+          currentProblemCard.value.cardStatus = 'perfect';
+        }
       } else {
         isCorrectAnswer.value = false;
-        currentProblemCard.value.cardStatus = 'forgotten'; // 항상 forgotten으로
+        // Only change status to 'forgotten' if it's not already forgotten
+        if (currentProblemCard.value.cardStatus !== 'forgotten') {
+          currentProblemCard.value.cardStatus = 'forgotten';
+        }
         showAnswer.value = true;
       }
       await saveCardStatus(); // Await saving status before moving on

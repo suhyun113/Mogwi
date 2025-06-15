@@ -7,7 +7,7 @@ import SolveView from '@/views/SolveView.vue'
 const routes = [
   { 
     path: '/', 
-    name: 'main', 
+    name: 'home', 
     component: MainView 
   },
   {

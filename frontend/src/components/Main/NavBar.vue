@@ -34,21 +34,20 @@ const goHome = () => {
   router.push('/')
 }
 
-// 로그인 여부 확인: Vuex 스토어의 실제 키값인 'store_userid'를 사용합니다.
+// 로그인 여부 확인
 const isLoggedIn = computed(() => !!store.state.store_userid)
 
 // 로그아웃 처리
 const onLogout = () => {
-  // setUserInfo mutation을 사용하여 모든 관련 상태를 초기화합니다.
   store.commit('setUserInfo', {
-    userid: null, // null 또는 빈 문자열로 설정하여 로그아웃 상태를 나타냅니다.
-    userpass: null,
-    usermail: null,
-    username: null,
-    created_at: null
-  });
-  localStorage.clear(); // 모든 localStorage 데이터를 비웁니다.
-  router.push('/');
+    userid: '',
+    userpass: '',
+    usermail: '',
+    username: '',
+    created_at: ''
+  })
+  localStorage.clear()
+  router.push('/')
 }
 </script>
 

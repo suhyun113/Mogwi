@@ -2,19 +2,17 @@
   <div class="study-view">
     <div v-if="!problem" class="loading">문제를 불러오는 중입니다...</div>
     <div v-else class="card-box">
-      <ProblemCard
-        :problem="problem"
-        @like="toggleLike"
-        @scrap="toggleScrap"
-      />
-      <StartButton @click="handleStudyStartClick" />
-    </div>
-
+        <ProblemCard
+          :problem="problem"
+          @like="toggleLike"
+          @scrap="toggleScrap"
+        />
+        <StartButton @click="startStudy" />
+      </div>
     <StudyStartModal
       v-if="showStudyStartModal"
-      :problemId="problem ? problem.id : null"
-      @go-preview="handleGoPreviewFromStudyModal"
-      @go-study="handleGoStudyFromStudyModal"
+      @go-preview="showStudyStartModal = false"
+      @go-study="goToSolveView"
     />
   </div>
 </template>
@@ -24,105 +22,41 @@ import axios from 'axios';
 import StartButton from '@/components/StartButton.vue';
 import ProblemCard from '@/components/Study/ProblemCard.vue';
 import StudyStartModal from '@/components/Study/StudyStartModal.vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
 
 export default {
   components: { StartButton, ProblemCard, StudyStartModal },
   data() {
     return {
       problem: null,
-      problemStatus: null,
       showStudyStartModal: false
     };
   },
-  setup() {
-    const store = useStore();
-    const router = useRouter();
-    const currentUserId = store.state.store_userid;
-    return { currentUserId, router, store };
-  },
   created() {
     const id = this.$route.params.id;
-    this.fetchProblemDetails(id);
+    const store = this.$store;
+    const currentUserId = store.state.store_userid;
+    
+    axios.get(`/api/problems/${id}`, {
+      params: {
+        currentUserId: currentUserId
+      }
+    })
+      .then(res => {
+        console.log('API 응답 데이터:', res.data);
+        this.problem = res.data;
+      })
+      .catch(err => {
+        console.error("문제 불러오기 실패:", err);
+      });
   },
   methods: {
-    async fetchProblemDetails(id) {
-      try {
-        const response = await axios.get(`/api/problems/${id}`, {
-          params: {
-            currentUserId: this.$store.state.store_userid
-          }
-        });
-        console.log('API 응답 데이터 (문제 상세):', response.data);
-        this.problem = response.data;
-        if (this.problem && this.problem.userProblemStatus) {
-            this.problemStatus = this.problem.userProblemStatus.problemStatus;
-        } else {
-            this.problemStatus = 'new';
-        }
-        console.log('초기 문제 상태:', this.problemStatus);
-
-      } catch (err) {
-        console.error("문제 불러오기 실패:", err);
-      }
+    startStudy() {
+      this.showStudyStartModal = true;
     },
-
-    async handleStudyStartClick() {
-      const problemId = this.problem.id;
-
-      try {
-        const response = await axios.post('/api/solve/start-study', {
-          userId: this.currentUserId,
-          problemId: problemId
-        });
-
-        this.problemStatus = response.data.problemStatus;
-        console.log('API 응답 데이터 (start-study problemStatus):', this.problemStatus);
-
-        if (this.problemStatus === 'new') {
-          this.showStudyStartModal = true;
-          console.log('problemStatus가 "new"이므로 StudyStartModal 표시.');
-        } else {
-          console.log(`problemStatus가 "${this.problemStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
-          this.router.push(`/study/${problemId}/solve`);
-        }
-      } catch (error) {
-        console.error('문제 학습 시작 처리 중 예외 발생:', error);
-        alert('문제 학습을 시작할 수 없습니다. 서버 오류 또는 네트워크 문제일 수 있습니다.');
-      }
-    },
-
-    // StudyStartModal에서 '문제 구경하기' 클릭 시 (수정된 부분)
-    handleGoPreviewFromStudyModal() {
-      this.showStudyStartModal = false; // 모달 닫기
-      console.log('StudyView: "문제 구경하기" 클릭. 모달을 닫고 MainView로 이동.');
-      this.router.push('/'); // MainView로 라우팅
-    },
-
-    // StudyStartModal에서 '문제 바로 풀기' 클릭 시
-    async handleGoStudyFromStudyModal(problemIdFromModal) {
+    goToSolveView() {
       this.showStudyStartModal = false;
-      try {
-        const response = await axios.post('/api/solve/set-ongoing', {
-          userId: this.currentUserId,
-          problemId: problemIdFromModal
-        });
-
-        if (response.status === 200) {
-          console.log(`StudyView: 문제 ${problemIdFromModal} 학습 상태를 'ongoing'으로 업데이트 완료.`);
-          this.problemStatus = 'ongoing';
-          this.router.push(`/study/${problemIdFromModal}/solve`);
-        } else {
-          console.error('StudyView: 문제 상태 업데이트 실패:', response.data);
-          alert('문제 학습을 시작하는 데 실패했습니다.');
-        }
-      } catch (error) {
-        console.error('StudyView: 문제 상태 업데이트 중 오류:', error);
-        alert('문제 학습을 시작하는 데 문제가 발생했습니다.');
-      }
+      this.$router.push(`/study/${this.$route.params.id}/solve`);
     },
-
     toggleLike() {
       if (!this.problem) return;
       const newLiked = !this.problem.liked;
@@ -153,22 +87,11 @@ export default {
         this.problem.scraps += newScrapped ? -1 : 1;
       });
     }
-  },
-  watch: {
-    '$route.params.id': {
-      handler(newId, oldId) {
-        if (newId && newId !== oldId) {
-          this.fetchProblemDetails(newId);
-        }
-      },
-      immediate: true
-    }
   }
 };
 </script>
 
 <style scoped>
-/* (스타일은 변경 없음) */
 .study-view {
   display: flex;
   justify-content: center;

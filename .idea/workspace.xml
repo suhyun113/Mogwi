@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 메인 뷰 검색창 고정">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/MyStudyController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/MyStudyController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Study/StudyResultModal.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Study/StudyResultModal.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +81,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.MogwiSystemApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/9-feat-mystudy&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/7-feat-study&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;E:/internetDB/Mogwi/mogwi-system&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -187,10 +186,7 @@
       <workItem from="1749327835061" duration="1103000" />
       <workItem from="1749445879232" duration="8985000" />
       <workItem from="1749727394974" duration="265000" />
-      <workItem from="1749917814010" duration="5239000" />
-      <workItem from="1749976777629" duration="1480000" />
-      <workItem from="1749978282483" duration="8457000" />
-      <workItem from="1750001426727" duration="7748000" />
+      <workItem from="1749917814010" duration="3909000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
