@@ -20,7 +20,7 @@ public class ProblemController {
     @PersistenceContext
     private EntityManager entityManager;
 
-    // --- 기존 문제 목록 조회 API (변경 없음) ---
+    // --- 문제 목록 조회 API (color_code 추가) ---
     @GetMapping("/api/problems")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
@@ -28,13 +28,15 @@ public class ProblemController {
             @RequestParam(required = false) String currentUserId
     ) {
         try {
+            // SQL 쿼리에 c.color_code 추가
             StringBuilder sql = new StringBuilder(
                     "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.card_count, " +
                             "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1), 0) AS likes, " +
                             "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_scrapped = 1), 0) AS scraps, " +
                             "IFNULL(ups.is_liked, 0) AS liked, " +
                             "IFNULL(ups.is_scrapped, 0) AS scrapped, " +
-                            "c.tag_name AS category " +
+                            "c.tag_name AS category_name, " + // category_name으로 컬럼명 변경
+                            "c.color_code AS category_color " + // category_color 컬럼 추가
                             "FROM problems p " +
                             "JOIN users u ON p.author_id = u.id " +
                             "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserId) " +
@@ -50,7 +52,8 @@ public class ProblemController {
                 sql.append("AND c.tag_name = :category ");
             }
 
-            sql.append("GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped ");
+            // GROUP BY 절에 category_name, category_color 추가
+            sql.append("GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
             sql.append("ORDER BY p.id DESC");
 
             var queryObj = entityManager.createNativeQuery(sql.toString());
@@ -81,11 +84,15 @@ public class ProblemController {
                     item.put("scraps", row[6]);
                     item.put("liked", ((Number) row[7]).intValue() == 1);
                     item.put("scrapped", ((Number) row[8]).intValue() == 1);
-                    item.put("categories", new ArrayList<String>());
+                    item.put("categories", new ArrayList<Map<String, String>>()); // List<Map<String, String>>으로 변경
                     problemMap.put(problemId, item);
                 }
+                // row[9]는 tag_name, row[10]은 color_code
                 if (row[9] != null) {
-                    ((List<String>) problemMap.get(problemId).get("categories")).add(row[9].toString());
+                    Map<String, String> categoryMap = new HashMap<>();
+                    categoryMap.put("tag_name", row[9].toString());
+                    categoryMap.put("color_code", row[10] != null ? row[10].toString() : "#CCCCCC"); // null 처리 및 기본값
+                    ((List<Map<String, String>>) problemMap.get(problemId).get("categories")).add(categoryMap);
                 }
             }
 
@@ -203,7 +210,7 @@ public class ProblemController {
         }
     }
 
-    // --- 기존 문제 상세 조회 API (변경 없음) ---
+    // --- 문제 상세 조회 API (color_code 추가) ---
     @GetMapping("/api/problems/{id}")
     public ResponseEntity<Map<String, Object>> getProblemDetail(
             @PathVariable Long id,
@@ -244,18 +251,24 @@ public class ProblemController {
             response.put("liked", ((Number) row[8]).intValue() == 1);
             response.put("scrapped", ((Number) row[9]).intValue() == 1);
 
-            // 카테고리 조회
+            // 카테고리 조회 (tag_name과 color_code 포함)
             List<?> categoryResults = entityManager.createNativeQuery(
-                            "SELECT c.tag_name FROM problem_categories pc " +
+                            "SELECT c.tag_name, c.color_code FROM problem_categories pc " +
                                     "JOIN categories c ON pc.category_id = c.id " +
                                     "WHERE pc.problem_id = ?1")
                     .setParameter(1, id)
                     .getResultList();
 
-            List<String> categories = categoryResults.stream()
-                    .map(Object::toString)
-                    .collect(Collectors.toList());
-            response.put("categories", categories);
+            // List<Map<String, String>> 형태로 변환
+            List<Map<String, String>> categoriesWithColor = new ArrayList<>();
+            for (Object result : categoryResults) {
+                Object[] categoryRow = (Object[]) result;
+                Map<String, String> categoryMap = new HashMap<>();
+                categoryMap.put("tag_name", categoryRow[0].toString());
+                categoryMap.put("color_code", categoryRow[1] != null ? categoryRow[1].toString() : "#CCCCCC"); // null 처리 및 기본값
+                categoriesWithColor.add(categoryMap);
+            }
+            response.put("categories", categoriesWithColor);
 
             // 카드 리스트 조회 (정답 컬럼은 'correct'임, 'answer' 아님)
             List<?> cardResults = entityManager.createNativeQuery(
@@ -282,11 +295,12 @@ public class ProblemController {
         }
     }
 
-    // --- 새로운 API: 카테고리 목록 조회 (변경 없음) ---
+    // --- 새로운 API: 카테고리 목록 조회 (color_code 추가) ---
     @GetMapping("/api/categories")
     public ResponseEntity<List<Map<String, Object>>> getAllCategories() {
         try {
-            List<?> results = entityManager.createNativeQuery("SELECT id, tag_name FROM categories ORDER BY tag_name ASC")
+            // SQL 쿼리에 color_code 컬럼 추가
+            List<?> results = entityManager.createNativeQuery("SELECT id, tag_name, color_code FROM categories ORDER BY tag_name ASC")
                     .getResultList();
 
             List<Map<String, Object>> categories = new ArrayList<>();
@@ -295,6 +309,8 @@ public class ProblemController {
                 Map<String, Object> categoryMap = new HashMap<>();
                 categoryMap.put("id", ((Number) row[0]).longValue());
                 categoryMap.put("tag_name", row[1].toString());
+                // color_code 추가
+                categoryMap.put("color_code", row[2] != null ? row[2].toString() : "#CCCCCC"); // null 처리 및 기본값 설정
                 categories.add(categoryMap);
             }
             return ResponseEntity.ok(categories);
@@ -304,7 +320,7 @@ public class ProblemController {
         }
     }
 
-    // --- 새로운 API: 문제 생성 ---
+    // --- 새로운 API: 문제 생성 (변경 없음) ---
     @PostMapping("/api/problems")
     public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
         Map<String, String> response = new HashMap<>();
