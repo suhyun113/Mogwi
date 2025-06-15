@@ -59,6 +59,11 @@
           <span>{{ localProblem.totalScraps }}</span>
         </div>
       </div>
+      <div class="study-card-summary">
+        <span class="perfect-count" :title="`${localProblem.perfectCount}개 - 완벽한 기억`">{{ localProblem.perfectCount }}</span> /
+        <span class="vague-count" :title="`${localProblem.vagueCount}개 - 희미한 기억`">{{ localProblem.vagueCount }}</span> /
+        <span class="forgotten-count" :title="`${localProblem.forgottenCount}개 - 사라진 기억`">{{ localProblem.forgottenCount }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -78,24 +83,25 @@ export default {
     ProblemTag
   },
   props: {
-    problem: {
+    problem: { // The problem object comes from ProblemListSection
       type: Object,
       required: true
     },
-    isAuthenticated: {
+    isAuthenticated: { // From parent
       type: Boolean,
       default: false
     },
-    currentUserId: {
+    currentUserId: { // From parent
       type: String,
       default: ''
     }
   },
-  emits: ['auth-required', 'update-problem-data', 'go-to-study'],
+  // Define events this component can emit
+  emits: ['auth-required', 'update-problem-data', 'go-to-study'], // 'update-problem-data' for any change, 'go-to-study' for solve button
 
   data() {
     return {
-      localProblem: { ...this.problem },
+      localProblem: { ...this.problem }, // Create a local copy to manage reactivity for likes/scraps
       heartOff,
       heartOn,
       scrapOff,
@@ -103,16 +109,19 @@ export default {
       cardIcon
     }
   },
+  // Watch for changes in the 'problem' prop from the parent
+  // This ensures localProblem stays in sync if the parent updates the original problem object
   watch: {
     problem: {
       handler(newVal) {
         this.localProblem = { ...newVal }
       },
-      deep: true,
-      immediate: true
+      deep: true, // Watch for nested changes in the problem object
+      immediate: true // Run handler immediately on component mount
     }
   },
   methods: {
+    // Method to get background color for tags
     getColor(tag) {
       const trimmedTag = tag ? tag.trim() : '';
       const colors = {
@@ -128,7 +137,6 @@ export default {
       }
       return colors[trimmedTag] || '#ccc'
     },
-    // 학습 상태 텍스트 반환 메서드 추가
     getStatusText(status) {
       switch (status) {
         case 'new':
@@ -138,10 +146,9 @@ export default {
         case 'completed':
           return '완료';
         default:
-          return ''; // 알 수 없는 상태일 경우
+          return '';
       }
     },
-    // 학습 상태에 따른 CSS 클래스 반환 메서드 추가
     getStatusClass(status) {
       switch (status) {
         case 'new':
@@ -250,7 +257,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  /* 학습 상태 추가로 인한 flex-wrap 및 gap 추가 */
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -280,9 +286,8 @@ export default {
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-  flex-shrink: 0; /* 카운트가 줄어들지 않도록 설정 */
+  flex-shrink: 0;
 }
-/* 학습 상태 스타일 추가 */
 .study-status {
   font-size: 13px;
   font-weight: bold;
@@ -390,6 +395,29 @@ export default {
   transform: translateY(-1px);
 }
 
+/* 추가된 카드별 학습 상태 스타일 */
+.study-card-summary {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* 숫자들 사이 간격 */
+  font-weight: bold;
+  white-space: nowrap;
+  margin-left: auto; /* 좋아요/스크랩 옆에 오른쪽 정렬 */
+}
+
+.perfect-count {
+  color: #4CAF50; /* 초록색 */
+}
+
+.vague-count {
+  color: #FFC107; /* 주황색 */
+}
+
+.forgotten-count {
+  color: #F44336; /* 빨간색 */
+}
+
+
 /* Responsive adjustments */
 @media (max-width: 576px) {
     .title-row {
@@ -400,11 +428,11 @@ export default {
     .problem-title {
         max-width: 100%;
     }
-    .study-status { /* 작은 화면에서 오른쪽 정렬 */
+    .study-status {
         align-self: flex-end;
         margin-top: 4px;
     }
-    .card-count { /* 작은 화면에서 study-status와 줄바꿈되도록 여유 공간 부여 */
+    .card-count {
         align-self: flex-start;
         margin-bottom: 4px;
     }
@@ -419,6 +447,16 @@ export default {
     }
     .edit-btn, .solve-btn {
         flex-grow: 1;
+    }
+    /* 작은 화면에서 카드별 학습 상태 정렬 */
+    .meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .study-card-summary {
+        margin-left: 0; /* 왼쪽 정렬 */
+        align-self: flex-end; /* 오른쪽으로 배치되도록 */
     }
 }
 </style>

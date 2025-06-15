@@ -4,20 +4,15 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
-// Correct imports for components using export default
 import OverallStudySummary from '@/components/MyStudy/OverallStudySummary.vue';
 import ProblemListSection from '@/components/MyStudy/ProblemListSection.vue';
 
 export default {
-    /* eslint-disable */ // Add this line at the very top of the script section to disable all ESLint warnings/errors in this file.
     name: 'MyStudy',
-
-    // Register components here
     components: {
         OverallStudySummary,
         ProblemListSection
     },
-
     setup() {
         const store = useStore();
         const router = useRouter();
@@ -29,7 +24,6 @@ export default {
         const loading = ref(true);
         const error = ref(null);
 
-        // Overall Study Summary Data
         const overallPerfectCount = ref(0);
         const overallVagueCount = ref(0);
         const overallForgottenCount = ref(0);
@@ -65,21 +59,32 @@ export default {
                 console.log(`Fetching detailed problems for userId: ${currentUserId.value}`);
                 const problemsResponse = await axios.get(`/api/mystudy/problems/detail/${currentUserId.value}`);
 
-                // **여기가 핵심입니다.**
-                // 백엔드에서 받은 `categories` 데이터가 배열인지 확인하고,
-                // 만약 `null`이나 `undefined`이면 빈 배열로 초기화하여 `v-for`가 오류 없이 동작하게 합니다.
-                allUserProblems.value = problemsResponse.data.map(problem => ({
-                    ...problem,
-                    isLiked: problem.isLiked,
-                    isScrapped: problem.isScrapped,
-                    authorNickname: problem.authorNickname || '알 수 없음',
-                    // `categories` 필드가 존재하지 않거나 null일 경우를 대비하여 빈 배열로 설정
-                    // 백엔드에서 이 필드가 올바른 문자열 배열로 전달되는지 확인해야 합니다.
-                    categories: Array.isArray(problem.categories) ? problem.categories : [],
-                }));
+                if (!problemsResponse.data || !Array.isArray(problemsResponse.data)) {
+                    console.warn("API 응답 데이터가 유효한 배열이 아닙니다.", problemsResponse.data);
+                    allUserProblems.value = [];
+                    return;
+                }
 
-                // **디버깅을 위해 추가: `allUserProblems`의 `categories` 내용 확인**
-                console.log("MyStudy: Processed allUserProblems (with categories check):", allUserProblems.value);
+                allUserProblems.value = problemsResponse.data.map(problem => {
+                    if (!problem) {
+                        console.warn("Received null or undefined problem in the list, skipping.", problem);
+                        return null;
+                    }
+                    return {
+                        ...problem,
+                        isLiked: problem.isLiked,
+                        isScrapped: problem.isScrapped,
+                        authorNickname: problem.authorNickname || '알 수 없음',
+                        categories: Array.isArray(problem.categories) ? problem.categories : [],
+                        id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
+                        // 새롭게 추가: 카드별 학습 상태 필드를 기본값 0으로 설정
+                        perfectCount: problem.perfectCount || 0,
+                        vagueCount: problem.vagueCount || 0,
+                        forgottenCount: problem.forgottenCount || 0,
+                    };
+                }).filter(problem => problem !== null);
+
+                console.log("MyStudy: Processed allUserProblems (with categories and card counts):", allUserProblems.value);
 
             } catch (err) {
                 console.error("나의 학습 데이터 불러오기 실패:", err);
@@ -109,14 +114,6 @@ export default {
             router.push({ name: 'SolveView', params: { problemId: problemId } });
         };
 
-        // ProblemListItem에서 이미 toggleLike와 toggleScrap을 자체적으로 처리하고
-        // 'update-problem-data' 이벤트를 통해 상태를 동기화하므로,
-        // MyStudy.vue에서 직접 좋아요/스크랩 토글 로직을 가질 필요는 없습니다.
-        // ProblemListSection에서 ProblemListItem의 'update-problem-data'를
-        // `handleUpdateProblemData`를 통해 처리하고 있으므로,
-        // MyStudy.vue에서는 이 이벤트를 별도로 받을 필요가 없습니다.
-        // 따라서 MyStudy.vue의 `@toggle-like`와 `@toggle-scrap` 이벤트 리스너는 제거합니다.
-
         onMounted(() => {
             fetchMyStudyData();
         });
@@ -134,8 +131,6 @@ export default {
             ongoingProblems,
             completedProblems,
             goToStudy,
-            // toggleLike, // ProblemListItem에서 직접 처리하므로 MyStudy에서는 제거
-            // toggleScrap // ProblemListItem에서 직접 처리하므로 MyStudy에서는 제거
         };
     }
 };
@@ -168,7 +163,8 @@ export default {
                 :isLoggedIn="isLoggedIn"
                 :currentUserId="currentUserId"
                 @go-to-study="goToStudy"
-                @auth-required="$emit('auth-required')" @update-problem-data="handleUpdateProblemData" />
+                @auth-required="$emit('auth-required')"
+            />
         </div>
     </div>
 </template>
@@ -179,19 +175,19 @@ export default {
     flex-direction: column;
     align-items: center;
     padding: 40px 20px;
-    background-color: #fdf8f4; /* Light background */
+    background-color: #fdf8f4;
     min-height: 100vh;
-    font-family: 'Pretendard', sans-serif; /* Recommended font */
+    font-family: 'Pretendard', sans-serif;
 }
 
 .page-title {
-    color: #5a2e87; /* Deep purple */
+    color: #5a2e87;
     font-size: 2.2rem;
     font-weight: 700;
     margin-bottom: 40px;
     text-align: center;
     padding: 10px 20px;
-    background-color: #e6d6ff; /* Lighter purple background */
+    background-color: #e6d6ff;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
@@ -203,15 +199,14 @@ export default {
     text-align: center;
 }
 
-/* 추가: 로그인하지 않았을 때 메시지 스타일 */
 .not-logged-in-message {
     text-align: center;
     margin-top: 50px;
     padding: 30px;
-    background-color: #fff3cd; /* Light yellow background */
+    background-color: #fff3cd;
     border: 1px solid #ffeeba;
     border-radius: 10px;
-    color: #856404; /* Dark yellow text */
+    color: #856404;
     font-size: 1.1rem;
     max-width: 600px;
     margin-left: auto;
