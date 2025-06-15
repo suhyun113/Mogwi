@@ -67,7 +67,7 @@
         </div>
 
         <ul v-else class="problem-list">
-            <li v-for="problem in currentProblems" :key="problem.id" class="problem-item">
+            <li v-for="problem in paginatedProblems" :key="problem.id" class="problem-item">
                 <ProblemListItem
                     :problem="problem"
                     :isAuthenticated="isLoggedIn"
@@ -81,11 +81,24 @@
                     @auth-required="$emit('auth-required')" />
             </li>
         </ul>
+        <div v-if="totalPages > 0" class="pagination">
+            <button class="pagination-arrow" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">&lt;</button>
+            <button
+                v-for="page in totalPages"
+                :key="page"
+                class="pagination-btn"
+                :class="{ active: page === currentPage }"
+                @click="goToPage(page)"
+            >
+                {{ page }}
+            </button>
+            <button class="pagination-arrow" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">&gt;</button>
+        </div>
     </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import ProblemListItem from '@/components/MyStudy/ProblemListItem.vue';
 import deleteIcon from '@/assets/icons/delete.png';
@@ -120,6 +133,9 @@ export default {
         const isSelectionMode = ref(false);
         const selectedProblems = ref([]);
 
+        const problemsPerPage = 3;
+        const currentPage = ref(1);
+
         const currentProblems = computed(() => {
             if (!props.isLoggedIn) {
                 return [];
@@ -127,6 +143,19 @@ export default {
             return activeTab.value === 'ongoing'
                 ? props.ongoingProblems
                 : props.completedProblems;
+        });
+
+        const totalPages = computed(() => {
+            return Math.max(1, Math.ceil(currentProblems.value.length / problemsPerPage));
+        });
+
+        const paginatedProblems = computed(() => {
+            const start = (currentPage.value - 1) * problemsPerPage;
+            return currentProblems.value.slice(start, start + problemsPerPage);
+        });
+
+        watch(currentProblems, () => {
+            currentPage.value = 1; // 탭 변경 시 첫 페이지로
         });
 
         const checkLoginAndExecute = () => {
@@ -262,6 +291,12 @@ export default {
             }
         };
 
+        function goToPage(page) {
+            if (page >= 1 && page <= totalPages.value) {
+                currentPage.value = page;
+            }
+        }
+
         return {
             activeTab,
             isSelectionMode,
@@ -275,6 +310,10 @@ export default {
             handleToggleSelection,
             confirmDeleteSelectedProblems,
             deleteIcon,
+            totalPages,
+            paginatedProblems,
+            currentPage,
+            goToPage,
         };
     },
 };
@@ -286,7 +325,7 @@ export default {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 30px;
+    padding: 30px 30px 50px 30px; /* 하단 패딩 50px로 증가 */
     margin-top: -20px;
     width: 100%;
     max-width: 800px;
@@ -477,5 +516,48 @@ export default {
 
 .problem-item {
     margin-bottom: -1px; /* 아이템들을 약간 겹치게 만듦 */
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 0px;
+    margin-bottom: 20px; /* 페이지 번호 아래에 20px 여백 추가 */
+    align-items: center;
+}
+.pagination-btn {
+    background: none; /* 배경 제거 */
+    border: none; /* 테두리 제거 */
+    color: #5a2e87; /* 텍스트 색상 유지 */
+    border-radius: 0; /* 둥근 테두리 제거 */
+    padding: 0 5px; /* 패딩 최소화 */
+    font-size: 1.1rem; /* 폰트 크기 유지 */
+    font-weight: 600; /* 폰트 굵기 좀 더 강조 */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.pagination-btn.active {
+    color: #a471ff; /* 활성화된 페이지 색상 강조 */
+    text-decoration: underline; /* 활성화된 페이지 밑줄 */
+}
+.pagination-btn:hover:not(.active):not(:disabled) {
+    color: #854fe6; /* 호버 시 색상 변경 */
+    text-decoration: underline; /* 호버 시 밑줄 */
+}
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #a0a0a0; /* 비활성화 시 색상 */
+}
+.pagination-arrow {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: #a471ff;
+    padding: 0 10px;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 </style>
