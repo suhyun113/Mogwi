@@ -51,7 +51,7 @@
             color: selectedTags.includes(category.id) ? 'white' : '#555'
           }"
         >
-          {{ category.tag_name }}
+          {{ formatTagName(category.tag_name) }}
         </button>
       </div>
       <p v-if="tagError" class="error-text">{{ tagError }}</p>
@@ -92,23 +92,16 @@ export default {
   setup(props, { emit }) {
     const tagError = ref('');
 
-    const getColor = (tag) => {
-      // 앞뒤 공백 제거, 모든 선행 '#' 제거 후 하나의 '#'만 붙임
-      let processedTag = tag ? tag.trim().replace(/^#+/, '') : '';
-      processedTag = '#' + processedTag;
+    // Helper function to format tag names for display (ensuring single #)
+    const formatTagName = (tagName) => {
+      const cleanedTagName = tagName.startsWith('#') ? tagName.substring(1) : tagName;
+      return `#${cleanedTagName}`;
+    };
 
-      const colors = {
-        '#수학': '#ffd54f',
-        '#AI': '#81c784',
-        '#컴퓨터': '#64b5f6',
-        '#과학': '#4dd0e1',
-        '#역사': '#a1887f',
-        '#기타': '#e0e0e0',
-        '#프론트엔드': '#ba68c8',
-        '#자료구조': '#f06292',
-        '#디자인': '#FFC0CB'
-      };
-      return colors[processedTag] || '#ccc'; // 기본 색상을 '#ccc'로 되돌림
+    const getColor = (tag) => {
+      // Find the category object that matches this tag name
+      const category = props.allCategories.find(cat => cat.tag_name === tag);
+      return category?.color_code || '#ccc';
     };
 
     const toggleTag = (tagId) => {
@@ -143,6 +136,7 @@ export default {
       tagError,
       toggleTag,
       getColor,
+      formatTagName,
     };
   },
 };

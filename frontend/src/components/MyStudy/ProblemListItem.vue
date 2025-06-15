@@ -16,8 +16,8 @@
             <div class="category-tags">
                 <ProblemTag
                     v-for="tag in localProblem.categories"
-                    :key="tag"
-                    :tagName="tag"
+                    :key="tag.id"
+                    :tagName="formatTagName(tag.tag_name)"
                     :backgroundColor="getColor(tag)" />
             </div>
             <div class="btn-wrapper">
@@ -208,20 +208,13 @@ export default {
         }
     },
     methods: {
+        formatTagName(tagName) {
+            // Remove existing '#' if any, then prepend a single '#'
+            const cleanedTagName = tagName.startsWith('#') ? tagName.substring(1) : tagName;
+            return `#${cleanedTagName}`;
+        },
         getColor(tag) {
-            const trimmedTag = tag ? tag.trim() : '';
-            const colors = {
-                '#수학': '#ffd54f',
-                '#AI': '#81c784',
-                '#컴퓨터': '#64b5f6',
-                '#과학': '#4dd0e1',
-                '#역사': '#a1887f',
-                '#기타': '#e0e0e0',
-                '#프론트엔드': '#ba68c8',
-                '#자료구조': '#f06292',
-                '#전체': '#b0bec5'
-            }
-            return colors[trimmedTag] || '#ccc'
+            return tag.color_code || '#ccc';
         },
         getStatusText(status) {
             switch (status) {
