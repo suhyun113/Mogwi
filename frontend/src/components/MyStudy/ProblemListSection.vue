@@ -1,6 +1,41 @@
 <template>
     <div class="problem-list-section">
-        <h2 class="section-title">학습 현황</h2>
+        <div class="section-header">
+            <h2 class="section-title">학습 현황</h2>
+            <div class="header-buttons">
+                <button
+                    v-if="!isSelectionMode"
+                    @click="enterSelectionMode"
+                    class="action-button delete-mode-icon-button"
+                    :disabled="!isLoggedIn"
+                    aria-label="삭제 모드 진입"
+                >
+                    <img :src="deleteIcon" alt="삭제 아이콘" class="button-icon" />
+                    <span>삭제</span>
+                </button>
+                <template v-else>
+                    <button
+                        @click="confirmDeleteSelectedProblems"
+                        :disabled="selectedProblems.length === 0 || !isLoggedIn"
+                        class="action-button delete-selected-button"
+                        :class="{ 'is-active': selectedProblems.length > 0 }"
+                        aria-label="선택된 문제 삭제"
+                    >
+                        <img :src="deleteIcon" alt="삭제 아이콘" class="button-icon" />
+                        <span>선택 삭제 ({{ selectedProblems.length }})</span>
+                    </button>
+                    <button
+                        @click="cancelSelectionMode"
+                        class="action-button cancel-selection-icon-button"
+                        :disabled="!isLoggedIn"
+                        aria-label="선택 취소"
+                    >
+                        <img :src="deleteIcon" alt="취소 아이콘" class="button-icon" />
+                        <span>취소</span>
+                    </button>
+                </template>
+            </div>
+        </div>
 
         <div class="problem-list-tabs">
             <button
@@ -17,33 +52,6 @@
             >
                 학습 완료 ({{ isLoggedIn ? completedProblems.length : 0 }})
             </button>
-        </div>
-
-        <div class="delete-mode-controls">
-            <button
-                v-if="!isSelectionMode"
-                @click="enterSelectionMode"
-                class="delete-mode-button"
-                :disabled="!isLoggedIn"
-            >
-                삭제 모드 진입
-            </button>
-            <template v-else>
-                <button
-                    @click="confirmDeleteSelectedProblems"
-                    :disabled="selectedProblems.length === 0 || !isLoggedIn"
-                    class="delete-selected-button"
-                >
-                    선택 삭제 ({{ selectedProblems.length }})
-                </button>
-                <button
-                    @click="cancelSelectionMode"
-                    class="cancel-selection-button"
-                    :disabled="!isLoggedIn"
-                >
-                    취소
-                </button>
-            </template>
         </div>
 
         <div v-if="!isLoggedIn" class="no-problems-message not-logged-in-msg">
@@ -77,9 +85,10 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'; // 'watch'는 MyStudyView.vue에 추가됩니다.
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import ProblemListItem from '@/components/MyStudy/ProblemListItem.vue';
+import deleteIcon from '@/assets/icons/delete.png';
 
 export default {
     name: 'ProblemListSection',
@@ -120,8 +129,6 @@ export default {
                 : props.completedProblems;
         });
 
-        // 모든 액션에 로그인 필요 조건 추가
-        // 'action' 매개변수 제거
         const checkLoginAndExecute = () => {
             if (!props.isLoggedIn) {
                 emit('auth-required');
@@ -185,7 +192,7 @@ export default {
             }
             isSelectionMode.value = true;
             selectedProblems.value = [];
-            alert("삭제할 문제를 클릭하여 선택하세요.");
+            alert("삭제할 문제를 클릭하여 선택한 후, '선택 삭제' 버튼을 눌러주세요.");
         };
 
         const cancelSelectionMode = () => {
@@ -255,7 +262,6 @@ export default {
             }
         };
 
-
         return {
             activeTab,
             isSelectionMode,
@@ -268,6 +274,7 @@ export default {
             cancelSelectionMode,
             handleToggleSelection,
             confirmDeleteSelectedProblems,
+            deleteIcon,
         };
     },
 };
@@ -286,13 +293,119 @@ export default {
     box-sizing: border-box;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
 .section-title {
     color: #5a2e87;
     font-size: 1.8rem;
     font-weight: 600;
-    margin-bottom: 25px;
-    text-align: center;
+    margin: 0;
 }
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* 모든 액션 버튼에 공통적으로 적용될 스타일 */
+.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.action-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.button-icon {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    filter: brightness(1); /* 기본 밝기 설정 */
+    transition: filter 0.2s ease, opacity 0.2s ease; /* 필터 애니메이션 추가 */
+}
+
+/* 1. "삭제" 버튼 (기본 상태) */
+.delete-mode-icon-button {
+    color:rgb(157, 28, 28); /* 빨간색 텍스트 */
+}
+.delete-mode-icon-button:hover:not(:disabled) {
+    color: #c90000;
+}
+.delete-mode-icon-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #a0a0a0;
+}
+.delete-mode-icon-button:disabled .button-icon {
+    filter: grayscale(100%) brightness(150%); /* 아이콘을 밝은 회색조로 */
+    opacity: 0.6;
+}
+
+
+/* 2. "선택 삭제 (N)" 버튼 (삭제 모드 시) */
+.delete-selected-button {
+    color: #a0a0a0; /* 기본 텍스트 색상: 회색 */
+}
+.delete-selected-button .button-icon {
+    filter: grayscale(100%) brightness(150%); /* 기본 아이콘 색상: 회색 */
+}
+
+.delete-selected-button.is-active { /* 선택된 문제가 있을 때 활성화 */
+    color: #e03c3c; /* 빨간색 텍스트 */
+}
+.delete-selected-button.is-active .button-icon {
+    filter: invert(21%) sepia(87%) saturate(3061%) hue-rotate(344deg) brightness(80%) contrast(100%); /* 빨간색 필터 */
+}
+.delete-selected-button.is-active:hover:not(:disabled) {
+    color: #c90000; /* 호버 시 더 진한 빨간색 */
+}
+
+.delete-selected-button:disabled { /* 로그인 안 했거나 문제가 없을 때 */
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+/* disabled 상태는 .is-active 여부와 관계없이 적용 */
+.delete-selected-button:disabled .button-icon {
+    filter: grayscale(100%) brightness(150%); /* 비활성화 시 아이콘 회색 */
+    opacity: 0.6;
+}
+
+
+/* 3. "취소" 버튼 (삭제 모드 시) */
+.cancel-selection-icon-button {
+    color: #555; /* 회색 텍스트 */
+}
+.cancel-selection-icon-button .button-icon {
+    filter: grayscale(100%) brightness(100%); /* 회색 필터 (조금 더 어둡게) */
+}
+.cancel-selection-icon-button:hover:not(:disabled) {
+    color: #333; /* 호버 시 더 진한 회색 */
+}
+.cancel-selection-icon-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #a0a0a0;
+}
+.cancel-selection-icon-button:disabled .button-icon {
+    filter: grayscale(100%) brightness(150%); /* 비활성화 시 아이콘 밝은 회색 */
+    opacity: 0.6;
+}
+
 
 .problem-list-tabs {
     display: flex;
@@ -324,68 +437,6 @@ export default {
     background-color: #e0e0e0;
 }
 .problem-list-tabs button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #f0f0f0;
-    color: #a0a0a0;
-}
-
-
-/* 삭제 모드 제어 버튼 스타일 */
-.delete-mode-controls {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-    gap: 10px;
-}
-
-.delete-mode-button,
-.delete-selected-button,
-.cancel-selection-button {
-    padding: 10px 20px;
-    font-size: 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
-}
-
-.delete-mode-button {
-    background-color: #f7a1a1;
-    color: #a30000;
-    border: 1px solid #e07070;
-}
-.delete-mode-button:hover:not(:disabled) {
-    background-color: #e07070;
-    color: white;
-    transform: translateY(-2px);
-}
-
-.delete-selected-button {
-    background-color: #e03c3c;
-    color: white;
-    border: none;
-}
-.delete-selected-button:not(:disabled):hover {
-    background-color: #c90000;
-    transform: translateY(-2px);
-}
-.delete-selected-button:disabled {
-    background-color: #f0f0f0;
-    color: #ccc;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.cancel-selection-button {
-    background-color: #cccccc;
-    color: #333;
-    border: none;
-}
-.cancel-selection-button:hover:not(:disabled) {
-    background-color: #aaaaaa;
-    transform: translateY(-2px);
-}
-.cancel-selection-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     background-color: #f0f0f0;
