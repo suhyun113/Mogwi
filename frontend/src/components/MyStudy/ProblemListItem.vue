@@ -5,10 +5,6 @@
         <h3 class="problem-title">{{ localProblem.title }}</h3>
         <span class="author">작성자: {{ localProblem.authorNickname }}</span>
       </div>
-      <div class="card-count">
-        <img :src="cardIcon" alt="card icon" class="icon card-icon" />
-        {{ localProblem.cardCount }} 카드
-      </div>
       <div class="study-status">
         <span :class="getStatusClass(localProblem.studyStatus)">
           {{ getStatusText(localProblem.studyStatus) }}
@@ -59,10 +55,17 @@
           <span>{{ localProblem.totalScraps }}</span>
         </div>
       </div>
-      <div class="study-card-summary">
-        <span class="perfect-count" :title="`${localProblem.perfectCount}개 - 완벽한 기억`">{{ localProblem.perfectCount }}</span> /
-        <span class="vague-count" :title="`${localProblem.vagueCount}개 - 희미한 기억`">{{ localProblem.vagueCount }}</span> /
-        <span class="forgotten-count" :title="`${localProblem.forgottenCount}개 - 사라진 기억`">{{ localProblem.forgottenCount }}</span>
+
+      <div class="meta-right-group">
+        <div class="study-card-summary">
+          <span class="perfect-count" :title="`${localProblem.perfectCount}개 - 완벽한 기억`">{{ localProblem.perfectCount }}</span> /
+          <span class="vague-count" :title="`${localProblem.vagueCount}개 - 희미한 기억`">{{ localProblem.vagueCount }}</span> /
+          <span class="forgotten-count" :title="`${localProblem.forgottenCount}개 - 사라진 기억`">{{ localProblem.forgottenCount }}</span>
+        </div>
+        <div class="card-count meta-card-count">
+          <img :src="cardIcon" alt="card icon" class="icon card-icon" />
+          {{ localProblem.cardCount }} 카드
+        </div>
       </div>
     </div>
   </div>
@@ -83,25 +86,24 @@ export default {
     ProblemTag
   },
   props: {
-    problem: { // The problem object comes from ProblemListSection
+    problem: {
       type: Object,
       required: true
     },
-    isAuthenticated: { // From parent
+    isAuthenticated: {
       type: Boolean,
       default: false
     },
-    currentUserId: { // From parent
+    currentUserId: {
       type: String,
       default: ''
     }
   },
-  // Define events this component can emit
-  emits: ['auth-required', 'update-problem-data', 'go-to-study'], // 'update-problem-data' for any change, 'go-to-study' for solve button
+  emits: ['auth-required', 'update-problem-data', 'go-to-study'],
 
   data() {
     return {
-      localProblem: { ...this.problem }, // Create a local copy to manage reactivity for likes/scraps
+      localProblem: { ...this.problem },
       heartOff,
       heartOn,
       scrapOff,
@@ -109,31 +111,28 @@ export default {
       cardIcon
     }
   },
-  // Watch for changes in the 'problem' prop from the parent
-  // This ensures localProblem stays in sync if the parent updates the original problem object
   watch: {
     problem: {
       handler(newVal) {
         this.localProblem = { ...newVal }
       },
-      deep: true, // Watch for nested changes in the problem object
-      immediate: true // Run handler immediately on component mount
+      deep: true,
+      immediate: true
     }
   },
   methods: {
-    // Method to get background color for tags
     getColor(tag) {
       const trimmedTag = tag ? tag.trim() : '';
       const colors = {
-        '수학': '#ffd54f',
-        'AI': '#81c784',
-        '컴퓨터': '#64b5f6',
-        '과학': '#4dd0e1',
-        '역사': '#a1887f',
-        '기타': '#e0e0e0',
-        '프론트엔드': '#ba68c8',
-        '자료구조': '#f06292',
-        '전체': '#b0bec5'
+        '#수학': '#ffd54f',
+        '#AI': '#81c784',
+        '#컴퓨터': '#64b5f6',
+        '#과학': '#4dd0e1',
+        '#역사': '#a1887f',
+        '#기타': '#e0e0e0',
+        '#프론트엔드': '#ba68c8',
+        '#자료구조': '#f06292',
+        '#전체': '#b0bec5'
       }
       return colors[trimmedTag] || '#ccc'
     },
@@ -279,7 +278,8 @@ export default {
   white-space: nowrap;
   flex-shrink: 0;
 }
-.card-count {
+/* 기존 .card-count 스타일은 .meta-card-count로 이동 */
+/* .card-count {
   font-size: 13px;
   color: #666;
   display: flex;
@@ -287,7 +287,8 @@ export default {
   gap: 4px;
   white-space: nowrap;
   flex-shrink: 0;
-}
+} */
+
 .study-status {
   font-size: 13px;
   font-weight: bold;
@@ -298,17 +299,17 @@ export default {
 }
 
 .status-new {
-  background-color: #e0e0e0; /* 회색 (진행 전) */
+  background-color: #e0e0e0;
   color: #616161;
 }
 
 .status-ongoing {
-  background-color: #ffe082; /* 노란색 (진행 중) */
+  background-color: #ffe082;
   color: #c66900;
 }
 
 .status-completed {
-  background-color: #a5d6a7; /* 초록색 (완료) */
+  background-color: #a5d6a7;
   color: #2e7d32;
 }
 
@@ -331,10 +332,11 @@ export default {
 .meta {
   margin-top: 10px;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* meta-left와 meta-right-group을 양 끝으로 정렬 */
   align-items: center;
   font-size: 14px;
   color: #666;
+  flex-wrap: wrap; /* 반응형을 위해 추가 */
 }
 .meta-left {
   display: flex;
@@ -399,22 +401,41 @@ export default {
 .study-card-summary {
   display: flex;
   align-items: center;
-  gap: 4px; /* 숫자들 사이 간격 */
+  gap: 4px;
   font-weight: bold;
   white-space: nowrap;
-  margin-left: auto; /* 좋아요/스크랩 옆에 오른쪽 정렬 */
 }
 
 .perfect-count {
-  color: #4CAF50; /* 초록색 */
+  color: #4CAF50;
 }
 
 .vague-count {
-  color: #FFC107; /* 주황색 */
+  color: #FFC107;
 }
 
 .forgotten-count {
-  color: #F44336; /* 빨간색 */
+  color: #F44336;
+}
+
+/* 새로 추가된 카드 수 스타일 */
+.meta-card-count {
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* meta 내의 오른쪽 정렬을 위한 그룹 */
+.meta-right-group {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 카드 상태 개수와 총 카드 수 사이의 간격 */
+    margin-left: auto; /* meta-left 옆에서 오른쪽으로 정렬 */
+    flex-wrap: wrap; /* 작은 화면에서 줄바꿈되도록 */
 }
 
 
@@ -432,10 +453,6 @@ export default {
         align-self: flex-end;
         margin-top: 4px;
     }
-    .card-count {
-        align-self: flex-start;
-        margin-bottom: 4px;
-    }
     .category-row {
         flex-direction: column;
         align-items: flex-start;
@@ -448,15 +465,20 @@ export default {
     .edit-btn, .solve-btn {
         flex-grow: 1;
     }
-    /* 작은 화면에서 카드별 학습 상태 정렬 */
+    /* 작은 화면에서 meta 정렬 */
     .meta {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: flex-start; /* 좋아요/스크랩은 왼쪽에 */
         gap: 8px;
     }
+    .meta-right-group {
+        margin-left: 0; /* 왼쪽 정렬 해제 */
+        width: 100%; /* 전체 너비 차지 */
+        justify-content: flex-end; /* 오른쪽 끝으로 정렬 */
+    }
+    /* study-card-summary의 margin-left: auto;를 초기화 */
     .study-card-summary {
-        margin-left: 0; /* 왼쪽 정렬 */
-        align-self: flex-end; /* 오른쪽으로 배치되도록 */
+        margin-left: 0;
     }
 }
 </style>
