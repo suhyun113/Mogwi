@@ -189,22 +189,26 @@ export default {
 .mystudy {
     display: flex;
     flex-direction: column;
-    align-items: center; /* 전체 콘텐츠 중앙 정렬 유지 */
-    padding: 40px 20px; /* 전체 페이지 패딩 */
+    align-items: center;
+    padding: 40px 20px;
     background-color: #fdf8f4;
-    height: 100vh; /* 고정 높이 */
-    overflow: hidden; /* 스크롤 제거 */
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: hidden;
     font-family: 'Pretendard', sans-serif;
-    position: relative;
-    box-sizing: border-box; /* 패딩을 높이에 포함 */
 }
 
-/* 전역 스타일 추가 */
+/* 전역 스타일 */
 :deep(html), :deep(body) {
     margin: 0;
     padding: 0;
     height: 100%;
+    width: 100%;
     overflow: hidden;
+    position: fixed;
 }
 
 /* 페이지 제목: 왼쪽 상단 고정 */
