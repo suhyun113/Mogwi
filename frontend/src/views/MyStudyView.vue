@@ -216,42 +216,38 @@ export default {
     color: #5a2e87;
     font-size: 2.2rem;
     font-weight: 700;
-    /* 배경 및 그림자 제거 (이전 답변에서 적용) */
     background-color: transparent;
     border-radius: 0;
     box-shadow: none;
     padding: 0;
-    /* 왼쪽 상단 배치 (이전 답변에서 적용) */
     position: absolute;
-    top: 40px; /* mystudy의 padding-top과 일치 */
-    left: 40px; /* mystudy의 padding-left와 일치 */
+    top: 120px;
+    left: 40px;
     margin: 0;
     text-align: left;
     width: auto;
-    z-index: 10; /* 다른 요소 위에 오도록 */
+    z-index: 10;
 }
 
 /* OverallStudySummary 컴포넌트 배치 조정 */
 /* OverallStudySummary에 직접 적용할 클래스 */
 .overall-summary-placement {
-    /* position: relative; (선택 사항: MyStudyView에서 z-index 관리가 필요할 때) */
-    z-index: 5; /* 제목보다 낮은 z-index */
-    margin-top: 100px; /* 페이지 제목과의 간격을 줘서 겹치지 않게 */
-    /* MyStudyView 내에서 중앙 정렬을 위해 */
-    width: 100%; /* 부모 너비를 따라가되, 컴포넌트 내부에서 max-width가 적용됨 */
-    max-width: 800px; /* OverallStudySummary의 max-width와 동일하게 맞춤 */
-    box-sizing: border-box; /* 패딩, 보더 포함 너비 계산 */
-    padding: 0 20px; /* mystudy의 좌우 패딩을 고려하여 내용물 중앙 정렬 */
-    margin-bottom: 15px; /* 하단 여백 추가 */
+    z-index: 5;
+    margin-top: 160px; /* 100px에서 160px로 증가 */
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+    padding: 0 20px;
+    margin-bottom: 15px;
 }
 
 /* ProblemListSection 배치 조정 */
 .problem-list-section {
     position: relative;
     z-index: 5;
-    margin-top: 15px; /* OverallStudySummary와의 간격 추가 */
+    margin-top: 30px; /* 15px에서 30px로 증가 */
     width: 100%;
-    max-width: 800px; /* MyStudyView 내에서 중앙 정렬을 위해 */
+    max-width: 800px;
     box-sizing: border-box;
     padding: 0 20px;
 }
