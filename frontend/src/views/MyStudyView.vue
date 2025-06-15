@@ -192,9 +192,19 @@ export default {
     align-items: center; /* 전체 콘텐츠 중앙 정렬 유지 */
     padding: 40px 20px; /* 전체 페이지 패딩 */
     background-color: #fdf8f4;
-    min-height: 100vh;
+    height: 100vh; /* 고정 높이 */
+    overflow: hidden; /* 스크롤 제거 */
     font-family: 'Pretendard', sans-serif;
     position: relative;
+    box-sizing: border-box; /* 패딩을 높이에 포함 */
+}
+
+/* 전역 스타일 추가 */
+:deep(html), :deep(body) {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 /* 페이지 제목: 왼쪽 상단 고정 */
@@ -228,13 +238,14 @@ export default {
     max-width: 800px; /* OverallStudySummary의 max-width와 동일하게 맞춤 */
     box-sizing: border-box; /* 패딩, 보더 포함 너비 계산 */
     padding: 0 20px; /* mystudy의 좌우 패딩을 고려하여 내용물 중앙 정렬 */
+    margin-bottom: 15px; /* 하단 여백 추가 */
 }
 
 /* ProblemListSection 배치 조정 */
 .problem-list-section {
     position: relative;
     z-index: 5;
-    margin-top: 40px; /* OverallStudySummary와의 간격 */
+    margin-top: 15px; /* OverallStudySummary와의 간격 추가 */
     width: 100%;
     max-width: 800px; /* MyStudyView 내에서 중앙 정렬을 위해 */
     box-sizing: border-box;

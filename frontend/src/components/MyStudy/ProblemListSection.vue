@@ -287,7 +287,7 @@ export default {
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     padding: 30px;
-    margin-top: 40px;
+    margin-top: -20px;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
@@ -298,7 +298,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 0;
 }
 
 .section-title {
@@ -310,7 +310,7 @@ export default {
 
 .header-buttons {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     align-items: center;
 }
 
@@ -407,16 +407,15 @@ export default {
     opacity: 0.6;
 }
 
-
 .problem-list-tabs {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    margin: -10px 0 20px 0;
     gap: 15px;
 }
 
 .problem-list-tabs button {
-    padding: 12px 25px;
+    padding: 8px 20px;
     font-size: 1.1rem;
     font-weight: 500;
     color: #888;
@@ -473,6 +472,10 @@ export default {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 0;
+}
+
+.problem-item {
+    margin-bottom: -1px; /* 아이템들을 약간 겹치게 만듦 */
 }
 </style>
