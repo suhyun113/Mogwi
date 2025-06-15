@@ -1,4 +1,3 @@
-// src/main/java/com/example/mogwi_system/controller/ProblemController.java
 package com.example.mogwi_system.controller;
 
 import jakarta.persistence.EntityManager;
@@ -9,19 +8,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigInteger; // AUTO_INCREMENT ID를 처리하기 위해 추가
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
-@Transactional // 컨트롤러 레벨에서 트랜잭션 관리
+@Transactional
 public class ProblemController {
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    // --- 기존 문제 목록 조회 API ---
+    // --- 기존 문제 목록 조회 API (변경 없음) ---
     @GetMapping("/api/problems")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
@@ -51,6 +50,7 @@ public class ProblemController {
                 sql.append("AND c.tag_name = :category ");
             }
 
+            sql.append("GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped ");
             sql.append("ORDER BY p.id DESC");
 
             var queryObj = entityManager.createNativeQuery(sql.toString());
@@ -91,12 +91,13 @@ public class ProblemController {
 
             return ResponseEntity.ok(new ArrayList<>(problemMap.values()));
         } catch (Exception e) {
-            log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage());
+            log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    // --- 기존 좋아요 상태 변경 API ---
+
+    // --- 기존 좋아요 상태 변경 API (변경 없음) ---
     @PostMapping("/api/like/{problemId}")
     public ResponseEntity<Map<String, Object>> toggleLike(
             @PathVariable Long problemId,
@@ -110,7 +111,6 @@ public class ProblemController {
         }
 
         try {
-            // 사용자 내부 ID 조회
             List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
                     .setParameter(1, userId)
                     .getResultList();
@@ -121,7 +121,6 @@ public class ProblemController {
 
             Long internalUserId = ((Number) userResult.get(0)).longValue();
 
-            // 기존 상태 확인
             List<?> existing = entityManager.createNativeQuery(
                             "SELECT id FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2")
                     .setParameter(1, internalUserId)
@@ -129,7 +128,6 @@ public class ProblemController {
                     .getResultList();
 
             if (existing.isEmpty()) {
-                // INSERT
                 entityManager.createNativeQuery(
                                 "INSERT INTO user_problem_status (user_id, problem_id, is_liked) VALUES (?1, ?2, ?3)")
                         .setParameter(1, internalUserId)
@@ -137,7 +135,6 @@ public class ProblemController {
                         .setParameter(3, liked ? 1 : 0)
                         .executeUpdate();
             } else {
-                // UPDATE
                 entityManager.createNativeQuery(
                                 "UPDATE user_problem_status SET is_liked = ?1 WHERE user_id = ?2 AND problem_id = ?3")
                         .setParameter(1, liked ? 1 : 0)
@@ -148,12 +145,12 @@ public class ProblemController {
 
             return ResponseEntity.ok(Map.of("status", "OK"));
         } catch (Exception e) {
-            log.error("좋아요 처리 중 오류 발생: {}", e.getMessage());
+            log.error("좋아요 처리 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
 
-    // --- 기존 스크랩 상태 변경 API ---
+    // --- 기존 스크랩 상태 변경 API (변경 없음) ---
     @PostMapping("/api/scrap/{problemId}")
     public ResponseEntity<Map<String, Object>> toggleScrap(
             @PathVariable Long problemId,
@@ -167,7 +164,6 @@ public class ProblemController {
         }
 
         try {
-            // 사용자 내부 ID 조회
             List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
                     .setParameter(1, userId)
                     .getResultList();
@@ -178,7 +174,6 @@ public class ProblemController {
 
             Long internalUserId = ((Number) userResult.get(0)).longValue();
 
-            // 기존 상태 확인
             List<?> existing = entityManager.createNativeQuery(
                             "SELECT id FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2")
                     .setParameter(1, internalUserId)
@@ -186,7 +181,6 @@ public class ProblemController {
                     .getResultList();
 
             if (existing.isEmpty()) {
-                // INSERT
                 entityManager.createNativeQuery(
                                 "INSERT INTO user_problem_status (user_id, problem_id, is_scrapped) VALUES (?1, ?2, ?3)")
                         .setParameter(1, internalUserId)
@@ -194,7 +188,6 @@ public class ProblemController {
                         .setParameter(3, scrapped ? 1 : 0)
                         .executeUpdate();
             } else {
-                // UPDATE
                 entityManager.createNativeQuery(
                                 "UPDATE user_problem_status SET is_scrapped = ?1 WHERE user_id = ?2 AND problem_id = ?3")
                         .setParameter(1, scrapped ? 1 : 0)
@@ -205,12 +198,12 @@ public class ProblemController {
 
             return ResponseEntity.ok(Map.of("status", "OK"));
         } catch (Exception e) {
-            log.error("스크랩 처리 중 오류 발생: {}", e.getMessage());
+            log.error("스크랩 처리 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
 
-    // --- 기존 문제 상세 조회 API ---
+    // --- 기존 문제 상세 조회 API (변경 없음) ---
     @GetMapping("/api/problems/{id}")
     public ResponseEntity<Map<String, Object>> getProblemDetail(
             @PathVariable Long id,
@@ -264,10 +257,9 @@ public class ProblemController {
                     .collect(Collectors.toList());
             response.put("categories", categories);
 
-            // 카드 리스트 조회 (정답 컬럼은 'answer'로 가정, 스키마에 따라 'correct'일 수 있음)
-            // Vue.js 코드에 'card.answer'와 'card.image_url'이 있으므로 이에 맞춰 수정
+            // 카드 리스트 조회 (정답 컬럼은 'correct'임, 'answer' 아님)
             List<?> cardResults = entityManager.createNativeQuery(
-                            "SELECT question, answer, image_url FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
+                            "SELECT question, correct, image_url FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
                     .setParameter(1, id)
                     .getResultList();
 
@@ -277,7 +269,7 @@ public class ProblemController {
                 Map<String, Object> card = new HashMap<>();
                 card.put("question", cardRow[0]);
                 card.put("answer", cardRow[1]);
-                card.put("image_url", cardRow[2]); // image_url 추가
+                card.put("image_url", cardRow[2]);
                 cards.add(card);
             }
 
@@ -285,13 +277,12 @@ public class ProblemController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.error("문제 상세 조회 중 오류 발생: {}", e.getMessage());
+            log.error("문제 상세 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
         }
     }
 
-    // --- 새로운 API: 카테고리 목록 조회 (CreateView.vue 용) ---
-    // Vue.js의 `allCategories` 배열에 매핑될 수 있도록 Map 형태로 반환
+    // --- 새로운 API: 카테고리 목록 조회 (변경 없음) ---
     @GetMapping("/api/categories")
     public ResponseEntity<List<Map<String, Object>>> getAllCategories() {
         try {
@@ -308,26 +299,31 @@ public class ProblemController {
             }
             return ResponseEntity.ok(categories);
         } catch (Exception e) {
-            log.error("카테고리 목록 조회 중 오류 발생: {}", e.getMessage());
+            log.error("카테고리 목록 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    // --- 새로운 API: 문제 생성 (CreateView.vue 용) ---
+    // --- 새로운 API: 문제 생성 ---
     @PostMapping("/api/problems")
     public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
         Map<String, String> response = new HashMap<>();
         try {
             // 1. 요청 데이터 파싱 및 기본 유효성 검사
             String title = (String) requestBody.get("title");
-            String authorIdString = (String) requestBody.get("author_id"); // Vue에서 넘어오는 userId (String)
+            String authorIdString = (String) requestBody.get("author_id");
             String description = (String) requestBody.get("description");
-            Boolean isPublicBool = (Boolean) requestBody.get("is_public");
-            @SuppressWarnings("unchecked")
-            List<Integer> categoryIds = (List<Integer>) requestBody.get("categories"); // Vue에서 태그 ID 배열 (Integer 리스트)
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> cards = (List<Map<String, Object>>) requestBody.get("cards"); // 카드 목록
 
+            Integer isPublicInt = (Integer) requestBody.get("is_public");
+            boolean isPublic = (isPublicInt != null && isPublicInt == 1);
+
+
+            @SuppressWarnings("unchecked")
+            List<Integer> categoryIds = (List<Integer>) requestBody.get("categories");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> cards = (List<Map<String, Object>>) requestBody.get("cards");
+
+            // --- 유효성 검사 로직 (변경 없음) ---
             if (title == null || title.trim().isEmpty()) {
                 response.put("status", "FAIL");
                 response.put("message", "문제 제목은 필수입니다.");
@@ -362,6 +358,7 @@ public class ProblemController {
                     return ResponseEntity.badRequest().body(response);
                 }
             }
+            // --- 유효성 검사 로직 끝 ---
 
             // 2. Vue의 author_id (userid 문자열)를 실제 users 테이블의 id (Long)로 변환
             Long authorInternalId;
@@ -380,37 +377,40 @@ public class ProblemController {
             String insertProblemSql = "INSERT INTO problems (title, description, author_id, card_count, is_public) VALUES (?1, ?2, ?3, ?4, ?5)";
             entityManager.createNativeQuery(insertProblemSql)
                     .setParameter(1, title)
-                    .setParameter(2, description != null && !description.isEmpty() ? description : null) // 빈 문자열 대신 null 저장
+                    .setParameter(2, description != null && !description.isEmpty() ? description : null)
                     .setParameter(3, authorInternalId)
-                    .setParameter(4, cards.size()) // card_count는 카드 개수로 설정
-                    .setParameter(5, isPublicBool != null && isPublicBool ? 1 : 0) // true:1, false:0
+                    .setParameter(4, cards.size())
+                    .setParameter(5, isPublic ? 1 : 0)
                     .executeUpdate();
 
             // 삽입된 문제의 ID 조회 (auto_increment 된 ID)
-            BigInteger problemIdBigInt = (BigInteger) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult();
-            Long problemId = problemIdBigInt.longValue();
+            // Long으로 직접 캐스팅하거나 Number로 받은 후 longValue()를 사용
+            // 기존: BigInteger problemIdBigInt = (BigInteger) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult();
+            Number lastInsertId = (Number) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult();
+            Long problemId = lastInsertId.longValue(); // Number에서 longValue()를 호출하여 안전하게 Long으로 변환
+
 
             // 4. problem_categories 테이블에 카테고리 연결
             String insertProblemCategorySql = "INSERT INTO problem_categories (problem_id, category_id) VALUES (?1, ?2)";
             for (Integer categoryId : categoryIds) {
                 entityManager.createNativeQuery(insertProblemCategorySql)
                         .setParameter(1, problemId)
-                        .setParameter(2, categoryId.longValue()) // Integer를 Long으로 변환
+                        .setParameter(2, categoryId.longValue())
                         .executeUpdate();
             }
 
             // 5. cards 테이블에 학습 카드 삽입
-            String insertCardSql = "INSERT INTO cards (problem_id, question, answer, image_url) VALUES (?1, ?2, ?3, ?4)";
+            String insertCardSql = "INSERT INTO cards (problem_id, question, correct, image_url) VALUES (?1, ?2, ?3, ?4)";
             for (Map<String, Object> card : cards) {
                 String question = (String) card.get("question");
-                String answer = (String) card.get("answer");
-                String imageUrl = (String) card.get("image_url"); // 이미지 URL은 null일 수 있음
+                String correct = (String) card.get("answer");
+                String imageUrl = (String) card.get("image_url");
 
                 entityManager.createNativeQuery(insertCardSql)
                         .setParameter(1, problemId)
                         .setParameter(2, question)
-                        .setParameter(3, answer)
-                        .setParameter(4, imageUrl != null && !imageUrl.isEmpty() ? imageUrl : null) // 빈 문자열 대신 null 저장
+                        .setParameter(3, correct)
+                        .setParameter(4, imageUrl != null && !imageUrl.isEmpty() ? imageUrl : null)
                         .executeUpdate();
             }
 
@@ -418,8 +418,13 @@ public class ProblemController {
             response.put("message", "문제가 성공적으로 생성되었습니다.");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
+        } catch (ClassCastException e) {
+            log.error("문제 생성 중 데이터 타입 캐스팅 오류 발생: {}", e.getMessage(), e);
+            response.put("status", "ERROR");
+            response.put("message", "전달된 데이터의 형식이 올바르지 않습니다. (예: 공개 여부, 숫자 캐스팅 오류)");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
-            log.error("문제 생성 중 오류 발생: {}", e.getMessage(), e); // 스택 트레이스 로깅
+            log.error("문제 생성 중 서버 오류 발생: {}", e.getMessage(), e);
             response.put("status", "ERROR");
             response.put("message", "문제 생성 중 서버 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
