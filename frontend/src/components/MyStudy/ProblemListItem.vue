@@ -1,6 +1,5 @@
 <template>
-  <div class="problem-summary">
-    <div class="title-row">
+  <div class="problem-list-item"> <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
         <span class="author">작성자: {{ localProblem.authorNickname }}</span>
@@ -22,15 +21,16 @@
         />
       </div>
       <div class="btn-wrapper">
-        <button
-          v-if="isAuthenticated && localProblem.authorId === currentUserId"
-          class="edit-btn"
-          @click.stop="handleEditClick"
-        >
-          수정
-        </button>
+        <template v-if="isAuthenticated && localProblem.authorId == currentUserId">
+          <button
+            class="edit-btn"
+            @click.stop="handleEditClick"
+          >
+            수정
+          </button>
+        </template>
         <button class="solve-btn" @click.stop="handleSolveClick">
-            {{ localProblem.studyStatus === 'completed' ? '다시 풀기' : '문제 풀기' }}
+          {{ localProblem.studyStatus === 'completed' ? '다시 풀기' : '문제 풀기' }}
         </button>
       </div>
     </div>
@@ -51,7 +51,7 @@
           <span>{{ localProblem.totalScraps }}</span>
         </div>
         <div v-else class="icon-wrapper disabled">
-          <img :src="localProblem.isScrapped ? scrapOn : scrapOff" alt="scrap" class="icon" />
+          <img :src="localProblem.isScrapped ? heartOn : heartOff" alt="scrap" class="icon" />
           <span>{{ localProblem.totalScraps }}</span>
         </div>
       </div>
@@ -95,11 +95,11 @@ export default {
       default: false
     },
     currentUserId: {
-      type: String,
+      type: [String, Number],
       default: ''
     }
   },
-  emits: ['auth-required', 'update-problem-data', 'go-to-study'],
+  emits: ['auth-required', 'problem-action-success', 'go-to-study'],
 
   data() {
     return {
@@ -115,10 +115,21 @@ export default {
     problem: {
       handler(newVal) {
         this.localProblem = { ...newVal }
+        console.log('[ProblemListItem] authorId:', this.localProblem.authorId, typeof this.localProblem.authorId);
       },
       deep: true,
       immediate: true
+    },
+    currentUserId: {
+      handler(newVal) {
+        console.log('[ProblemListItem] currentUserId:', newVal, typeof newVal);
+      },
+      immediate: true
     }
+  },
+  mounted() {
+    console.log('[ProblemListItem] mounted - authorId:', this.localProblem.authorId, typeof this.localProblem.authorId);
+    console.log('[ProblemListItem] mounted - currentUserId:', this.currentUserId, typeof this.currentUserId);
   },
   methods: {
     getColor(tag) {
@@ -179,7 +190,7 @@ export default {
           userId: this.currentUserId,
           liked: newLiked
         });
-        this.$emit('update-problem-data', this.localProblem);
+        this.$emit('problem-action-success');
       } catch (error) {
         console.error('좋아요 반영 실패:', error);
         this.localProblem.isLiked = !newLiked;
@@ -206,7 +217,7 @@ export default {
           userId: this.currentUserId,
           scrapped: newScrapped
         });
-        this.$emit('update-problem-data', this.localProblem);
+        this.$emit('problem-action-success');
       } catch (error) {
         console.error('스크랩 반영 실패:', error);
         this.localProblem.isScrapped = !newScrapped;
@@ -229,7 +240,7 @@ export default {
 </script>
 
 <style scoped>
-.problem-summary {
+.problem-list-item { /* 클래스 이름 변경: problem-summary -> problem-list-item */
   padding: 16px;
   border: 1px solid #e0d0ff;
   border-radius: 8px;
@@ -241,12 +252,12 @@ export default {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.problem-summary:hover {
+.problem-list-item:hover { /* 클래스 이름 변경: problem-summary -> problem-list-item */
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
-.problem-summary h3 {
+.problem-list-item h3 { /* 클래스 이름 변경: problem-summary -> problem-list-item */
   margin: 0;
   font-size: 18px;
   color: #5a2e87;
@@ -278,16 +289,6 @@ export default {
   white-space: nowrap;
   flex-shrink: 0;
 }
-/* 기존 .card-count 스타일은 .meta-card-count로 이동 */
-/* .card-count {
-  font-size: 13px;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-} */
 
 .study-status {
   font-size: 13px;
@@ -332,11 +333,11 @@ export default {
 .meta {
   margin-top: 10px;
   display: flex;
-  justify-content: space-between; /* meta-left와 meta-right-group을 양 끝으로 정렬 */
+  justify-content: space-between;
   align-items: center;
   font-size: 14px;
   color: #666;
-  flex-wrap: wrap; /* 반응형을 위해 추가 */
+  flex-wrap: wrap;
 }
 .meta-left {
   display: flex;
@@ -381,11 +382,11 @@ export default {
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 .edit-btn {
-  background-color: #ffc107;
+  background-color: #fff4c1;
   color: #343a40;
 }
 .edit-btn:hover {
-  background-color: #e0a800;
+  background-color: #ffe066;
   transform: translateY(-1px);
 }
 .solve-btn {
@@ -397,7 +398,6 @@ export default {
   transform: translateY(-1px);
 }
 
-/* 추가된 카드별 학습 상태 스타일 */
 .study-card-summary {
   display: flex;
   align-items: center;
@@ -418,7 +418,6 @@ export default {
   color: #F44336;
 }
 
-/* 새로 추가된 카드 수 스타일 */
 .meta-card-count {
     font-size: 13px;
     color: #666;
@@ -429,17 +428,14 @@ export default {
     flex-shrink: 0;
 }
 
-/* meta 내의 오른쪽 정렬을 위한 그룹 */
 .meta-right-group {
     display: flex;
     align-items: center;
-    gap: 12px; /* 카드 상태 개수와 총 카드 수 사이의 간격 */
-    margin-left: auto; /* meta-left 옆에서 오른쪽으로 정렬 */
-    flex-wrap: wrap; /* 작은 화면에서 줄바꿈되도록 */
+    gap: 12px;
+    margin-left: auto;
+    flex-wrap: wrap;
 }
 
-
-/* Responsive adjustments */
 @media (max-width: 576px) {
     .title-row {
         flex-direction: column;
@@ -465,18 +461,16 @@ export default {
     .edit-btn, .solve-btn {
         flex-grow: 1;
     }
-    /* 작은 화면에서 meta 정렬 */
     .meta {
         flex-direction: column;
-        align-items: flex-start; /* 좋아요/스크랩은 왼쪽에 */
+        align-items: flex-start;
         gap: 8px;
     }
     .meta-right-group {
-        margin-left: 0; /* 왼쪽 정렬 해제 */
-        width: 100%; /* 전체 너비 차지 */
-        justify-content: flex-end; /* 오른쪽 끝으로 정렬 */
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
     }
-    /* study-card-summary의 margin-left: auto;를 초기화 */
     .study-card-summary {
         margin-left: 0;
     }

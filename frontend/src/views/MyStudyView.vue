@@ -70,6 +70,15 @@ export default {
                         console.warn("Received null or undefined problem in the list, skipping.", problem);
                         return null;
                     }
+                    // 임시 패치: authorId가 없으면, authorNickname이 내 닉네임과 같을 때 currentUserId로 세팅
+                    let computedAuthorId = problem.authorId;
+                    if (computedAuthorId === undefined || computedAuthorId === '' || computedAuthorId === null) {
+                        if (problem.authorNickname && problem.authorNickname === username.value) {
+                            computedAuthorId = currentUserId.value;
+                        } else {
+                            computedAuthorId = '';
+                        }
+                    }
                     return {
                         ...problem,
                         isLiked: problem.isLiked,
@@ -77,10 +86,11 @@ export default {
                         authorNickname: problem.authorNickname || '알 수 없음',
                         categories: Array.isArray(problem.categories) ? problem.categories : [],
                         id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
-                        // 새롭게 추가: 카드별 학습 상태 필드를 기본값 0으로 설정
+                        authorId: computedAuthorId, // authorId를 위에서 계산한 값으로 세팅
                         perfectCount: problem.perfectCount || 0,
                         vagueCount: problem.vagueCount || 0,
                         forgottenCount: problem.forgottenCount || 0,
+                        cardCount: problem.cardCount || 0, // cardCount도 추가 (ProblemListItem에서 사용)
                     };
                 }).filter(problem => problem !== null);
 
@@ -131,6 +141,7 @@ export default {
             ongoingProblems,
             completedProblems,
             goToStudy,
+            fetchMyStudyData, // ProblemListSection에서 재호출할 수 있도록 노출
         };
     }
 };
@@ -164,7 +175,7 @@ export default {
                 :currentUserId="currentUserId"
                 @go-to-study="goToStudy"
                 @auth-required="$emit('auth-required')"
-            />
+                @refresh-problems="fetchMyStudyData" />
         </div>
     </div>
 </template>

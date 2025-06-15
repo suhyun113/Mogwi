@@ -25,8 +25,7 @@
                         :currentUserId="currentUserId"
                         @go-to-study="handleGoToStudy"
                         @auth-required="handleAuthRequired"
-                        @update-problem-data="handleUpdateProblemData"
-                    />
+                        @problem-action-success="handleProblemActionSuccess" />
                 </ul>
                 <p v-else class="no-data-message">현재 진행 중인 학습이 없습니다.</p>
             </div>
@@ -45,8 +44,7 @@
                         :currentUserId="currentUserId"
                         @go-to-study="handleGoToStudy"
                         @auth-required="handleAuthRequired"
-                        @update-problem-data="handleUpdateProblemData"
-                    />
+                        @problem-action-success="handleProblemActionSuccess" />
                 </ul>
                 <p v-else class="no-data-message">아직 완료한 학습이 없습니다.</p>
             </div>
@@ -57,7 +55,7 @@
 <script>
 import { ref, computed } from 'vue';
 import ProblemTabs from './ProblemTabs.vue';
-import ProblemListItem from './ProblemListItem.vue'; // Correctly refers to ProblemListItem
+import ProblemListItem from './ProblemListItem.vue';
 
 export default {
     name: 'ProblemListSection',
@@ -74,19 +72,18 @@ export default {
             type: Array,
             default: () => []
         },
-        isLoggedIn: { // Used to pass down isAuthenticated prop
+        isLoggedIn: {
             type: Boolean,
             default: false
         },
-        currentUserId: { // Used to pass down currentUserId prop
+        currentUserId: {
             type: String,
             default: ''
         }
     },
     setup(props, { emit }) {
-        const activeTab = ref('ongoing'); // State for active tab
+        const activeTab = ref('ongoing');
 
-        // Determine if tabs should be shown (for mobile responsiveness)
         const showTabs = computed(() => {
             return window.innerWidth <= 768;
         });
@@ -95,43 +92,18 @@ export default {
             activeTab.value = tab;
         };
 
-        // Handlers for events emitted by ProblemListItem
         const handleGoToStudy = (problemId) => {
-            emit('go-to-study', problemId); // Re-emit to parent view
+            emit('go-to-study', problemId);
         };
 
         const handleAuthRequired = () => {
-            emit('auth-required'); // Re-emit to parent view
+            emit('auth-required');
         };
 
-        // This handler will be called when a problem item's like/scrap state changes locally
-        // It's crucial if the parent (MyStudyView) needs to keep its problem data in sync.
-        const handleUpdateProblemData = (updatedProblem) => {
-            // Find and update the problem in the respective list
-            const updateList = (list) => {
-                const index = list.findIndex(p => p.id === updatedProblem.id);
-                if (index !== -1) {
-                    // Update only the specific properties that changed (isLiked, totalLikes, etc.)
-                    // Using Object.assign or a new object to ensure reactivity if list is reactive
-                    // 여기에서 `list[index]`를 직접 수정하는 대신 `Vue.set` 또는 새로운 배열을 할당하여 반응성을 보장하는 것이 좋습니다.
-                    // 그러나 현재 Vue 3 Composition API에서는 반응형 객체를 직접 수정하는 것이 일반적이며 문제 없습니다.
-                    // 스프레드 연산자를 사용하여 새 객체를 생성하는 방식은 이 경우에도 적절합니다.
-                    list[index] = { ...list[index], ...updatedProblem };
-                }
-            };
-
-            // Check both lists as a problem can be in either
-            updateList(props.ongoingProblems);
-            updateList(props.completedProblems);
-
-            // If MyStudyView also maintains a master list, you might need to emit a generic update event.
-            // For simplicity, we assume the prop arrays are reactive enough.
-            // If props.ongoingProblems/completedProblems are not directly mutable (e.g., from Vuex getters),
-            // you might need to emit an event like 'problem-updated' to the parent MyStudyView
-            // which then dispatches a mutation/action to update its store.
-            // Example: emit('problem-updated', updatedProblem);
+        // 좋아요/스크랩 등의 액션 성공 시 MyStudy.vue에 알림
+        const handleProblemActionSuccess = () => {
+            emit('refresh-problems'); // 새로운 이벤트 발생
         };
-
 
         return {
             activeTab,
@@ -139,7 +111,7 @@ export default {
             changeTab,
             handleGoToStudy,
             handleAuthRequired,
-            handleUpdateProblemData
+            handleProblemActionSuccess // 리턴에 추가
         };
     }
 };
