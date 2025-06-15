@@ -71,7 +71,21 @@ export default {
     const selectedProblemId = ref(null)
     const query = ref('')
     const selectedCategory = ref('#전체')
-    const categories = ref(['#전체', '#수학', '#AI', '#컴퓨터', '#과학', '#역사', '#기타'])
+    const categories = ref([])
+
+    // 카테고리 불러오기
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('/api/categories')
+        // Sort by id and add '#전체' at the beginning
+        const sortedCategories = response.data
+          .sort((a, b) => a.id - b.id)
+          .map(cat => cat.tag_name)
+        categories.value = ['#전체', ...sortedCategories]
+      } catch (error) {
+        console.error('카테고리 불러오기 실패:', error)
+      }
+    }
 
     // 문제 불러오기기
     const fetchProblems = async () => {
@@ -146,12 +160,15 @@ export default {
         const matchText = problem.title.toLowerCase().includes(query.value.toLowerCase())
         const matchCategory =
           selectedCategory.value === '#전체' ||
-          problem.categories.includes(selectedCategory.value)
+          problem.categories.some(cat => cat.tag_name === selectedCategory.value)
         return matchText && matchCategory
       })
     })
 
-    onMounted(fetchProblems)
+    onMounted(() => {
+      fetchCategories()
+      fetchProblems()
+    })
 
     return {
       problems,
