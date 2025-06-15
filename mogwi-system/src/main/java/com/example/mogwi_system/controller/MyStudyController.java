@@ -143,13 +143,19 @@ public class MyStudyController {
                     "FROM problems p " +
                     "JOIN users u ON p.author_id = u.id " +
                     "LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ?1 " +
-                    "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?1 " +
-                    "WHERE ups.user_id = ?1 AND (ups.problem_status = 'ongoing' OR ups.problem_status = 'completed') " +
+                    "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?2 " + // 여기도 ?1 -> ?2 로 변경
+                    "WHERE p.id IN (" +
+                    "SELECT p_all.id FROM problems p_all " +
+                    "LEFT JOIN user_problem_status ups_all ON p_all.id = ups_all.problem_id AND ups_all.user_id = ?3 " + // 여기도 ?1 -> ?3 로 변경
+                    "WHERE ups_all.user_id IS NULL OR ups_all.problem_status IN ('new', 'ongoing', 'completed')" +
+                    ") " +
                     "GROUP BY p.id, p.title, p.description, p.card_count, u.username, ups.is_liked, ups.is_scrapped, ups.problem_status " +
-                    "ORDER BY ups.updated_at DESC";
+                    "ORDER BY IFNULL(ups.updated_at, p.created_at) DESC";
 
             List<Object[]> problemResults = entityManager.createNativeQuery(problemSql)
-                    .setParameter(1, internalUserId)
+                    .setParameter(1, internalUserId) // 첫 번째 ?1 (ups.user_id)
+                    .setParameter(2, internalUserId) // 두 번째 ?2 (ucs.user_id)
+                    .setParameter(3, internalUserId) // 세 번째 ?3 (ups_all.user_id)
                     .getResultList();
 
             List<Map<String, Object>> userProblems = new ArrayList<>();
