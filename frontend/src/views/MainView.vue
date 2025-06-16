@@ -289,6 +289,7 @@ export default {
   flex-direction: column;
   gap: 20px;
   margin-top: 25px;
+  margin-bottom: 50px;
   padding: 0;
 }
 
