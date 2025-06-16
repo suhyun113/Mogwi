@@ -14,8 +14,7 @@
                     v-if="!isSelectionMode"
                     @click="enterSelectionMode"
                     class="action-button delete-mode-icon-button"
-                    :disabled="!isLoggedIn"
-                    aria-label="삭제 모드 진입"
+                    :disabled="!isLoggedIn || currentProblems.length === 0" aria-label="삭제 모드 진입"
                 >
                     <img :src="deleteIcon" alt="삭제 아이콘" class="button-icon" />
                     <span>삭제</span>
@@ -132,7 +131,6 @@ export default {
             type: [String, Number],
             default: null,
         },
-        // Add username prop here
         username: {
             type: String,
             default: '사용자',
@@ -227,7 +225,8 @@ export default {
 
         const enterSelectionMode = () => {
             if (!checkLoginAndExecute()) return;
-            if (currentProblems.value.length === 0) {
+            // Additional check to disable the button if there are no problems in either tab
+            if (props.ongoingProblems.length === 0 && props.completedProblems.length === 0) {
                 alert("삭제할 문제가 없습니다.");
                 return;
             }
@@ -264,40 +263,62 @@ export default {
             if (confirm(`선택된 문제 ${selectedProblems.value.length}개의 학습 현황을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
                 try {
                     const deletePromises = selectedProblems.value.map(problemId =>
-                        axios.delete(`/api/mystudy/problems/${problemId}/user/${props.currentUserId}`)
+                        axios.delete(`/api/mystudy/problems/${problemId}/status/${props.currentUserId}`)
                     );
 
                     const results = await Promise.allSettled(deletePromises);
 
                     let successfulDeletes = 0;
                     let failedDeletes = [];
+                    let infoMessages = []; // To collect "INFO" messages
 
                     results.forEach((result, index) => {
                         const problemId = selectedProblems.value[index];
-                        if (result.status === 'fulfilled' && result.value.data.status === 'OK') {
-                            successfulDeletes++;
-                            console.log(`문제 ID ${problemId} 학습 현황 삭제 성공.`);
-                        } else {
+                        if (result.status === 'fulfilled') {
+                            if (result.value.data.status === 'OK') {
+                                successfulDeletes++;
+                                console.log(`문제 ID ${problemId} 학습 현황 삭제 성공.`);
+                            } else if (result.value.data.status === 'INFO') {
+                                infoMessages.push(`문제 ID ${problemId}: ${result.value.data.message}`);
+                                console.log(`문제 ID ${problemId} 학습 현황 정보:`, result.value.data.message);
+                            } else {
+                                failedDeletes.push({
+                                    id: problemId,
+                                    error: result.value.data.message || '알 수 없는 오류'
+                                });
+                                console.error(`문제 ID ${problemId} 학습 현황 삭제 실패 (서버 응답):`, result.value.data.message);
+                            }
+                        } else { // result.status === 'rejected'
                             failedDeletes.push({
                                 id: problemId,
-                                error: result.reason?.response?.data?.message || result.reason?.message || '알 수 없는 오류'
+                                error: result.reason?.response?.data?.message || result.reason?.message || '네트워크 오류 또는 서버 응답 없음'
                             });
-                            console.error(`문제 ID ${problemId} 학습 현황 삭제 실패:`, result.reason);
+                            console.error(`문제 ID ${problemId} 학습 현황 삭제 실패 (네트워크/서버 오류):`, result.reason);
                         }
                     });
 
+                    let summaryMessage = '';
                     if (successfulDeletes > 0) {
-                        alert(`${successfulDeletes}개의 학습 현황이 성공적으로 삭제되었습니다.`);
+                        summaryMessage += `${successfulDeletes}개의 학습 현황이 성공적으로 삭제되었습니다.\n`;
+                    }
+                    if (infoMessages.length > 0) {
+                        summaryMessage += `\n주의: 일부 문제는 이미 학습 상태가 없었습니다.\n${infoMessages.join('\n')}\n`;
                     }
                     if (failedDeletes.length > 0) {
                         const failedMessages = failedDeletes.map(f => `ID: ${f.id}, 오류: ${f.error}`).join('\n');
-                        alert(`다음 문제들의 학습 현황 삭제에 실패했습니다:\n${failedMessages}`);
+                        summaryMessage += `\n다음 문제들의 학습 현황 삭제에 실패했습니다:\n${failedMessages}`;
+                    }
+
+                    if (summaryMessage) {
+                        alert(summaryMessage.trim());
+                    } else {
+                        alert("선택된 문제들의 학습 현황을 삭제할 수 없었습니다.");
                     }
 
                     cancelSelectionMode();
                     emit('refresh-problems');
                 } catch (error) {
-                    console.error('일괄 학습 현황 삭제 중 오류 발생:', error);
+                    console.error('일괄 학습 현황 삭제 중 예기치 않은 오류 발생:', error);
                     alert('학습 현황 삭제 중 예기치 않은 오류가 발생했습니다.');
                 }
             }
