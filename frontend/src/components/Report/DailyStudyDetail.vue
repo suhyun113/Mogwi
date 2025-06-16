@@ -47,7 +47,6 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* 세로 중앙 정렬 */
   width: 100%;
   height: 100%; /* 부모 컨테이너에 맞춰 높이 차지 */
   padding: 0; /* 내부 패딩 제거 */
@@ -59,8 +58,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center; /* 가로 중앙 정렬 */
-  gap: 20px; /* 요소 간 간격 */
+  justify-content: space-between; /* 세로 공간에 내용 균등 분배 */
   width: 100%;
+  height: 100%; /* 부모 높이 채우기 */
 }
 
 .selected-date-display {

@@ -46,7 +46,7 @@
           <div class="daily-detail-wrapper">
             <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
             <img :src="dailyCharacterImage" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
-            <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
+            <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" :style="{ flexGrow: 1 }" />
           </div>
           <div class="calendar-wrapper">
             <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
@@ -487,18 +487,19 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 25px; /* 패딩 통일 */
+  justify-content: space-evenly; /* 내용을 세로 공간에 균등 분배 */
+  padding: 30px 25px; /* 상하단 패딩 조정 */
   color: white; /* 텍스트 색상 흰색으로 변경 */
   box-sizing: border-box;
   text-align: center;
   height: 100%; /* 세로 길이를 부모 컨테이너에 맞춤 */
+  min-height: 620px; /* 캘린더의 세로 길이에 맞추기 위한 최소 높이 설정 */
 }
 
 .section-title-daily-detail {
   color: white; /* 제목 색상 흰색으로 변경 */
   font-size: 2rem;
   font-weight: 600;
-  margin-bottom: 20px;
   position: relative;
   padding-bottom: 15px;
 }
@@ -506,7 +507,6 @@ export default {
 .mogwi-daily-detail-character {
   width: 150px; /* 캐릭터 이미지 크기 조정 */
   height: auto;
-  margin-bottom: 20px;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
 }
 
@@ -532,7 +532,7 @@ export default {
   background-color: #ffffff; /* 흰색 배경 */
   display: flex;
   flex-direction: column;
-  padding: 25px; /* 패딩 통일 */
+  padding: 13px; /* 패딩 통일 */
   box-sizing: border-box;
 }
 
@@ -567,7 +567,7 @@ export default {
 .mogwi-character-small {
   width: 150px;
   height: auto;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .logged-out-message {
