@@ -3,7 +3,7 @@
     <h3 class="detail-title">
       {{ selectedDate ? `${formatDate(selectedDate)} 학습 기록` : '날짜를 선택해주세요' }}
     </h3>
-    <div v-if="dailyStudyData && selectedDate" class="detail-stats">
+    <div v-if="dailyStudyData && selectedDate && dailyTotal > 0" class="detail-stats">
       <div class="stat-item perfect">
         <span class="stat-label">완벽한 기억</span>
         <span class="stat-count">{{ dailyStudyData.perfect }}</span>
@@ -15,10 +15,6 @@
       <div class="stat-item forgotten">
         <span class="stat-label">사라진 기억</span>
         <span class="stat-count">{{ dailyStudyData.forgotten }}</span>
-      </div>
-      <div class="no-data" v-if="dailyTotal === 0">
-        <img src="@/assets/mogwi-sleep.png" alt="모귀 잠자기" class="mogwi-sleep-icon" />
-        <p>선택하신 날짜에 학습 기록이 없습니다.</p>
       </div>
     </div>
     <div v-else-if="!selectedDate" class="no-selection">
@@ -34,8 +30,8 @@
 
 <script>
 import { computed } from 'vue';
-import mogwiSleep from '@/assets/mogwi-sleep.png'; // Assuming you have this image
-import mogwiLook from '@/assets/mogwi-look.png'; // Assuming you have this image
+import mogwiSleep from '@/assets/mogwi-sleep.png';
+import mogwiLook from '@/assets/mogwi-look.png';
 
 export default {
   name: 'DailyStudyDetail',
@@ -74,28 +70,31 @@ export default {
 <style scoped>
 .daily-study-detail {
   width: 100%;
-  max-width: 600px;
+  padding: 25px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background-color: #fcf8ff;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  padding: 20px;
   border: 1px solid #e9dffc;
-  text-align: center;
 }
 
 .detail-title {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   color: #5a2e87;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   font-weight: 600;
   border-bottom: 1px dashed #f0e6ff;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
 }
 
 .detail-stats {
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -103,23 +102,23 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 18px;
+  padding: 15px 20px;
   border-radius: 8px;
   background-color: #ffffff;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-  min-width: 120px;
+  min-width: 140px;
   flex: 1;
   border: 1px solid #f2eaff;
 }
 
 .detail-stats .stat-label {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #7a4bb7;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .detail-stats .stat-count {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   font-weight: 700;
 }
 
@@ -134,19 +133,19 @@ export default {
 }
 
 .no-data, .no-selection {
-  margin-top: 20px;
+  margin-top: 30px;
   color: #888;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .mogwi-sleep-icon, .mogwi-look-icon {
-    width: 80px;
+    width: 90px;
     height: auto;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 @media (max-width: 768px) {
@@ -156,6 +155,9 @@ export default {
   .detail-title {
     font-size: 1.3rem;
     margin-bottom: 15px;
+  }
+  .detail-stats {
+    gap: 10px;
   }
   .detail-stats .stat-item {
     padding: 10px 15px;

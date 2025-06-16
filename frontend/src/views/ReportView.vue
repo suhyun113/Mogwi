@@ -15,8 +15,10 @@
       <section class="report-section calendar-section">
         <h2 class="section-title">날짜별 학습 기록</h2>
         <p class="section-description">달력에서 날짜를 선택하여 해당 날짜의 학습 기록을 확인하세요.</p>
-        <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
-        <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
+        <div class="calendar-content">
+          <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
+          <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
+        </div>
       </section>
 
       <section class="report-section chart-section">
@@ -35,7 +37,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
-// ReportSummary 컴포넌트 import가 제거되었습니다.
 import StudyCalendar from '@/components/Report/StudyCalendar.vue';
 import DailyStudyDetail from '@/components/Report/DailyStudyDetail.vue';
 import WeeklyBarChart from '@/components/Report/WeeklyBarChart.vue';
@@ -45,7 +46,6 @@ import RegisterModal from '@/components/Register/RegisterModal.vue';
 export default {
   name: 'ReportView',
   components: {
-    // ReportSummary 컴포넌트가 제거되었습니다.
     StudyCalendar,
     DailyStudyDetail,
     WeeklyBarChart,
@@ -60,24 +60,19 @@ export default {
     const loading = ref(true);
     const error = ref(null);
 
-    // Modals
     const showLoginModal = ref(false);
     const showRegisterModal = ref(false);
 
-    // Overall Study Summary Data - 이 데이터들은 이제 ReportSummary 컴포넌트가 없으므로 사용되지 않을 수 있습니다.
-    // 하지만 API 호출 자체는 남아있고, 혹시 모를 다른 곳에서의 사용을 위해 일단 유지합니다.
     const overallPerfectCount = ref(0);
     const overallVagueCount = ref(0);
     const overallForgottenCount = ref(0);
     const overallTotalCards = ref(0);
 
-    // Calendar Data
-    const studyDates = ref({}); // { 'YYYY-MM-DD': { perfect: N, vague: M, forgotten: O }, ... }
-    const selectedDate = ref(null); // The date selected in the calendar
-    const dailyStudyData = ref(null); // Data for the currently selected date
+    const studyDates = ref({});
+    const selectedDate = ref(null);
+    const dailyStudyData = ref(null);
 
-    // Weekly Chart Data
-    const weeklyChartData = ref([]); // [{ date: 'MM-DD', perfect: N, vague: M, forgotten: O }, ...]
+    const weeklyChartData = ref([]);
 
     const fetchReportData = async () => {
       if (!isLoggedIn.value) {
@@ -89,7 +84,6 @@ export default {
       error.value = null;
 
       try {
-        // Fetch overall summary (API 호출은 유지)
         const summaryResponse = await axios.get(`/api/report/summary/${currentUserId.value}`);
         const summary = summaryResponse.data;
         overallPerfectCount.value = summary.perfect || 0;
@@ -97,7 +91,6 @@ export default {
         overallForgottenCount.value = summary.forgotten || 0;
         overallTotalCards.value = summary.total || 0;
 
-        // Fetch daily study records for the calendar
         const dailyResponse = await axios.get(`/api/report/daily-records/${currentUserId.value}`);
         const transformedStudyDates = {};
         dailyResponse.data.forEach(record => {
@@ -118,7 +111,6 @@ export default {
           dailyStudyData.value = null;
         }
 
-        // Fetch weekly chart data
         const weeklyResponse = await axios.get(`/api/report/weekly-records/${currentUserId.value}`);
         weeklyChartData.value = weeklyResponse.data.map(item => ({
           label: item.weekStart.substring(5),
@@ -175,7 +167,7 @@ export default {
       loading,
       error,
       isLoggedIn,
-      overallPerfectCount, // 여전히 계산되지만, 화면에 표시되지 않습니다.
+      overallPerfectCount,
       overallVagueCount,
       overallForgottenCount,
       overallTotalCards,
@@ -207,17 +199,13 @@ export default {
 }
 
 .report-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   padding: 40px;
   width: 100%;
-  max-width: 900px;
+  max-width: 1100px;
   margin-top: 20px;
-  border: 1px solid #e0d0ff;
   display: flex;
   flex-direction: column;
-  gap: 30px; /* Space between sections */
+  gap: 40px;
 }
 
 .loading-message, .error-message {
@@ -228,58 +216,74 @@ export default {
 }
 
 .page-title {
-  color: #4a1e77;
-  font-size: 2.8rem;
-  font-weight: 700;
-  margin-bottom: 30px;
-  text-align: center;
-  border-bottom: 3px solid #f0e6ff;
-  padding-bottom: 20px;
+  display: none;
 }
 
 .report-section {
-  background-color: #fcf9fc;
-  border: 1px solid #ede1ff;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  padding: 30px;
 }
 
 .section-title {
   color: #5a2e87;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 600;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   text-align: center;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(to right, #8c5dff, #a471ff);
+  border-radius: 3px;
 }
 
 .section-description {
-  color: #888;
-  font-size: 0.95rem;
+  color: #666;
+  font-size: 1.1rem;
   text-align: center;
-  margin-bottom: 20px;
-}
-
-/* summary-section 스타일은 ReportSummary가 제거되었으므로 더 이상 필요하지 않을 수 있습니다.
-   하지만 혹시 다른 곳에서 이 클래스를 사용하거나 재사용 가능성을 고려하여 일단 유지합니다.
-   만약 확실히 필요없다면 이 부분도 제거 가능합니다. */
-.summary-section {
-  background-color: #f0e6ff;
-  padding: 30px;
+  margin-bottom: 25px;
+  line-height: 1.6;
 }
 
 .calendar-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.calendar-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 40px;
+  width: 100%;
+}
+
+.calendar-content > *:first-child {
+  flex: 1.6;
+}
+
+.calendar-content > *:last-child {
+  flex: 0.8;
 }
 
 .chart-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 25px; /* Adjusted gap */
 }
 
 /* Logged out prompt styles */
@@ -340,10 +344,17 @@ export default {
   background-position: right center;
 }
 
+@media (max-width: 1200px) {
+  .report-container {
+    max-width: 900px; /* Adjust for medium screens */
+  }
+}
+
 @media (max-width: 768px) {
   .report-container {
     padding: 20px;
     gap: 20px;
+    max-width: 100%; /* Full width on small screens */
   }
   .page-title {
     font-size: 2rem;
@@ -355,6 +366,10 @@ export default {
   }
   .section-description {
     font-size: 0.9rem;
+  }
+  .report-section {
+    padding: 20px;
+    gap: 15px;
   }
   .logged-out-prompt {
     padding: 40px 20px;
