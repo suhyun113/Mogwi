@@ -475,4 +475,107 @@ public class MyStudyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * 특정 문제에 대한 사용자의 학습 상태와 해당 문제 자체를 시스템에서 삭제합니다.
+     * 이는 해당 문제와 관련된 사용자의 카드 학습 상태, 모든 사용자의 학습 상태,
+     * 해당 문제에 속한 모든 카드, 그리고 문제 자체를 영구적으로 삭제합니다.
+     * !!! 경고: 이 작업은 전체 시스템에 영향을 미치며 되돌릴 수 없습니다. !!!
+     * DELETE /api/mystudy/problems/{problemId}/status/{userId}
+     *
+     * @param problemId 삭제할 문제 ID
+     * @param userId    현재 로그인한 사용자 ID (users 테이블의 userid 필드)
+     * @return 성공/실패 메시지
+     */
+    @DeleteMapping("/problems/{problemId}/status/{userId}")
+    public ResponseEntity<Map<String, String>> deleteProblemStatus(
+            @PathVariable Long problemId,
+            @PathVariable String userId) {
+        log.warn("MyStudyController - deleteProblemStatus 호출됨: problemId={}, userId={}. !!! 전체 문제 데이터가 삭제됩니다 !!!", problemId, userId);
+        Map<String, String> response = new HashMap<>();
+
+        if (userId == null || userId.trim().isEmpty() || problemId == null) {
+            log.warn("MyStudyController - deleteProblemStatus: 필수 입력값 누락. problemId={}, userId={}", problemId, userId);
+            response.put("status", "ERROR");
+            response.put("message", "필수 입력값(userId, problemId)이 누락되었습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // internalUserId is still needed for logging, but not strictly for deleting ALL statuses
+        Long internalUserId = null;
+        try {
+            internalUserId = getInternalUserId(userId);
+        } catch (NoResultException e) {
+            log.warn("MyStudyController - deleteProblemStatus: 사용자 ID '{}'를 찾을 수 없음. 하지만 문제 전체 삭제는 진행됩니다.", userId);
+            // We might still proceed with problem deletion even if user is not found,
+            // as the intent here is global deletion tied to this endpoint.
+            // Consider if you want to allow this or always require a valid user.
+        } catch (Exception e) {
+            log.error("MyStudyController - deleteProblemStatus: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
+            // No rollback here yet, as we haven't started DB operations
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        try {
+            // Start Transaction (if not already handled by Spring's @Transactional)
+            // It's highly recommended to use @Transactional on the service layer method
+            // that orchestrates these deletes, rather than directly in the controller.
+
+            // 1. Delete ALL user_card_status entries for this problem (for ALL users)
+            String deleteGlobalCardStatusSql = "DELETE FROM user_card_status WHERE problem_id = ?1";
+            int deletedGlobalCardStatusCount = entityManager.createNativeQuery(deleteGlobalCardStatusSql)
+                    .setParameter(1, problemId)
+                    .executeUpdate();
+            log.info("MyStudyController - deleted {} user_card_status entries for problemId={}", deletedGlobalCardStatusCount, problemId);
+
+            // 2. Delete ALL user_problem_status entries for this problem (for ALL users)
+            String deleteGlobalProblemStatusSql = "DELETE FROM user_problem_status WHERE problem_id = ?1";
+            int deletedGlobalProblemStatusCount = entityManager.createNativeQuery(deleteGlobalProblemStatusSql)
+                    .setParameter(1, problemId)
+                    .executeUpdate();
+            log.info("MyStudyController - deleted {} user_problem_status entries for problemId={}", deletedGlobalProblemStatusCount, problemId);
+
+            // 3. Delete cards associated with this problem
+            String deleteCardsSql = "DELETE FROM cards WHERE problem_id = ?1";
+            int deletedCardsCount = entityManager.createNativeQuery(deleteCardsSql)
+                    .setParameter(1, problemId)
+                    .executeUpdate();
+            log.info("MyStudyController - deleted {} cards for problemId={}", deletedCardsCount, problemId);
+
+            // 4. Delete problem_categories entries related to this problem
+            //    (Assuming problem_categories is a join table or has problem_id directly)
+            String deleteProblemCategoriesSql = "DELETE FROM problem_categories WHERE problem_id = ?1";
+            int deletedCategoriesCount = entityManager.createNativeQuery(deleteProblemCategoriesSql)
+                    .setParameter(1, problemId)
+                    .executeUpdate();
+            log.info("MyStudyController - deleted {} problem_categories entries for problemId={}", deletedCategoriesCount, problemId);
+
+            // 5. Finally, delete the problem itself
+            String deleteProblemSql = "DELETE FROM problems WHERE id = ?1";
+            int deletedProblemCount = entityManager.createNativeQuery(deleteProblemSql)
+                    .setParameter(1, problemId)
+                    .executeUpdate();
+            log.info("MyStudyController - deleted {} problem from 'problems' table for problemId={}", deletedProblemCount, problemId);
+
+
+            if (deletedProblemCount > 0) {
+                response.put("status", "OK");
+                response.put("message", "문제 및 모든 관련 데이터가 시스템에서 성공적으로 삭제되었습니다.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "INFO"); // Not an error, but problem was not found for deletion
+                response.put("message", "해당 문제(ID: " + problemId + ")를 찾을 수 없거나 이미 시스템에서 삭제되었습니다.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        } catch (Exception e) {
+            log.error("MyStudyController - deleteProblemStatus: 문제 및 관련 데이터 삭제 중 오류 발생 (problemId: {}): {}", problemId, e.getMessage(), e);
+            // This is critical, ensure rollback if using programmatic transaction management
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
