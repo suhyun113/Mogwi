@@ -478,7 +478,7 @@ export default {
   gap: 20px; /* 각 섹션 사이 간격 */
   width: 100%;
   justify-content: center;
-  align-items: flex-start; /* 상단 정렬 */
+  align-items: stretch; /* 세로 길이를 같게 늘리기 */
 }
 
 .daily-detail-wrapper {
@@ -487,10 +487,11 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px;
+  padding: 25px; /* 패딩 통일 */
   color: white; /* 텍스트 색상 흰색으로 변경 */
   box-sizing: border-box;
   text-align: center;
+  height: 100%; /* 세로 길이를 부모 컨테이너에 맞춤 */
 }
 
 .section-title-daily-detail {
@@ -531,7 +532,7 @@ export default {
   background-color: #ffffff; /* 흰색 배경 */
   display: flex;
   flex-direction: column;
-  padding: 25px;
+  padding: 25px; /* 패딩 통일 */
   box-sizing: border-box;
 }
 
