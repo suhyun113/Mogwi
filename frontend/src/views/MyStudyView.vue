@@ -137,6 +137,15 @@ export default {
                         console.warn("Received null or undefined problem in the list, skipping.", problem);
                         return null;
                     }
+                    // 임시 패치: authorId가 없으면, authorNickname이 내 닉네임과 같을 때 currentUserId로 세팅
+                    let computedAuthorId = problem.authorId;
+                    if (computedAuthorId === undefined || computedAuthorId === '' || computedAuthorId === null) {
+                        if (problem.authorNickname && problem.authorNickname === username.value) {
+                            computedAuthorId = currentUserId.value;
+                        } else {
+                            computedAuthorId = '';
+                        }
+                    }
 
                     const sortedCategories = Array.isArray(problem.categories)
                         ? problem.categories.sort((a, b) => a.id - b.id)
@@ -149,11 +158,11 @@ export default {
                         authorNickname: problem.authorNickname || '알 수 없음',
                         categories: sortedCategories,
                         id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
-                        authorId: problem.authorId,
+                        authorId: computedAuthorId, // authorId를 위에서 계산한 값으로 세팅
                         perfectCount: problem.perfectCount || 0,
                         vagueCount: problem.vagueCount || 0,
                         forgottenCount: problem.forgottenCount || 0,
-                        cardCount: problem.cardCount || 0,
+                        cardCount: problem.cardCount || 0, // cardCount도 추가 (ProblemListItem에서 사용)
                     };
                 }).filter(problem => problem !== null);
 
@@ -261,7 +270,6 @@ export default {
 </script>
 
 <style scoped>
-/* (Your existing styles remain unchanged) */
 .mystudy {
     display: flex;
     flex-direction: column;
@@ -277,7 +285,6 @@ export default {
     font-family: 'Pretendard', sans-serif;
 }
 
-/* 전역 스타일 */
 :deep(html), :deep(body) {
     margin: 0;
     padding: 0;
@@ -287,31 +294,9 @@ export default {
     position: fixed;
 }
 
-/* .page-title style can be removed or repurposed if needed */
-/* .page-title {
-    color: #5a2e87;
-    font-size: 2.2rem;
-    font-weight: 700;
-    background-color: transparent;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    position: absolute;
-    top: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
-    text-align: center;
-    width: 100%;
-    max-width: 800px;
-    z-index: 10;
-} */
-
-/* OverallStudySummary 컴포넌트 배치 조정 */
-/* OverallStudySummary에 직접 적용할 클래스 */
 .overall-summary-placement {
-    z-index: 5; /* 제목보다 낮은 z-index */
-    margin-top: 100px; /* Adjust this value if needed, as page-title is removed */
+    z-index: 5;
+    margin-top: 100px;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
@@ -319,7 +304,6 @@ export default {
     margin-bottom: 5px;
 }
 
-/* ProblemListSection 배치 조정 */
 .problem-list-section {
     position: relative;
     z-index: 5;
@@ -337,7 +321,6 @@ export default {
     text-align: center;
 }
 
-/* 로그아웃 상태 UI 개선 */
 .logged-out-state {
     display: flex;
     flex-direction: column;
@@ -349,7 +332,7 @@ export default {
     border-radius: 10px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
     padding: 100px 30px;
-    margin-top: 200px; /* Adjust this value if needed */
+    margin-top: 200px;
     box-sizing: border-box;
     text-align: center;
     border: 1px solid #d0c0ee;
@@ -458,16 +441,9 @@ export default {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
-    /* .page-title styles can be removed or adjusted */
-    /* .page-title {
-        font-size: 1.8rem;
-        top: 20px;
-        left: 20px;
-    } */
     .overall-summary-placement {
-        margin-top: 70px; /* Adjust for mobile if needed */
+        margin-top: 70px;
         padding: 0 10px;
     }
     .problem-list-section {
