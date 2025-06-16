@@ -45,7 +45,7 @@
         <div class="calendar-and-detail-wrapper">
           <div class="daily-detail-wrapper">
             <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
-            <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
+            <img :src="dailyCharacterImage" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
             <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
           </div>
           <div class="calendar-wrapper">
@@ -75,6 +75,9 @@ import DailyStudyDetail from '@/components/Report/DailyStudyDetail.vue';
 import WeeklyBarChart from '@/components/Report/WeeklyBarChart.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
+
+import mogwiCharacter from '@/assets/mogwi-character.png';
+import mogwiSleep from '@/assets/mogwi-sleep.png';
 
 export default {
   name: 'ReportView',
@@ -109,6 +112,14 @@ export default {
 
     // 탭 상태 관리: 'daily' 또는 'weekly'
     const activeTab = ref('daily'); // 기본값은 'daily'
+
+    const dailyCharacterImage = computed(() => {
+      if (dailyStudyData.value && (dailyStudyData.value.perfect > 0 || dailyStudyData.value.vague > 0 || dailyStudyData.value.forgotten > 0)) {
+        return mogwiCharacter;
+      } else {
+        return mogwiSleep;
+      }
+    });
 
     const fetchReportData = async () => {
       if (!isLoggedIn.value) {
@@ -217,6 +228,7 @@ export default {
       openLoginModal,
       openRegisterModal,
       activeTab, // activeTab 반환
+      dailyCharacterImage, // computed 속성 반환
     };
   },
 };
