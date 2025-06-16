@@ -233,6 +233,7 @@ export default {
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
+  overflow-x: hidden; /* 가로 스크롤 제거 */
 }
 
 /* Report Banner Styles (User provided) */
@@ -474,12 +475,14 @@ export default {
 
 .calendar-wrapper {
   flex: 1.5;
-  min-width: 450px;
+  /* min-width: 450px; 제거 또는 조정 */
+  min-width: 0; /* 가변 너비 허용 */
 }
 
 .daily-detail-wrapper {
   flex: 1;
-  min-width: 300px;
+  /* min-width: 300px; 제거 또는 조정 */
+  min-width: 0; /* 가변 너비 허용 */
 }
 
 .chart-section {
@@ -565,7 +568,7 @@ export default {
   }
   .calendar-wrapper, .daily-detail-wrapper {
     width: 100%;
-    min-width: unset;
+    min-width: unset; /* Remove fixed min-width for flexibility */
   }
 }
 
@@ -581,7 +584,7 @@ export default {
   .tab-buttons {
     margin: 0 auto 20px auto;
     padding: 0; /* No padding on container */
-    max-width: 300px; /* Adjusted for smaller screens */
+    max-width: 280px; /* Adjusted for smaller screens */
   }
   .tab-button {
     padding: 8px 10px; /* Adjusted padding for smaller screens */
