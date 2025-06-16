@@ -42,8 +42,6 @@
       </div>
 
       <section v-if="activeTab === 'daily'" class="report-section calendar-section">
-        <h2 class="section-title">날짜별 학습 기록</h2>
-        <p class="section-description">달력에서 날짜를 선택하여 해당 날짜의 학습 기록을 확인하세요.</p>
         <div class="calendar-and-detail-wrapper">
           <div class="calendar-wrapper">
             <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
