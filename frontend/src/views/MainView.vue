@@ -14,6 +14,10 @@
       </CustomCarousel>
     </section>
 
+    <div class="search-guidance">
+      <p>아래의 검색창에 문제를 검색해보세요.</p>
+    </div>
+
     <div class="main-inner">
       <div class="sticky-search">
         <SearchBar @search="handleSearch" :categories="categories" />
@@ -238,34 +242,46 @@ export default {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
   background-color: #f0e6ff;
-  min-height: 700px;
+  min0height: 700px;
 }
 
 .main-inner {
   width: 100%;
-  max-width: 720px;
+  max-width: 900px;
   position: relative;
   padding: 0 16px;
   box-sizing: border-box;
+  margin-top: 70px;
+  margin: 0 auto;
+}
+
+.search-guidance {
+  width: 100%;
+  max-width: 900px; /* main-inner와 동일한 최대 너비 */
+  text-align: center; /* 텍스트 가운데 정렬 */
+  margin-top: 60px; 
+  color: #555; /* 부드러운 회색 톤 */
+  font-size: 1.25rem; /* 적당히 눈에 띄는 크기 */
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0 16px; /* 좌우 여백 */
+  box-sizing: border-box;
+}
+
+.search-guidance p {
+    margin: 0; /* p 태그의 기본 margin 제거 */
 }
 
 .sticky-search {
   position: sticky;
-  top: 74px; /* Adjust based on your actual navbar height */
+  top: 74px;
   z-index: 999;
-  background-color: #f8f0ff;
+  background-color: transparent;
   padding: 12px 0;
-  margin: 0 -16px;
-  width: calc(100% + 32px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.sticky-search > * {
+  margin-top: 60px;
+  margin-bottom: 10px;
   width: 100%;
-  max-width: 720px;
-  padding: 0 16px;
-  box-sizing: border-box;
-  margin: 0 auto;
+  box-shadow: none;
 }
 
 .problem-list {
@@ -277,21 +293,28 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .banner-section {
+    height: 55vh;
+  }
   .main-inner {
     padding: 0 10px;
+    max-width: 100%;
+    margin: 40px auto;
   }
   .sticky-search {
     top: 60px;
     padding: 10px 0;
-    margin: 0 -10px;
-    width: calc(100% + 20px);
+    margin: 0;
+    width: 100%;
   }
   .sticky-search > * {
-    padding: 0 10px;
+    padding: 0;
+    max-width: 100%;
   }
   .problem-list {
     gap: 15px;
     margin-top: 20px;
+    padding: 0;
   }
 }
 </style>
