@@ -50,8 +50,9 @@ export default {
   justify-content: center; /* 세로 중앙 정렬 */
   width: 100%;
   height: 100%; /* 부모 컨테이너에 맞춰 높이 차지 */
-  padding: 20px; /* 내부 패딩 */
+  padding: 0; /* 내부 패딩 제거 */
   box-sizing: border-box;
+  background-color: transparent; /* 배경색을 투명으로 설정 */
 }
 
 .detail-content {

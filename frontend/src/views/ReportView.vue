@@ -418,10 +418,6 @@ export default {
 /* Report Section General Styles */
 .report-section {
   padding: 30px;
-  background-color: #ffffff; /* 컨테이너 배경색을 흰색으로 통일 */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e8e0ff;
 }
 
 .section-title {
@@ -467,15 +463,10 @@ export default {
 .calendar-and-detail-wrapper {
   display: flex;
   flex-direction: row; /* 가로 배치 */
-  gap: 0; /* 각 섹션이 큰 직사각형 내부에 있으므로 gap을 0으로 설정 */
+  gap: 20px; /* 각 섹션 사이 간격 */
   width: 100%;
   justify-content: center;
   align-items: flex-start; /* 상단 정렬 */
-  min-height: 400px; /* 전체 섹션의 최소 높이 설정 */
-  border-radius: 12px;
-  overflow: hidden; /* 자식 요소의 둥근 모서리 적용을 위해 */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* 전체 직사각형에 그림자 적용 */
-  border: 1px solid #e8e0ff; /* 전체 직사각형에 테두리 적용 */
 }
 
 .daily-detail-wrapper {
@@ -612,7 +603,6 @@ export default {
   .calendar-and-detail-wrapper {
     flex-direction: column; /* 작은 화면에서는 세로 배치 */
     gap: 20px; /* 세로 배치 시 간격 */
-    border-radius: 12px; /* 모바일에서도 둥근 모서리 유지 */
   }
   .calendar-wrapper, .daily-detail-wrapper {
     width: 100%;
