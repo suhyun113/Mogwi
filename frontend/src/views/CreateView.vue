@@ -1,9 +1,15 @@
 <template>
   <div class="create-view">
     <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
-    <div v-else-if="error" class="error-message">{{ error }}</div>
+    <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
 
-    <div class="create-container">
+    <div v-else-if="!isLoggedIn" class="logout-prompt">
+      <p class="logout-message">
+        <i class="fas fa-lock"></i> 문제 생성은 로그인 후 이용 가능합니다.
+      </p>
+      <button @click="showLoginModal = true" class="login-button">로그인</button>
+    </div>
+    <div v-else class="create-container">
       <ProblemForm
         v-model:title="problem.title"
         v-model:isPublic="problem.is_public"
@@ -42,6 +48,9 @@
         </button>
       </div>
     </div>
+
+    <LoginModal v-if="showLoginModal" @close="showLoginModal = false" @open-register="openRegisterModal" />
+    <RegisterModal v-if="showRegisterModal" @close="closeRegisterModal" />
   </div>
 </template>
 
@@ -52,11 +61,15 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import ProblemForm from '@/components/Create/ProblemForm.vue';
 import CardInput from '@/components/Create/CardInput.vue';
+import LoginModal from '@/components/Login/LoginModal.vue'; // Assume your LoginModal is here
+import RegisterModal from '@/components/Register/RegisterModal.vue'; // Assume your RegisterModal is here
 
 export default {
   components: {
     ProblemForm,
-    CardInput
+    CardInput,
+    LoginModal,
+    RegisterModal // Register the RegisterModal component
   },
   setup() {
     const store = useStore();
@@ -80,11 +93,14 @@ export default {
       cards: [{ id: 1, question: '', answer: '', image_url: '', image_file: null }]
     });
 
+    // Modal state
+    const showLoginModal = ref(false);
+    const showRegisterModal = ref(false);
+
     let nextCardId = 2;
 
     const fetchCategories = async () => {
       try {
-        // Axios 기본 URL 설정 (main.js 또는 여기에 설정)
         const response = await axios.get('/api/categories');
         allCategories.value = response.data.sort((a, b) => a.id - b.id);
       } catch (err) {
@@ -102,9 +118,8 @@ export default {
       if (!problem.value.title.trim()) {
         return false;
       }
-      // 태그는 최소 1개 이상, 최대 3개
       if (problem.value.selectedTags.length === 0 || problem.value.selectedTags.length > 3) {
-          return false;
+        return false;
       }
       if (problem.value.cards.length === 0) {
         return false;
@@ -139,51 +154,46 @@ export default {
     };
 
     const uploadImages = async () => {
-        isUploadingImages.value = true;
-        submitError.value = '';
+      isUploadingImages.value = true;
+      submitError.value = '';
 
-        const uploadPromises = problem.value.cards.map(async (card, index) => {
-            if (card.image_file) {
-                const formData = new FormData();
-                // 백엔드 FileUploadController의 @RequestParam("file")과 일치시켜야 함
-                formData.append('file', card.image_file);
+      const uploadPromises = problem.value.cards.map(async (card, index) => {
+        if (card.image_file) {
+          const formData = new FormData();
+          formData.append('file', card.image_file);
 
-                try {
-                    // TODO: 실제 백엔드 서버 URL과 포트로 변경하세요!
-                    // 예시: 'http://localhost:8000/api/upload-image' 또는 '/api/upload-image' (proxy 설정 사용 시)
-                    const response = await axios.post('/api/upload-image', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    });
+          try {
+            const response = await axios.post('/api/upload-image', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
 
-                    if (response.data.status === 'OK' && response.data.imageUrl) {
-                        card.image_url = response.data.imageUrl; // 서버에서 반환된 URL로 업데이트
-                        card.image_file = null; // 업로드 완료된 파일 객체는 제거
-                        console.log(`Card ${index + 1} image uploaded successfully:`, card.image_url);
-                    } else {
-                        console.error(`이미지 업로드 실패: 카드 ${index + 1} -`, response.data.message);
-                        submitError.value = `카드 ${index + 1} 이미지 업로드에 실패했습니다: ${response.data.message || '알 수 없는 오류'}`;
-                        throw new Error(`이미지 업로드 실패: ${response.data.message || '알 수 없는 오류'}`);
-                    }
-                } catch (uploadErr) {
-                    console.error(`카드 ${index + 1} 이미지 업로드 중 오류 발생:`, uploadErr);
-                    // Network errors or server errors will also be caught here
-                    submitError.value = `카드 ${index + 1} 이미지 업로드 중 오류가 발생했습니다: ${uploadErr.message || '네트워크 오류'}`;
-                    throw uploadErr; // Propagate the error to stop Promise.all
-                }
+            if (response.data.status === 'OK' && response.data.imageUrl) {
+              card.image_url = response.data.imageUrl;
+              card.image_file = null;
+              console.log(`Card ${index + 1} image uploaded successfully:`, card.image_url);
+            } else {
+              console.error(`이미지 업로드 실패: 카드 ${index + 1} -`, response.data.message);
+              submitError.value = `카드 ${index + 1} 이미지 업로드에 실패했습니다: ${response.data.message || '알 수 없는 오류'}`;
+              throw new Error(`이미지 업로드 실패: ${response.data.message || '알 수 없는 오류'}`);
             }
-        });
-
-        try {
-            await Promise.all(uploadPromises);
-            return true; // All images uploaded successfully
-        } catch (e) {
-            // An error occurred during one of the image uploads, error message already set
-            return false; // Image upload failed
-        } finally {
-            isUploadingImages.value = false; // 이미지 업로드 상태 종료
+          } catch (uploadErr) {
+            console.error(`카드 ${index + 1} 이미지 업로드 중 오류 발생:`, uploadErr);
+            submitError.value = `카드 ${index + 1} 이미지 업로드 중 오류가 발생했습니다: ${uploadErr.message || '네트워크 오류'}`;
+            throw uploadErr;
+          }
         }
+      });
+
+      try {
+        await Promise.all(uploadPromises);
+        return true;
+      } catch (e) {
+        return false;
+      } finally {
+        isUploadingImages.value = false;
+      }
     };
 
     const createProblem = async () => {
@@ -192,34 +202,24 @@ export default {
         return;
       }
 
-      if (!isLoggedIn.value) {
-        alert('로그인 후 문제 생성이 가능합니다.');
-        router.push('/login');
+      submitError.value = '';
+
+      const imagesUploaded = await uploadImages();
+      if (!imagesUploaded) {
         return;
       }
 
-      submitError.value = '';
-      // isUploadingImages는 uploadImages 함수 내부에서 관리되므로 여기서 직접 true로 설정할 필요 없음
-
-      // 1. 모든 이미지 업로드
-      const imagesUploaded = await uploadImages();
-      if (!imagesUploaded) {
-          // 이미지 업로드 실패 시 이미 submitError가 설정되어 있으므로 추가 처리 없음
-          return;
-      }
-
-      // 2. 모든 이미지 URL이 설정된 최종 문제 데이터를 서버에 전송
       try {
         const payload = {
           title: problem.value.title,
           author_id: currentUserId.value,
           description: problem.value.description,
-          is_public: problem.value.is_public ? 1 : 0, // 백엔드에서 Integer로 받으므로 1 또는 0으로 변환
-          categories: problem.value.selectedTags, // 이미 ID 배열
+          is_public: problem.value.is_public ? 1 : 0,
+          categories: problem.value.selectedTags,
           cards: problem.value.cards.map(card => ({
             question: card.question,
             answer: card.answer,
-            image_url: card.image_url || null // 업로드된 URL 또는 null
+            image_url: card.image_url || null
           }))
         };
 
@@ -227,7 +227,7 @@ export default {
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 생성되었습니다!');
-          router.push('mystudy'); // 이름으로 라우트 이동
+          router.push('mystudy');
         } else {
           submitError.value = response.data.message || '문제 생성에 실패했습니다.';
         }
@@ -239,24 +239,39 @@ export default {
           submitError.value = '문제 생성 중 알 수 없는 오류가 발생했습니다.';
         }
       } finally {
-        // 문제 생성 완료 후에도 isUploadingImages를 false로 설정 (uploadImages에서 이미 했지만 한 번 더 확인)
         isUploadingImages.value = false;
       }
     };
 
+    // No longer redirects, just opens the modal
+    // This function will be called by the new "로그인" button in the template
+    const openLoginModal = () => {
+      showLoginModal.value = true;
+    };
+
+    const openRegisterModal = () => {
+      showLoginModal.value = false; // Close login modal first
+      showRegisterModal.value = true;
+    };
+
+    const closeRegisterModal = () => {
+      showRegisterModal.value = false;
+    };
+
     onMounted(() => {
       fetchCategories();
-      if (!isLoggedIn.value) {
-        // router.push('/login'); // 이미 watch에서 처리하고 있으므로 중복 가능
-      }
     });
 
     watch(isLoggedIn, (newVal) => {
       if (!newVal) {
-        alert('로그아웃되었습니다. 문제 생성이 취소됩니다.');
-        router.push('/login');
+        // If the user logs out, clear form data or reset as needed
+        // For now, the UI just switches to the login prompt
+      } else {
+        // If the user logs in while on this page (e.g., via the modal), refresh categories.
+        fetchCategories();
+        showLoginModal.value = false; // Close modal if login was successful
       }
-    });
+    }, { immediate: true });
 
     return {
       loading,
@@ -270,14 +285,97 @@ export default {
       removeCard,
       updateCardField,
       handleImageFile,
-      createProblem
+      createProblem,
+      isLoggedIn,
+      showLoginModal, // Expose modal state
+      openLoginModal, // Expose function to open modal (called by the template button)
+      showRegisterModal,
+      openRegisterModal,
+      closeRegisterModal
     };
   }
 };
 </script>
 
 <style scoped>
-/* 기존 스타일은 동일하게 유지됩니다. */
+/* Your existing styles remain, add these new styles */
+
+.logout-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 60px 30px;
+  width: 100%;
+  max-width: 500px;
+  margin: 80px auto;
+  border: 1px solid #eee;
+}
+
+.logout-message {
+  font-size: 1.5rem;
+  color: #4a1e77;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logout-message .fas {
+  font-size: 2rem;
+  color: #8c5dff;
+}
+
+/* Renamed from .login-button to clarify it's for opening the modal, not submitting a form */
+.login-button {
+  background-image: linear-gradient(to right, #8c5dff 0%, #a471ff 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(140, 93, 255, 0.4);
+}
+
+.login-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(140, 93, 255, 0.6);
+  background-position: right center;
+}
+
+/* Ensure the main container doesn't show when logged out */
+.create-view > .create-container {
+    display: v-bind("isLoggedIn ? 'block' : 'none'"); /* Hide form when logged out */
+}
+
+/* Adjust media queries for the new UI */
+@media (max-width: 768px) {
+  .logout-prompt {
+    padding: 40px 20px;
+    margin: 50px auto;
+  }
+  .logout-message {
+    font-size: 1.2rem;
+    gap: 10px;
+  }
+  .logout-message .fas {
+    font-size: 1.7rem;
+  }
+  .login-button {
+    padding: 12px 25px;
+    font-size: 1rem;
+  }
+}
+
+/* The rest of your existing styles below */
 .create-view {
   display: flex;
   flex-direction: column;
@@ -346,8 +444,8 @@ export default {
 }
 
 .add-card-btn {
-  background-color: #e6e0f4; /* Light purple */
-  color: #5a2e87; /* Dark purple */
+  background-color: #e6e0f4;
+  color: #5a2e87;
   border: none;
   padding: 12px 20px;
   border-radius: 8px;
@@ -364,7 +462,7 @@ export default {
 }
 
 .add-card-btn:hover {
-  background-color: #d1c4e9; /* Slightly darker light purple */
+  background-color: #d1c4e9;
   transform: translateY(-2px);
 }
 
@@ -413,7 +511,6 @@ export default {
   text-align: center;
 }
 
-/* New style for file input */
 .form-input-file {
   width: 100%;
   padding: 10px 12px;
@@ -449,7 +546,6 @@ export default {
   background-color: #e6d7f0;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .page-title {
     font-size: 2rem;
