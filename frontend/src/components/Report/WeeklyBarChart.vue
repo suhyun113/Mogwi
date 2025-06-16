@@ -183,13 +183,9 @@ export default {
 
 <style scoped>
 .weekly-bar-chart {
-  width: 100%; /* Allow to take full width of parent */
-  height: 400px; /* Increased fixed height for the chart container */
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  padding: 25px; /* Adjusted padding */
-  border: 1px solid #dcd0f0;
+  width: 100%;
+  height: 400px;
+  padding: 0; /* ReportView의 .report-section에서 padding을 처리하므로 여기서는 0으로 */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -215,20 +211,20 @@ canvas {
     border-radius: 10px;
     z-index: 10;
     color: #888;
-    font-size: 1.2rem; /* Slightly larger text */
+    font-size: 1.2rem;
     text-align: center;
 }
 
 .mogwi-confused-icon {
-    width: 110px; /* Slightly larger icon */
+    width: 110px;
     height: auto;
-    margin-bottom: 12px; /* More space */
+    margin-bottom: 12px;
 }
 
 @media (max-width: 768px) {
   .weekly-bar-chart {
     height: 300px;
-    padding: 15px;
+    padding: 0; /* ReportView에서 처리 */
   }
   .mogwi-confused-icon {
       width: 70px;

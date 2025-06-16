@@ -70,16 +70,16 @@ export default {
 <style scoped>
 .daily-study-detail {
   width: 100%;
-  padding: 25px;
+  padding: 0; /* ReportView의 .report-section에서 padding을 처리하므로 여기서는 0으로 */
   text-align: center;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background-color: #fcf8ff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e9dffc;
+  /* background-color: #fcf8ff; 이 부분 제거 */
+  /* border-radius: 10px; 이 부분 제거 */
+  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03); 이 부분 제거 */
+  /* border: 1px solid #e9dffc; 이 부분 제거 */
 }
 
 .detail-title {
@@ -104,7 +104,7 @@ export default {
   align-items: center;
   padding: 15px 20px;
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: #ffffff; /* 통계 항목 자체는 흰색 배경 유지 */
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
   min-width: 140px;
   flex: 1;
@@ -150,7 +150,7 @@ export default {
 
 @media (max-width: 768px) {
   .daily-study-detail {
-    padding: 15px;
+    padding: 0; /* ReportView에서 처리 */
   }
   .detail-title {
     font-size: 1.3rem;

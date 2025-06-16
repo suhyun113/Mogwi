@@ -144,11 +144,7 @@ export default {
 <style scoped>
 .study-calendar {
   width: 100%;
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  padding: 25px;
-  border: 1px solid #e8e0ff;
+  padding: 0; /* ReportView의 .report-section에서 padding을 처리하므로 여기서는 0으로 */
 }
 
 .calendar-header {
@@ -275,7 +271,7 @@ export default {
 
 @media (max-width: 768px) {
   .study-calendar {
-    padding: 15px;
+    padding: 0; /* ReportView에서 처리 */
   }
   .calendar-header {
     margin-bottom: 15px;

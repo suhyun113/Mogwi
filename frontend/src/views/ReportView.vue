@@ -1,5 +1,20 @@
 <template>
   <div class="report-view">
+    <section class="report-banner-section">
+      <div class="report-banner">
+        <div class="banner-content">
+          <div class="text-content">
+            <h1 class="banner-title">나의 학습 리포트</h1>
+            <p class="banner-description">
+              모귀와 함께한 학습 여정을 한눈에 확인하고,<br>
+              더 효율적인 학습 계획을 세워보세요!
+            </p>
+          </div>
+          <img src="@/assets/mogwi-character.png" alt="모귀 리포트 캐릭터" class="banner-mogwi-character">
+        </div>
+      </div>
+    </section>
+
     <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <div v-else-if="!isLoggedIn" class="logged-out-prompt">
@@ -9,19 +24,37 @@
       </p>
       <button @click="showLoginModal = true" class="login-button">로그인</button>
     </div>
-    <div v-else class="report-container">
-      <h1 class="page-title">나의 학습 리포트</h1>
 
-      <section class="report-section calendar-section">
+    <div v-else class="report-container">
+      <div class="tab-buttons">
+        <button
+          :class="{ 'tab-button': true, 'active': activeTab === 'daily' }"
+          @click="activeTab = 'daily'"
+        >
+          날짜별 학습 기록
+        </button>
+        <button
+          :class="{ 'tab-button': true, 'active': activeTab === 'weekly' }"
+          @click="activeTab = 'weekly'"
+        >
+          주간 학습량
+        </button>
+      </div>
+
+      <section v-if="activeTab === 'daily'" class="report-section calendar-section">
         <h2 class="section-title">날짜별 학습 기록</h2>
         <p class="section-description">달력에서 날짜를 선택하여 해당 날짜의 학습 기록을 확인하세요.</p>
-        <div class="calendar-content">
-          <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
-          <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
+        <div class="calendar-and-detail-wrapper">
+          <div class="calendar-wrapper">
+            <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
+          </div>
+          <div class="daily-detail-wrapper">
+            <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
+          </div>
         </div>
       </section>
 
-      <section class="report-section chart-section">
+      <section v-if="activeTab === 'weekly'" class="report-section chart-section">
         <h2 class="section-title">주간 학습량</h2>
         <p class="section-description">지난 한 달간의 주별 학습 카드 수를 막대 그래프로 확인하세요.</p>
         <WeeklyBarChart :chartData="weeklyChartData" />
@@ -73,6 +106,9 @@ export default {
     const dailyStudyData = ref(null);
 
     const weeklyChartData = ref([]);
+
+    // 탭 상태 관리: 'daily' 또는 'weekly'
+    const activeTab = ref('daily'); // 기본값은 'daily'
 
     const fetchReportData = async () => {
       if (!isLoggedIn.value) {
@@ -180,6 +216,7 @@ export default {
       showRegisterModal,
       openLoginModal,
       openRegisterModal,
+      activeTab, // activeTab 반환
     };
   },
 };
@@ -190,7 +227,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding-top: 0;
   background-color: #fdf8f4;
   min-height: 100vh;
   width: 100%;
@@ -198,6 +235,129 @@ export default {
   font-family: 'Pretendard', sans-serif;
 }
 
+/* Report Banner Styles (User provided) */
+.report-banner-section {
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+.report-banner {
+  width: 100%;
+  padding: 60px 20px;
+  background: linear-gradient(to right, #8c5dff, #a471ff);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-content {
+  position: relative;
+  z-index: 10;
+  max-width: 1000px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+.text-content {
+  text-align: left;
+  max-width: 50%;
+}
+
+.banner-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.banner-description {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.banner-mogwi-character {
+  width: 220px;
+  height: auto;
+  opacity: 0.8;
+  filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.2));
+  flex-shrink: 0;
+}
+
+@media (max-width: 992px) {
+  .banner-content {
+    padding: 0 20px;
+  }
+  .text-content {
+    max-width: 60%;
+  }
+  .banner-title {
+    font-size: 2.5rem;
+  }
+  .banner-description {
+    font-size: 1.1rem;
+  }
+  .banner-mogwi-character {
+    width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .report-banner {
+    padding: 40px 15px;
+    min-height: 250px;
+  }
+  .banner-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+  }
+  .text-content {
+    max-width: 100%;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .banner-title {
+    font-size: 2rem;
+  }
+  .banner-description {
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+  .banner-mogwi-character {
+    width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-banner {
+    padding: 30px 10px;
+    min-height: 200px;
+  }
+  .banner-title {
+    font-size: 1.7rem;
+  }
+  .banner-description {
+    font-size: 0.9rem;
+  }
+  .banner-mogwi-character {
+    width: 120px;
+  }
+}
+
+/* Report Container & Common Section Styles */
 .report-container {
   padding: 40px;
   width: 100%;
@@ -215,12 +375,52 @@ export default {
   text-align: center;
 }
 
-.page-title {
-  display: none;
+/* Tab Buttons Styles */
+.tab-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 350px; /* Adjusted max-width to reduce overall button width */
+  margin: 0 auto 30px auto;
+  border-radius: 30px; /* Pill shape */
+  background-color: transparent; /* Remove the gray background container */
+  padding: 0; /* Remove padding from the container */
+  box-shadow: none; /* Remove container shadow */
 }
 
+.tab-button {
+  flex: 1;
+  padding: 10px 15px; /* Adjusted padding to reduce button width */
+  border: none;
+  background-color: transparent; /* Default transparent background */
+  color: #666; /* Default text color (gray) */
+  font-size: 1.1rem; /* Adjust font size */
+  font-weight: 500; /* Adjust font weight */
+  cursor: pointer;
+  border-radius: 25px; /* Pill shape */
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.tab-button.active {
+  background: linear-gradient(to right, #8c5dff, #a471ff); /* Purple gradient for active button */
+  color: white; /* White text for active button */
+  box-shadow: 0 4px 10px rgba(140, 93, 255, 0.3); /* Subtle shadow for active button matching the banner */
+}
+
+.tab-button:hover:not(.active) {
+  background-color: #f0f0f0; /* Light hover background */
+  color: #333; /* Slightly darker text on hover */
+}
+
+/* Report Section General Styles */
 .report-section {
   padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e8e0ff;
 }
 
 .section-title {
@@ -259,31 +459,37 @@ export default {
   align-items: center;
   gap: 30px;
   width: 100%;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
-.calendar-content {
+.calendar-and-detail-wrapper {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: 40px;
+  gap: 30px;
   width: 100%;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-.calendar-content > *:first-child {
-  flex: 1.6;
+.calendar-wrapper {
+  flex: 1.5;
+  min-width: 450px;
 }
 
-.calendar-content > *:last-child {
-  flex: 0.8;
+.daily-detail-wrapper {
+  flex: 1;
+  min-width: 300px;
 }
 
 .chart-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 25px; /* Adjusted gap */
+  gap: 25px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 /* Logged out prompt styles */
@@ -344,22 +550,42 @@ export default {
   background-position: right center;
 }
 
+/* Media Queries for Responsiveness */
 @media (max-width: 1200px) {
   .report-container {
-    max-width: 900px; /* Adjust for medium screens */
+    max-width: 900px;
+  }
+  .calendar-section, .chart-section {
+    max-width: 900px;
+  }
+  .calendar-and-detail-wrapper {
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+  }
+  .calendar-wrapper, .daily-detail-wrapper {
+    width: 100%;
+    min-width: unset;
   }
 }
 
 @media (max-width: 768px) {
+  .report-banner-section {
+    margin-bottom: 25px;
+  }
   .report-container {
     padding: 20px;
     gap: 20px;
-    max-width: 100%; /* Full width on small screens */
+    max-width: 100%;
   }
-  .page-title {
-    font-size: 2rem;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+  .tab-buttons {
+    margin: 0 auto 20px auto;
+    padding: 0; /* No padding on container */
+    max-width: 300px; /* Adjusted for smaller screens */
+  }
+  .tab-button {
+    padding: 8px 10px; /* Adjusted padding for smaller screens */
+    font-size: 0.9rem; /* Adjusted font size for smaller screens */
   }
   .section-title {
     font-size: 1.5rem;
@@ -390,6 +616,9 @@ export default {
   .login-button {
     padding: 12px 25px;
     font-size: 1.1rem;
+  }
+  .calendar-and-detail-wrapper {
+    gap: 20px;
   }
 }
 </style>
