@@ -5,6 +5,7 @@ import StudyView from '@/views/StudyView.vue'
 import SolveView from '@/views/SolveView.vue'
 import CreateView from '@/views/CreateView.vue'
 import ReportView from '@/views/ReportView.vue'
+import MypageView from '@/views/MypageView.vue'
 
 const routes = [
   { 
@@ -36,6 +37,11 @@ const routes = [
     path: '/report',
     name: 'report',
     component: ReportView
+  },
+  {
+    path: '/mypage',
+    name: 'mypage',
+    component: MypageView
   }
 ]
 

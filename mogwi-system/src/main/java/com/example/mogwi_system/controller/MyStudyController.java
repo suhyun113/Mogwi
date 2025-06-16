@@ -578,4 +578,198 @@ public class MyStudyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * 특정 문제의 좋아요 상태를 토글합니다. (좋아요 추가 또는 취소)
+     * PUT /api/mystudy/problems/{problemId}/toggle-
+     *
+     *
+     * @param problemId 토글할 문제 ID
+     * @param data      사용자 ID
+     * @return 좋아요 상태 업데이트 결과
+     */
+    @PutMapping("/problems/{problemId}/toggle-like")
+    public ResponseEntity<Map<String, Object>> toggleProblemLike(
+            @PathVariable Long problemId,
+            @RequestBody Map<String, Object> data) {
+        log.info("MyStudyController - toggleProblemLike 호출됨: problemId={}, data={}", problemId, data);
+        Map<String, Object> response = new HashMap<>();
+        String userId = (String) data.get("userId");
+
+        if (userId == null || problemId == null) {
+            log.warn("MyStudyController - toggleProblemLike: 필수 입력값 누락. problemId={}, userId={}", problemId, userId);
+            response.put("status", "ERROR");
+            response.put("message", "필수 입력값(userId, problemId)이 누락되었습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        Long internalUserId;
+        try {
+            internalUserId = getInternalUserId(userId);
+        } catch (NoResultException e) {
+            log.warn("MyStudyController - toggleProblemLike: 사용자 ID '{}'를 찾을 수 없음.", userId);
+            response.put("status", "ERROR");
+            response.put("message", "사용자를 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            log.error("MyStudyController - toggleProblemLike: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        try {
+            // user_problem_status 테이블에 해당 레코드가 있는지 확인
+            String checkSql = "SELECT COUNT(*) FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2";
+            Long count = ((Number) entityManager.createNativeQuery(checkSql)
+                    .setParameter(1, internalUserId)
+                    .setParameter(2, problemId)
+                    .getSingleResult()).longValue();
+
+            boolean isCurrentlyLiked = false;
+            if (count > 0) {
+                // 현재 좋아요 상태 조회
+                String currentLikedStatusSql = "SELECT is_liked FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2";
+                Object result = entityManager.createNativeQuery(currentLikedStatusSql)
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, problemId)
+                        .getSingleResult();
+                isCurrentlyLiked = ((Number) result).intValue() == 1;
+
+                // 좋아요 상태 토글
+                String updateSql = "UPDATE user_problem_status SET is_liked = ?, updated_at = NOW() WHERE user_id = ?2 AND problem_id = ?3";
+                entityManager.createNativeQuery(updateSql)
+                        .setParameter(1, isCurrentlyLiked ? 0 : 1) // 0: 취소, 1: 좋아요
+                        .setParameter(2, internalUserId)
+                        .setParameter(3, problemId)
+                        .executeUpdate();
+            } else {
+                // 레코드가 없으면 새로 삽입하고 좋아요 상태를 1로 설정
+                String insertSql = "INSERT INTO user_problem_status (user_id, problem_id, is_liked, problem_status, created_at, updated_at) VALUES (?1, ?2, 1, 'new', NOW(), NOW())";
+                entityManager.createNativeQuery(insertSql)
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, problemId)
+                        .executeUpdate();
+                isCurrentlyLiked = false; // 새로 추가된 것이므로 이전 상태는 'false'로 간주
+            }
+
+            // 업데이트된 좋아요 총 개수 조회
+            String totalLikesSql = "SELECT COUNT(*) FROM user_problem_status WHERE problem_id = ?1 AND is_liked = 1";
+            Long totalLikes = ((Number) entityManager.createNativeQuery(totalLikesSql)
+                    .setParameter(1, problemId)
+                    .getSingleResult()).longValue();
+
+            response.put("status", "OK");
+            response.put("isLiked", !isCurrentlyLiked); // 토글된 최종 상태 반환
+            response.put("totalLikes", totalLikes);
+            response.put("message", isCurrentlyLiked ? "좋아요가 취소되었습니다." : "문제를 좋아요했습니다.");
+            log.info("MyStudyController - toggleProblemLike 성공: problemId={}, userId={}, isLiked={}, totalLikes={}", problemId, userId, !isCurrentlyLiked, totalLikes);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("MyStudyController - toggleProblemLike: 좋아요 상태 업데이트 중 오류 발생 (problemId: {}, internalUserId: {}): {}", problemId, internalUserId, e.getMessage(), e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    /**
+     * 특정 문제의 스크랩 상태를 토글합니다. (스크랩 추가 또는 취소)
+     * PUT /api/mystudy/problems/{problemId}/toggle-scrap
+     *
+     * @param problemId 토글할 문제 ID
+     * @param data      사용자 ID
+     * @return 스크랩 상태 업데이트 결과
+     */
+    @PutMapping("/problems/{problemId}/toggle-scrap")
+    public ResponseEntity<Map<String, Object>> toggleProblemScrap(
+            @PathVariable Long problemId,
+            @RequestBody Map<String, Object> data) {
+        log.info("MyStudyController - toggleProblemScrap 호출됨: problemId={}, data={}", problemId, data);
+        Map<String, Object> response = new HashMap<>();
+        String userId = (String) data.get("userId");
+
+        if (userId == null || problemId == null) {
+            log.warn("MyStudyController - toggleProblemScrap: 필수 입력값 누락. problemId={}, userId={}", problemId, userId);
+            response.put("status", "ERROR");
+            response.put("message", "필수 입력값(userId, problemId)이 누락되었습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        Long internalUserId;
+        try {
+            internalUserId = getInternalUserId(userId);
+        } catch (NoResultException e) {
+            log.warn("MyStudyController - toggleProblemScrap: 사용자 ID '{}'를 찾을 수 없음.", userId);
+            response.put("status", "ERROR");
+            response.put("message", "사용자를 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            log.error("MyStudyController - toggleProblemScrap: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        try {
+            // user_problem_status 테이블에 해당 레코드가 있는지 확인
+            String checkSql = "SELECT COUNT(*) FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2";
+            Long count = ((Number) entityManager.createNativeQuery(checkSql)
+                    .setParameter(1, internalUserId)
+                    .setParameter(2, problemId)
+                    .getSingleResult()).longValue();
+
+            boolean isCurrentlyScrapped = false;
+            if (count > 0) {
+                // 현재 스크랩 상태 조회
+                String currentScrappedStatusSql = "SELECT is_scrapped FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2";
+                Object result = entityManager.createNativeQuery(currentScrappedStatusSql)
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, problemId)
+                        .getSingleResult();
+                isCurrentlyScrapped = ((Number) result).intValue() == 1;
+
+                // 스크랩 상태 토글
+                String updateSql = "UPDATE user_problem_status SET is_scrapped = ?, updated_at = NOW() WHERE user_id = ?2 AND problem_id = ?3";
+                entityManager.createNativeQuery(updateSql)
+                        .setParameter(1, isCurrentlyScrapped ? 0 : 1) // 0: 취소, 1: 스크랩
+                        .setParameter(2, internalUserId)
+                        .setParameter(3, problemId)
+                        .executeUpdate();
+            } else {
+                // 레코드가 없으면 새로 삽입하고 스크랩 상태를 1로 설정
+                String insertSql = "INSERT INTO user_problem_status (user_id, problem_id, is_scrapped, problem_status, created_at, updated_at) VALUES (?1, ?2, 1, 'new', NOW(), NOW())";
+                entityManager.createNativeQuery(insertSql)
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, problemId)
+                        .executeUpdate();
+                isCurrentlyScrapped = false; // 새로 추가된 것이므로 이전 상태는 'false'로 간주
+            }
+
+            // 업데이트된 스크랩 총 개수 조회
+            String totalScrapsSql = "SELECT COUNT(*) FROM user_problem_status WHERE problem_id = ?1 AND is_scrapped = 1";
+            Long totalScraps = ((Number) entityManager.createNativeQuery(totalScrapsSql)
+                    .setParameter(1, problemId)
+                    .getSingleResult()).longValue();
+
+            response.put("status", "OK");
+            response.put("isScrapped", !isCurrentlyScrapped); // 토글된 최종 상태 반환
+            response.put("totalScraps", totalScraps);
+            response.put("message", isCurrentlyScrapped ? "스크랩이 취소되었습니다." : "문제를 스크랩했습니다.");
+            log.info("MyStudyController - toggleProblemScrap 성공: problemId={}, userId={}, isScrapped={}, totalScraps={}", problemId, userId, !isCurrentlyScrapped, totalScraps);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("MyStudyController - toggleProblemScrap: 스크랩 상태 업데이트 중 오류 발생 (problemId: {}, internalUserId: {}): {}", problemId, internalUserId, e.getMessage(), e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
