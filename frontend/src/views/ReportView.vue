@@ -55,8 +55,6 @@
       </section>
 
       <section v-if="activeTab === 'weekly'" class="report-section chart-section">
-        <h2 class="section-title">주간 학습량</h2>
-        <p class="section-description">지난 한 달간의 주별 학습 카드 수를 막대 그래프로 확인하세요.</p>
         <WeeklyBarChart :chartData="weeklyChartData" />
       </section>
     </div>
@@ -159,13 +157,24 @@ export default {
         }
 
         const weeklyResponse = await axios.get(`/api/report/weekly-records/${currentUserId.value}`);
-        weeklyChartData.value = weeklyResponse.data.map(item => ({
-          label: item.weekStart.substring(5),
-          perfect: item.perfect || 0,
-          vague: item.vague || 0,
-          forgotten: item.forgotten || 0,
-          total: item.total || 0,
-        }));
+        weeklyChartData.value = weeklyResponse.data.map(item => {
+          const weekStartDate = new Date(item.weekStart);
+          const weekEndDate = new Date(weekStartDate);
+          weekEndDate.setDate(weekEndDate.getDate() + 6); // Add 6 days to get the end of the week
+
+          const startMonth = String(weekStartDate.getMonth() + 1).padStart(2, '0');
+          const startDay = String(weekStartDate.getDate()).padStart(2, '0');
+          const endMonth = String(weekEndDate.getMonth() + 1).padStart(2, '0');
+          const endDay = String(weekEndDate.getDate()).padStart(2, '0');
+
+          return {
+            label: `${startMonth}-${startDay} ~ ${endMonth}-${endDay}`,
+            perfect: item.perfect || 0,
+            vague: item.vague || 0,
+            forgotten: item.forgotten || 0,
+            total: item.total || 0,
+          };
+        });
 
       } catch (err) {
         console.error('리포트 데이터 불러오기 실패:', err);
