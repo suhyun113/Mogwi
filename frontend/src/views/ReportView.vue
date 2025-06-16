@@ -43,11 +43,13 @@
 
       <section v-if="activeTab === 'daily'" class="report-section calendar-section">
         <div class="calendar-and-detail-wrapper">
+          <div class="daily-detail-wrapper">
+            <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
+            <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
+            <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
+          </div>
           <div class="calendar-wrapper">
             <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
-          </div>
-          <div class="daily-detail-wrapper">
-            <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" />
           </div>
         </div>
       </section>
@@ -234,7 +236,7 @@ export default {
   overflow-x: hidden; /* 가로 스크롤 제거 */
 }
 
-/* Report Banner Styles (User provided) */
+/* Report Banner Styles */
 .report-banner-section {
   width: 100%;
   margin-bottom: 40px;
@@ -416,7 +418,7 @@ export default {
 /* Report Section General Styles */
 .report-section {
   padding: 30px;
-  background-color: #ffffff;
+  background-color: #ffffff; /* 컨테이너 배경색을 흰색으로 통일 */
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border: 1px solid #e8e0ff;
@@ -464,24 +466,72 @@ export default {
 
 .calendar-and-detail-wrapper {
   display: flex;
-  flex-direction: row;
-  gap: 30px;
+  flex-direction: row; /* 가로 배치 */
+  gap: 0; /* 각 섹션이 큰 직사각형 내부에 있으므로 gap을 0으로 설정 */
   width: 100%;
   justify-content: center;
-  align-items: flex-start;
-}
-
-.calendar-wrapper {
-  flex: 1.5;
-  /* min-width: 450px; 제거 또는 조정 */
-  min-width: 0; /* 가변 너비 허용 */
+  align-items: flex-start; /* 상단 정렬 */
+  min-height: 400px; /* 전체 섹션의 최소 높이 설정 */
+  border-radius: 12px;
+  overflow: hidden; /* 자식 요소의 둥근 모서리 적용을 위해 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* 전체 직사각형에 그림자 적용 */
+  border: 1px solid #e8e0ff; /* 전체 직사각형에 테두리 적용 */
 }
 
 .daily-detail-wrapper {
-  flex: 1;
-  /* min-width: 300px; 제거 또는 조정 */
-  min-width: 0; /* 가변 너비 허용 */
+  flex: 1.2; /* 왼쪽 섹션을 더 넓게 */
+  background-color: #8c5dff; /* 보라색 배경 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+  color: white; /* 텍스트 색상 흰색으로 변경 */
+  box-sizing: border-box;
+  text-align: center;
 }
+
+.section-title-daily-detail {
+  color: white; /* 제목 색상 흰색으로 변경 */
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.mogwi-daily-detail-character {
+  width: 150px; /* 캐릭터 이미지 크기 조정 */
+  height: auto;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
+}
+
+/* DailyStudyDetail 컴포넌트 내부의 스타일을 조절해야 할 수 있습니다.
+   여기서는 ReportView에서 DailyStudyDetail 컴포넌트 자체에는
+   배경이나 패딩을 주지 않고, daily-detail-wrapper에서 전체 스타일을 제어합니다. */
+.daily-detail-wrapper >>> .daily-study-detail {
+  width: 100%; /* DailyStudyDetail이 부모 너비를 차지하도록 */
+  background-color: transparent; /* DailyStudyDetail 자체 배경 투명 */
+  padding: 0; /* DailyStudyDetail 자체 패딩 제거 */
+  box-shadow: none; /* DailyStudyDetail 자체 그림자 제거 */
+  border: none; /* DailyStudyDetail 자체 테두리 제거 */
+}
+/* 필요하다면 DailyStudyDetail 내부의 텍스트 색상 등 조정 */
+.daily-detail-wrapper >>> .study-detail-item p,
+.daily-detail-wrapper >>> .no-data-message {
+  color: white; /* DailyStudyDetail 내부 텍스트 색상을 흰색으로 */
+}
+
+
+.calendar-wrapper {
+  flex: 2; /* 캘린더 섹션을 더 넓게 */
+  background-color: #ffffff; /* 흰색 배경 */
+  display: flex;
+  flex-direction: column;
+  padding: 25px;
+  box-sizing: border-box;
+}
+
 
 .chart-section {
   display: flex;
@@ -560,13 +610,18 @@ export default {
     max-width: 900px;
   }
   .calendar-and-detail-wrapper {
-    flex-direction: column;
-    gap: 30px;
-    align-items: center;
+    flex-direction: column; /* 작은 화면에서는 세로 배치 */
+    gap: 20px; /* 세로 배치 시 간격 */
+    border-radius: 12px; /* 모바일에서도 둥근 모서리 유지 */
   }
   .calendar-wrapper, .daily-detail-wrapper {
     width: 100%;
-    min-width: unset; /* Remove fixed min-width for flexibility */
+    min-width: unset;
+    padding: 20px; /* 모바일 패딩 조정 */
+  }
+  /* 모바일에서 DailyStudyDetail 섹션의 높이 고정 해제 */
+  .daily-detail-wrapper {
+    min-height: unset;
   }
 }
 
@@ -581,12 +636,12 @@ export default {
   }
   .tab-buttons {
     margin: 0 auto 20px auto;
-    padding: 0; /* No padding on container */
-    max-width: 280px; /* Adjusted for smaller screens */
+    padding: 0;
+    max-width: 280px;
   }
   .tab-button {
-    padding: 8px 10px; /* Adjusted padding for smaller screens */
-    font-size: 0.9rem; /* Adjusted font size for smaller screens */
+    padding: 8px 10px;
+    font-size: 0.9rem;
   }
   .section-title {
     font-size: 1.5rem;
@@ -620,6 +675,15 @@ export default {
   }
   .calendar-and-detail-wrapper {
     gap: 20px;
+  }
+  .daily-detail-wrapper {
+    padding: 20px; /* 모바일에서 다시 패딩 적용 */
+  }
+  .section-title-daily-detail {
+    font-size: 1.5rem;
+  }
+  .mogwi-daily-detail-character {
+    width: 100px;
   }
 }
 </style>

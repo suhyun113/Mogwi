@@ -144,7 +144,7 @@ export default {
 <style scoped>
 .study-calendar {
   width: 100%;
-  padding: 0; /* ReportView의 .report-section에서 padding을 처리하므로 여기서는 0으로 */
+  padding: 0; /* ReportView의 .calendar-wrapper에서 padding을 처리하므로 여기서는 0으로 */
 }
 
 .calendar-header {
@@ -271,7 +271,7 @@ export default {
 
 @media (max-width: 768px) {
   .study-calendar {
-    padding: 0; /* ReportView에서 처리 */
+    padding: 0;
   }
   .calendar-header {
     margin-bottom: 15px;
