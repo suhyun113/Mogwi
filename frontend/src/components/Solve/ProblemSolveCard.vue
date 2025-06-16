@@ -9,7 +9,7 @@
           <img :src="require('@/assets/mogwi-character.png')" class="problem-image" alt="모귀 캐릭터" />
         </template>
         <template v-else>
-          <img :src="problem.imageUrl" class="problem-image" alt="문제 이미지" />
+          <img :src="getFullImageUrl(problem.imageUrl)" class="problem-image" alt="문제 이미지" />
         </template>
       </div>
 
@@ -31,8 +31,8 @@
 <script>
 export default {
   // 컴포넌트 이름 (선택 사항이지만 권장됨)
-  name: 'ProblemSolveCard', 
-  
+  name: 'ProblemSolveCard',
+
   // props 선언 (Composition API의 defineProps와 동일)
   props: {
     problem: { type: Object, required: true },
@@ -61,7 +61,7 @@ export default {
         }
       },
       // 컴포넌트가 생성될 때 즉시 실행
-      immediate: true 
+      immediate: true
     }
   },
 
@@ -79,6 +79,16 @@ export default {
       if (status === 'new') return 'card-new';
       return '';
     },
+    // ⭐⭐⭐ 이 메서드 추가 ⭐⭐⭐
+    getFullImageUrl(relativeUrl) {
+      // DB에 저장된 URL이 이미 풀 URL인 경우 (예: http://yourdomain.com/images/...)
+      // 이 로직은 필요 없지만, 현재 DB 스크린샷은 상대 경로로 보입니다.
+      if (relativeUrl && relativeUrl.startsWith('http')) {
+        return relativeUrl;
+      }
+      // 백엔드 서버의 주소를 앞에 붙여 완전한 URL 생성
+      return `http://localhost:8000${relativeUrl}`;
+    },
     // 이벤트를 발생시키는 메서드 (Composition API의 emit과 동일)
     onStatusChange() {
       // 'status-changed' 이벤트를 발생시키고 현재 selectedStatus 값을 전달
@@ -88,7 +98,7 @@ export default {
     // 필요하다면 이곳에 메서드를 추가하거나 부모에서 직접 처리할 수 있습니다.
     // 예를 들어, 카드 내부에 "정답 보기" 버튼이 있다면
     // toggleShowAnswer() {
-    //   this.$emit('toggle-show-answer');
+    //    this.$emit('toggle-show-answer');
     // }
   }
 };

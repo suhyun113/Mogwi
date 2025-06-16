@@ -8,8 +8,8 @@
     <div class="author">작성자: {{ problem.author }}</div>
     
     <div class="tags">
-      <span v-for="tag in problemCategories" :key="tag" class="tag" :style="{ backgroundColor: getTagColor(tag) }">
-        {{ tag }}
+      <span v-for="tag in problemCategories" :key="tag.id || tag.tag_name" class="tag" :style="{ backgroundColor: getTagColor(tag) }">
+        {{ formatTagName(tag.tag_name) }}
       </span>
     </div>
 
@@ -75,8 +75,8 @@ export default {
     problemCategories() {
       if (!this.problem.categories) return [];
       return Array.isArray(this.problem.categories) 
-        ? this.problem.categories 
-        : [this.problem.categories];
+        ? this.problem.categories.map(cat => typeof cat === 'string' ? { tag_name: cat } : cat) 
+        : [typeof this.problem.categories === 'string' ? { tag_name: this.problem.categories } : this.problem.categories];
     },
     problemLikes() {
       return parseInt(this.problem.likes || 0);
@@ -92,19 +92,12 @@ export default {
     }
   },
   methods: {
+    formatTagName(tagName) {
+      const cleanedTagName = tagName.startsWith('#') ? tagName.substring(1) : tagName;
+      return `#${cleanedTagName}`;
+    },
     getTagColor(tag) {
-      const colors = {
-        '#수학': '#ffd54f',
-        '#AI': '#81c784',
-        '#컴퓨터': '#64b5f6',
-        '#과학': '#4dd0e1',
-        '#역사': '#a1887f',
-        '#기타': '#e0e0e0',
-        '#프론트엔드': '#ba68c8',
-        '#자료구조': '#f06292',
-        '#전체': '#b0bec5'
-      };
-      return colors[tag] || '#e0e0e0';
+      return tag.color_code || '#e0e0e0';
     }
   }
 };

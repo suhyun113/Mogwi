@@ -16,12 +16,12 @@
             <div class="category-tags">
                 <ProblemTag
                     v-for="tag in localProblem.categories"
-                    :key="tag"
-                    :tagName="tag"
+                    :key="tag.id"
+                    :tagName="formatTagName(tag.tag_name)"
                     :backgroundColor="getColor(tag)" />
             </div>
             <div class="btn-wrapper">
-                <template v-if="localProblem.authorId && localProblem.authorId == currentUserId">
+                <template v-if="isAuthenticated && localProblem.authorId == currentUserId">
                     <button
                         class="edit-btn"
                         @click.stop="handleEditClick"
@@ -96,7 +96,7 @@ export default {
             type: Object,
             required: true
         },
-        isAuthenticated: { // 이 prop은 MyStudy -> ProblemListSection -> ProblemListItem으로 계속 전달됩니다.
+        isAuthenticated: {
             type: Boolean,
             default: false
         },
@@ -117,7 +117,6 @@ export default {
 
     data() {
         return {
-            // 로그인하지 않은 경우를 대비하여 problem 객체의 초기값들을 안전하게 설정
             localProblem: {
                 id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                 title: this.problem.title || '문제 제목 (로그인 필요)',
@@ -145,16 +144,14 @@ export default {
         itemClass() {
             return {
                 'problem-list-item': true,
-                'selectable': this.isSelectionMode && this.isAuthenticated, // 로그인해야 선택 가능
-                'selected': this.isSelected // 선택되었을 때 빨간 테두리
+                'selectable': this.isSelectionMode && this.isAuthenticated,
+                'selected': this.isSelected
             };
         }
     },
     watch: {
         problem: {
             handler(newVal) {
-                // prop 'problem'이 변경될 때 localProblem 업데이트.
-                // 로그인하지 않은 상태에서는 problem prop이 비어있을 수 있으므로 기본값 다시 설정.
                 this.localProblem = {
                     id: newVal?.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                     title: newVal?.title || '문제 제목 (로그인 필요)',
@@ -175,9 +172,8 @@ export default {
             deep: true,
             immediate: true
         },
-        isAuthenticated: { // isAuthenticated prop 변화 감지
+        isAuthenticated: {
             handler(newVal) {
-                // 로그인 상태가 변경될 때마다 로컬 데이터 갱신 (특히 problem이 없는 경우)
                 if (!newVal) {
                     this.localProblem = {
                         id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
@@ -196,7 +192,6 @@ export default {
                         authorId: null,
                     };
                 } else {
-                    // 로그인 시에는 problem prop의 실제 데이터를 사용하도록 강제
                     this.localProblem = {
                         ...this.problem,
                         isLiked: !!this.problem.isLiked,
@@ -208,20 +203,12 @@ export default {
         }
     },
     methods: {
+        formatTagName(tagName) {
+            const cleanedTagName = tagName.startsWith('#') ? tagName.substring(1) : tagName;
+            return `#${cleanedTagName}`;
+        },
         getColor(tag) {
-            const trimmedTag = tag ? tag.trim() : '';
-            const colors = {
-                '#수학': '#ffd54f',
-                '#AI': '#81c784',
-                '#컴퓨터': '#64b5f6',
-                '#과학': '#4dd0e1',
-                '#역사': '#a1887f',
-                '#기타': '#e0e0e0',
-                '#프론트엔드': '#ba68c8',
-                '#자료구조': '#f06292',
-                '#전체': '#b0bec5'
-            }
-            return colors[trimmedTag] || '#ccc'
+            return tag.color_code || '#ccc';
         },
         getStatusText(status) {
             switch (status) {
@@ -248,7 +235,7 @@ export default {
             }
         },
         handleItemClick() {
-            if (!this.isAuthenticated) { // 로그인 안 했으면 클릭해도 선택 안 되게
+            if (!this.isAuthenticated) {
                 this.$emit('auth-required');
                 return;
             }
@@ -305,7 +292,6 @@ export default {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
 .problem-list-item {
     padding: 16px;
     border: 1px solid #e0d0ff;
@@ -323,13 +309,11 @@ export default {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
-/* 삭제 모드일 때 (그리고 로그인했을 때) 스타일 */
 .problem-list-item.selectable {
     cursor: pointer;
     border-color: #a471ff;
 }
 
-/* 선택된 문제 스타일 (빨간색 테두리) */
 .problem-list-item.selected {
     border: 2px solid #e03c3c;
     box-shadow: 0 0 0 3px rgba(224, 60, 60, 0.3);

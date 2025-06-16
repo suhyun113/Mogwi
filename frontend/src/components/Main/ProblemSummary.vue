@@ -15,11 +15,11 @@
       <div class="category-tags">
         <span
           class="tag"
-          v-for="tag in localProblem.categories"
-          :key="tag"
-          :style="{ backgroundColor: getColor(tag) }"
+          v-for="categoryObj in localProblem.categories"
+          :key="categoryObj.tag_name"
+          :style="{ backgroundColor: categoryObj.color_code }"
         >
-          {{ tag }}
+          {{ displayTagName(categoryObj.tag_name) }}
         </span>
       </div>
       <div class="btn-wrapper">
@@ -88,24 +88,18 @@ export default {
     problem: {
       handler(newVal) {
         this.localProblem = { ...newVal }
+        console.log('ProblemSummary - localProblem.categories:', this.localProblem.categories);
       },
       deep: true
     }
   },
   methods: {
+    displayTagName(tagName) {
+      // Remove the '#' prefix if it exists
+      return tagName.startsWith('#') ? tagName.substring(1) : tagName;
+    },
     getColor(tag) {
-      const colors = {
-        '#수학': '#ffd54f',
-        '#AI': '#81c784',
-        '#컴퓨터': '#64b5f6',
-        '#과학': '#4dd0e1',
-        '#역사': '#a1887f',
-        '#기타': '#e0e0e0',
-        '#프론트엔드': '#ba68c8',
-        '#자료구조': '#f06292',
-        '#전체': '#b0bec5'
-      }
-      return colors[tag] || '#ccc'
+      return tag.color_code || '#ccc';
     },
     toggleLike() {
       if (!this.canLikeScrap) return

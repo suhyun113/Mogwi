@@ -1,9 +1,5 @@
 <template>
     <div class="mystudy">
-        <h1 class="page-title">
-            {{ isLoggedIn ? `${username}님의 학습 페이지` : '나의 학습 페이지' }}
-        </h1>
-
         <template v-if="isLoggedIn">
             <OverallStudySummary
                 :overallPerfectCount="overallPerfectCount"
@@ -11,7 +7,7 @@
                 :overallForgottenCount="overallForgottenCount"
                 :overallTotalCards="overallTotalCards"
                 :isLoggedIn="isLoggedIn"
-                class="overall-summary-placement"
+                :username="username" class="overall-summary-placement"
             />
 
             <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
@@ -22,13 +18,13 @@
                 :completedProblems="completedProblems"
                 :isLoggedIn="isLoggedIn"
                 :currentUserId="currentUserId"
-                @go-to-study="goToStudy"
+                :username="username" @go-to-study="goToStudy"
                 @auth-required="handleAuthRequired"
                 @refresh-problems="fetchMyStudyData" />
         </template>
 
         <div v-else class="logged-out-state">
-            <img src="@/assets/mogwi-character.png" alt="모그위 캐릭터" class="mogwi-character" />
+            <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character" />
             <p class="logged-out-message">
                 나만의 학습 현황을 확인하고 싶으신가요?
                 <br>
@@ -63,8 +59,8 @@ import axios from 'axios';
 
 import OverallStudySummary from '@/components/MyStudy/OverallStudySummary.vue';
 import ProblemListSection from '@/components/MyStudy/ProblemListSection.vue';
-import LoginModal from '@/components/Login/LoginModal.vue'; // Corrected path
-import RegisterModal from '@/components/Register/RegisterModal.vue'; // Corrected path
+import LoginModal from '@/components/Login/LoginModal.vue';
+import RegisterModal from '@/components/Register/RegisterModal.vue';
 
 
 export default {
@@ -141,18 +137,32 @@ export default {
                         console.warn("Received null or undefined problem in the list, skipping.", problem);
                         return null;
                     }
+                    // 임시 패치: authorId가 없으면, authorNickname이 내 닉네임과 같을 때 currentUserId로 세팅
+                    let computedAuthorId = problem.authorId;
+                    if (computedAuthorId === undefined || computedAuthorId === '' || computedAuthorId === null) {
+                        if (problem.authorNickname && problem.authorNickname === username.value) {
+                            computedAuthorId = currentUserId.value;
+                        } else {
+                            computedAuthorId = '';
+                        }
+                    }
+
+                    const sortedCategories = Array.isArray(problem.categories)
+                        ? problem.categories.sort((a, b) => a.id - b.id)
+                        : [];
+
                     return {
                         ...problem,
                         isLiked: !!problem.isLiked,
                         isScrapped: !!problem.isScrapped,
                         authorNickname: problem.authorNickname || '알 수 없음',
-                        categories: Array.isArray(problem.categories) ? problem.categories : [],
+                        categories: sortedCategories,
                         id: problem.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
-                        authorId: problem.authorId,
+                        authorId: computedAuthorId, // authorId를 위에서 계산한 값으로 세팅
                         perfectCount: problem.perfectCount || 0,
                         vagueCount: problem.vagueCount || 0,
                         forgottenCount: problem.forgottenCount || 0,
-                        cardCount: problem.cardCount || 0,
+                        cardCount: problem.cardCount || 0, // cardCount도 추가 (ProblemListItem에서 사용)
                     };
                 }).filter(problem => problem !== null);
 
@@ -188,41 +198,33 @@ export default {
 
         const handleAuthRequired = () => {
             alert("로그인이 필요한 서비스입니다.");
-            showLoginModal.value = true; // Changed to show login modal
+            showLoginModal.value = true;
         };
 
-        // 로그인 버튼 클릭 시 로그인 모달 열기
         const goToLogin = () => {
             showLoginModal.value = true;
         };
 
-        // 회원가입 버튼 클릭 시 회원가입 모달 열기
         const goToRegister = () => {
             showRegisterModal.value = true;
         };
 
-        // 로그인 성공 시 처리 (예: 모달 닫고 데이터 다시 불러오기)
         const handleLoginSuccess = () => {
             showLoginModal.value = false;
-            // LoginModal에서 Vuex 상태를 업데이트했으므로, 여기서는 데이터 새로고침만 하면 됩니다.
-            // store.dispatch('checkLoginStatusAndFetchUserData'); // 이 부분은 LoginModal에서 이미 처리되었다고 가정합니다.
-            fetchMyStudyData(); // 학습 데이터 다시 불러오기
+            fetchMyStudyData();
         };
 
-        // 회원가입 성공 시 처리 (예: 모달 닫고 로그인 모달 띄우기 또는 안내 메시지)
         const handleRegistrationSuccess = () => {
             showRegisterModal.value = false;
             alert("회원가입이 완료되었습니다. 로그인 해주세요!");
-            showLoginModal.value = true; // 회원가입 후 바로 로그인 모달 띄우기
+            showLoginModal.value = true;
         };
 
-        // LoginModal에서 '회원가입' 링크 클릭 시 호출
         const handleOpenRegister = () => {
             showLoginModal.value = false;
             showRegisterModal.value = true;
         };
 
-        // RegisterModal에서 '로그인' 링크 클릭 시 호출 (이벤트 추가 필요)
         const handleOpenLogin = () => {
             showRegisterModal.value = false;
             showLoginModal.value = true;
@@ -260,15 +262,14 @@ export default {
             showRegisterModal,
             handleLoginSuccess,
             handleRegistrationSuccess,
-            handleOpenRegister, // Expose to template
-            handleOpenLogin,    // Expose to template
+            handleOpenRegister,
+            handleOpenLogin,
         };
     }
 };
 </script>
 
 <style scoped>
-/* (Your existing styles remain unchanged) */
 .mystudy {
     display: flex;
     flex-direction: column;
@@ -284,7 +285,6 @@ export default {
     font-family: 'Pretendard', sans-serif;
 }
 
-/* 전역 스타일 */
 :deep(html), :deep(body) {
     margin: 0;
     padding: 0;
@@ -294,29 +294,9 @@ export default {
     position: fixed;
 }
 
-/* 페이지 제목: 왼쪽 상단 고정 */
-.page-title {
-    color: #5a2e87;
-    font-size: 2.2rem;
-    font-weight: 700;
-    background-color: transparent;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    position: absolute;
-    top: 120px;
-    left: 40px;
-    margin: 0;
-    text-align: left;
-    width: auto;
-    z-index: 10;
-}
-
-/* OverallStudySummary 컴포넌트 배치 조정 */
-/* OverallStudySummary에 직접 적용할 클래스 */
 .overall-summary-placement {
-    z-index: 5; /* 제목보다 낮은 z-index */
-    margin-top: 160px;
+    z-index: 5;
+    margin-top: 100px;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
@@ -324,7 +304,6 @@ export default {
     margin-bottom: 5px;
 }
 
-/* ProblemListSection 배치 조정 */
 .problem-list-section {
     position: relative;
     z-index: 5;
@@ -342,7 +321,6 @@ export default {
     text-align: center;
 }
 
-/* 로그아웃 상태 UI 개선 */
 .logged-out-state {
     display: flex;
     flex-direction: column;
@@ -362,14 +340,14 @@ export default {
 }
 
 .logged-out-state:hover {
-    transform: translateY(-5px); /* 호버 시 살짝 위로 */
+    transform: translateY(-5px);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
 .mogwi-character {
     width: 180px;
     height: auto;
-    margin-bottom: 5px; /* 15px에서 5px로 줄임 */
+    margin-bottom: 5px;
     animation: bounceIn 1s ease-out;
 }
 
@@ -404,7 +382,7 @@ export default {
 .logged-out-message {
     font-size: 1.6rem;
     color: #4a1e77;
-    margin-bottom: 10px; /* 20px에서 10px로 줄임 */
+    margin-bottom: 10px;
     font-weight: 700;
     line-height: 1.5;
     text-align: center;
@@ -414,24 +392,24 @@ export default {
 .logged-out-hint {
     font-size: 1rem;
     color: #777;
-    margin-top: 5px; /* 15px에서 5px로 줄임 */
+    margin-top: 5px;
     line-height: 1.4;
     border-top: 1px dashed #eee;
-    padding-top: 10px; /* 20px에서 10px로 줄임 */
+    padding-top: 10px;
     width: 80%;
 }
 
 .logged-out-actions {
     display: flex;
     gap: 30px;
-    margin-bottom: 5px; /* 10px에서 5px로 줄임 */
+    margin-bottom: 5px;
 }
 
 .action-button {
     padding: 15px 35px;
     font-size: 1.2rem;
     font-weight: 700;
-    border-radius: 10px; /* 30px에서 10px로 줄임 */
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
     border: none;
@@ -439,7 +417,7 @@ export default {
 }
 
 .login-button {
-    background-image: linear-gradient(to right, #a471ff 0%, #8c5dff 100%); /* 그라데이션 */
+    background-image: linear-gradient(to right, #a471ff 0%, #8c5dff 100%);
     color: white;
     box-shadow: 0 8px 20px rgba(164, 113, 255, 0.4);
 }
@@ -447,13 +425,13 @@ export default {
 .login-button:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 25px rgba(164, 113, 255, 0.6);
-    background-position: right center; /* 그라데이션 이동 효과 */
+    background-position: right center;
 }
 
 .register-button {
     background-color: #f0f0f0;
     color: #5a2e87;
-    border: 2px solid #a471ff; /* 보라색 테두리 */
+    border: 2px solid #a471ff;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -463,13 +441,7 @@ export default {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
-    .page-title {
-        font-size: 1.8rem;
-        top: 20px;
-        left: 20px;
-    }
     .overall-summary-placement {
         margin-top: 70px;
         padding: 0 10px;
@@ -482,16 +454,16 @@ export default {
     .logged-out-state {
         padding: 30px 20px;
         margin-top: 70px;
-        min-height: auto; /* 모바일에서 높이 자동 조절 */
+        min-height: auto;
     }
 
     .mogwi-character {
-        width: 120px; /* 모바일에서 캐릭터 크기 줄임 */
+        width: 120px;
         margin-bottom: 25px;
     }
 
     .logged-out-message {
-        font-size: 1.3rem; /* 모바일에서 폰트 크기 줄임 */
+        font-size: 1.3rem;
         margin-bottom: 30px;
     }
 
@@ -502,7 +474,7 @@ export default {
     }
 
     .action-button {
-        width: 90%; /* 모바일에서 버튼 너비 조정 */
+        width: 90%;
         margin: 0 auto;
         font-size: 1.1rem;
         padding: 12px 25px;

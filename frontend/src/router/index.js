@@ -3,6 +3,9 @@ import MainView from '@/views/MainView.vue'
 import MyStudyView from '@/views/MyStudyView.vue'
 import StudyView from '@/views/StudyView.vue'
 import SolveView from '@/views/SolveView.vue'
+import CreateView from '@/views/CreateView.vue'
+import ReportView from '@/views/ReportView.vue'
+import MypageView from '@/views/MypageView.vue'
 
 const routes = [
   { 
@@ -15,14 +18,30 @@ const routes = [
     name: 'StudyView',
     component: StudyView
   },
-  { path: '/mystudy', 
-    name: 'mystudy', 
-    component: MyStudyView 
-  },
   {
     path: '/study/:id/solve',
     name: 'SolveView',
     component: SolveView
+  },
+  { 
+    path: '/mystudy', 
+    name: 'mystudy', 
+    component: MyStudyView 
+  },
+  {
+    path: '/create',
+    name: 'create',
+    component: CreateView
+  },
+  {
+    path: '/report',
+    name: 'report',
+    component: ReportView
+  },
+  {
+    path: '/mypage',
+    name: 'mypage',
+    component: MypageView
   }
 ]
 
