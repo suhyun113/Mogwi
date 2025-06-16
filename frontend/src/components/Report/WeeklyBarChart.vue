@@ -1,0 +1,246 @@
+<template>
+  <div class="weekly-bar-chart">
+    <canvas ref="chartCanvas"></canvas>
+    <div v-if="chartData.length === 0" class="no-chart-data">
+        <img src="@/assets/mogwi-confused.png" alt="모귀 혼란" class="mogwi-confused-icon" />
+        <p>지난 주간 학습 기록이 없습니다.</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
+import Chart from 'chart.js/auto'; // Import Chart.js
+import mogwiConfused from '@/assets/mogwi-confused.png'; // Assuming you have this image
+
+export default {
+  name: 'WeeklyBarChart',
+  props: {
+    // chartData: [{ label: 'MM-DD', perfect: N, vague: M, forgotten: O, total: P }, ...]
+    chartData: {
+      type: Array,
+      default: () => []
+    }
+  },
+  setup(props) {
+    const chartCanvas = ref(null);
+    let chartInstance = null;
+
+    const createChart = () => {
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      if (!chartCanvas.value || props.chartData.length === 0) {
+        return;
+      }
+
+      const labels = props.chartData.map(d => d.label);
+      const perfectData = props.chartData.map(d => d.perfect);
+      const vagueData = props.chartData.map(d => d.vague);
+      const forgottenData = props.chartData.map(d => d.forgotten);
+      // The 'totalData' variable is not directly used for plotting datasets
+      // as the 'total' is calculated in the tooltip footer.
+      // Therefore, it's safe to remove this line to fix the ESLint error.
+      // const totalData = props.chartData.map(d => d.total);
+
+      const ctx = chartCanvas.value.getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '완벽한 기억',
+              data: perfectData,
+              backgroundColor: '#8BC34A', // Green
+              borderColor: '#689F38',
+              borderWidth: 1,
+              stack: 'study', // To stack these bars
+            },
+            {
+              label: '희미한 기억',
+              data: vagueData,
+              backgroundColor: '#FFEB3B', // Yellow
+              borderColor: '#FBC02D',
+              borderWidth: 1,
+              stack: 'study',
+            },
+            {
+              label: '사라진 기억',
+              data: forgottenData,
+              backgroundColor: '#F44336', // Red
+              borderColor: '#D32F2F',
+              borderWidth: 1,
+              stack: 'study',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                title: function(tooltipItems) {
+                    return `${tooltipItems[0].label} 주차`;
+                },
+                label: function(tooltipItem) {
+                    const datasetLabel = tooltipItem.dataset.label || '';
+                    const value = tooltipItem.raw;
+                    return `${datasetLabel}: ${value} 카드`;
+                },
+                footer: function(tooltipItems) {
+                    const total = tooltipItems.reduce((sum, item) => sum + item.raw, 0);
+                    return `총 학습 카드: ${total}`;
+                }
+              }
+            },
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                boxWidth: 20,
+                padding: 15,
+                font: {
+                  size: 12,
+                  family: 'Pretendard',
+                },
+                color: '#555',
+              }
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              title: {
+                display: true,
+                text: '주차 (월-일)',
+                color: '#5a2e87',
+                font: {
+                  size: 14,
+                  weight: 'bold',
+                  family: 'Pretendard',
+                }
+              },
+              ticks: {
+                color: '#666',
+                font: {
+                    family: 'Pretendard',
+                }
+              },
+              grid: {
+                display: false, // Hide vertical grid lines
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: '학습 카드 수',
+                color: '#5a2e87',
+                font: {
+                  size: 14,
+                  weight: 'bold',
+                  family: 'Pretendard',
+                }
+              },
+              ticks: {
+                color: '#666',
+                stepSize: 10, // Example step size
+                font: {
+                    family: 'Pretendard',
+                }
+              },
+              grid: {
+                color: '#e0e0e0', // Light grey horizontal grid lines
+              }
+            }
+          }
+        }
+      });
+    };
+
+    onMounted(() => {
+      createChart();
+    });
+
+    watch(() => props.chartData, () => {
+      createChart(); // Recreate chart when data changes
+    }, { deep: true });
+
+    onBeforeUnmount(() => {
+      if (chartInstance) {
+        chartInstance.destroy(); // Clean up chart instance before component unmounts
+      }
+    });
+
+    return {
+      chartCanvas,
+      mogwiConfused
+    };
+  }
+};
+</script>
+
+<style scoped>
+.weekly-bar-chart {
+  width: 100%;
+  max-width: 700px; /* Adjust max-width as needed */
+  height: 350px; /* Set a fixed height for the chart container */
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  border: 1px solid #dcd0f0;
+  display: flex; /* Use flexbox to center content */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  position: relative; /* For no-chart-data positioning */
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.no-chart-data {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    z-index: 10; /* Ensure it's above the canvas if data is empty */
+    color: #888;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.mogwi-confused-icon {
+    width: 100px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .weekly-bar-chart {
+    height: 300px; /* Adjust height for smaller screens */
+    padding: 15px;
+  }
+  .mogwi-confused-icon {
+      width: 70px;
+  }
+  .no-chart-data {
+      font-size: 0.95rem;
+  }
+}
+</style>
