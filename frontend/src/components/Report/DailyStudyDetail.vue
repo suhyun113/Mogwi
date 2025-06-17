@@ -52,7 +52,6 @@ export default {
   padding: 10px; /* 패딩을 20px에서 10px로 줄임 */
   box-sizing: border-box;
   background-color: transparent;
-  gap: 50px;
 }
 
 .detail-content {
@@ -70,13 +69,13 @@ export default {
   font-size: 1.3rem; /* 폰트 크기를 1.5rem에서 1.3rem으로 줄임 */
   font-weight: 600;
   color: white;
-  margin-bottom: 5px; /* 하단 마진 추가 */
+  margin-bottom: 10px; /* 하단 마진 추가 */
 }
 
 .study-summary-tags {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* 태그 간격을 15px에서 10px로 줄임 */
+  gap: 15px; /* 태그 간격을 15px에서 10px로 줄임 */
   width: 80%;
   max-width: 250px;
 }
@@ -87,6 +86,7 @@ export default {
   align-items: center;
   width: 100%;
   gap: 10px; /* 태그와 숫자 사이 간격을 15px에서 10px로 줄임 */
+  margin-bottom: 7px;
 }
 
 .tag {

@@ -518,11 +518,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  margin-bottom: 10px;
 }
 
 .calendar-and-detail-wrapper {
@@ -530,9 +528,16 @@ export default {
   flex-direction: row;
   gap: 20px;
   width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
   justify-content: center;
   align-items: stretch;
   min-height: 500px; /* 최소 높이 설정 */
+  background-color: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .daily-detail-wrapper {
@@ -547,6 +552,7 @@ export default {
   box-sizing: border-box;
   text-align: center;
   height: 100%; /* 부모 컨테이너의 높이에 맞춤 */
+  border-radius: 8px;
 }
 
 .section-title-daily-detail {
