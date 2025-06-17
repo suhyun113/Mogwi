@@ -48,50 +48,53 @@ export default {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  height: 100%; /* 부모 컨테이너에 맞춰 높이 차지 */
-  padding: 20px; /* 모든 방향으로 패딩 추가 */
+  height: 100%;
+  padding: 10px; /* 패딩을 20px에서 10px로 줄임 */
   box-sizing: border-box;
-  background-color: transparent; /* 배경색을 투명으로 설정 */
+  background-color: transparent;
+  gap: 50px;
 }
 
 .detail-content {
   display: flex;
   flex-direction: column;
-  align-items: center; /* 가로 중앙 정렬 */
-  justify-content: center; /* 세로 공간에 내용 중앙 정렬 */
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 100%; /* 부모 높이 채우기 */
-  flex-grow: 1; /* 남은 공간을 차지하도록 설정 */
+  height: 100%;
+  flex-grow: 1;
+  gap: 10px; /* 요소들 사이의 간격 추가 */
 }
 
 .selected-date-display {
-  font-size: 1.5rem;
+  font-size: 1.3rem; /* 폰트 크기를 1.5rem에서 1.3rem으로 줄임 */
   font-weight: 600;
-  color: white; /* 텍스트 색상을 흰색으로 */
+  color: white;
+  margin-bottom: 5px; /* 하단 마진 추가 */
 }
 
 .study-summary-tags {
   display: flex;
-  flex-direction: column; /* 세로 정렬 */
-  gap: 15px; /* 태그 항목 간 간격 */
-  width: 80%; /* 태그 컨테이너 너비 조정 */
-  max-width: 250px; /* 최대 너비 설정 */
+  flex-direction: column;
+  gap: 10px; /* 태그 간격을 15px에서 10px로 줄임 */
+  width: 80%;
+  max-width: 250px;
 }
 
 .tag-item {
   display: flex;
-  justify-content: center; /* 태그와 개수를 중앙에 정렬 */
+  justify-content: center;
   align-items: center;
   width: 100%;
-  gap: 15px; /* 태그와 숫자 사이에 간격 더 추가 */
+  gap: 10px; /* 태그와 숫자 사이 간격을 15px에서 10px로 줄임 */
 }
 
 .tag {
-  font-size: 1rem;
+  font-size: 0.9rem; /* 폰트 크기를 1rem에서 0.9rem으로 줄임 */
   font-weight: 500;
-  padding: 8px 15px;
+  padding: 6px 12px; /* 패딩을 8px 15px에서 6px 12px로 줄임 */
   border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* 개별 태그에 그림자 추가 */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .perfect-tag {
@@ -110,9 +113,9 @@ export default {
 }
 
 .count {
-  font-size: 1.2rem;
+  font-size: 1.1rem; /* 폰트 크기를 1.2rem에서 1.1rem으로 줄임 */
   font-weight: 700;
-  color: white; /* 개수 텍스트 색상을 흰색으로 통일 */
+  color: white;
 }
 
 .count.perfect-count-color {
@@ -127,8 +130,9 @@ export default {
 
 .no-data-message,
 .no-date-selected-message {
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.8); /* 흰색 투명도 적용 */
+  font-size: 1rem; /* 폰트 크기를 1.1rem에서 1rem으로 줄임 */
+  color: rgba(255, 255, 255, 0.8);
   text-align: center;
+  margin-top: 5px; /* 상단 마진 추가 */
 }
 </style>

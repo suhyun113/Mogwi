@@ -46,7 +46,9 @@
           <div class="calendar-and-detail-wrapper">
             <div class="daily-detail-wrapper">
               <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
-              <img :src="dailyCharacterImage" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
+              <div class="mogwi-daily-detail-character">
+                <img :src="dailyCharacterImage" alt="모귀 캐릭터">
+              </div>
               <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" :style="{ flexGrow: 1 }" />
             </div>
             <div class="calendar-wrapper">
@@ -76,7 +78,7 @@ import WeeklyBarChart from '@/components/Report/WeeklyBarChart.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
 
-import mogwiCharacter from '@/assets/mogwi-character.png';
+import mogwiLook from '@/assets/mogwi-look.png';
 import mogwiSleep from '@/assets/mogwi-sleep.png';
 
 export default {
@@ -115,7 +117,7 @@ export default {
 
     const dailyCharacterImage = computed(() => {
       if (dailyStudyData.value && (dailyStudyData.value.perfect > 0 || dailyStudyData.value.vague > 0 || dailyStudyData.value.forgotten > 0)) {
-        return mogwiCharacter;
+        return mogwiLook;
       } else {
         return mogwiSleep;
       }
@@ -534,30 +536,43 @@ export default {
 }
 
 .daily-detail-wrapper {
-  flex: 1.2; /* 왼쪽 섹션을 더 넓게 */
-  background-color: #8c5dff; /* 보라색 배경 */
+  flex: 1.2;
+  background-color: #8c5dff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* 내용을 상단에 정렬하여 flex-grow가 작동하도록 */
-  padding: 25px; /* 패딩 통일 */
-  color: white; /* 텍스트 색상 흰색으로 변경 */
+  justify-content: flex-start;
+  padding: 15px;
+  color: white;
   box-sizing: border-box;
   text-align: center;
 }
 
 .section-title-daily-detail {
-  color: white; /* 제목 색상 흰색으로 변경 */
+  color: white;
   font-size: 2rem;
   font-weight: 600;
   position: relative;
-  padding-bottom: 15px;
+  padding-bottom: 5px;
+  margin-bottom: 0;
+  margin-top: -5px;
 }
 
 .mogwi-daily-detail-character {
-  width: 150px; /* 캐릭터 이미지 크기 조정 */
-  height: auto;
+  width: 120px;
+  height: 130px; /* 컨테이너 크기 고정 */
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* 이미지가 컨테이너를 벗어나지 않도록 */
+}
+
+.mogwi-daily-detail-character img {
+  width: 120px; /* 내부 이미지 크기 증가 */
+  height: auto;
+  object-fit: contain; /* 이미지 비율 유지 */
 }
 
 /* DailyStudyDetail 컴포넌트 내부의 스타일을 조절해야 할 수 있습니다.
