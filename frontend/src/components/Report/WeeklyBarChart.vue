@@ -80,7 +80,7 @@ export default {
               intersect: false,
               callbacks: {
                 title: function(tooltipItems) {
-                    return `${tooltipItems[0].label} 주차`;
+                    return tooltipItems[0].label;
                 },
                 label: function(tooltipItem) {
                     const datasetLabel = tooltipItem.dataset.label || '';
@@ -112,7 +112,7 @@ export default {
               stacked: true,
               title: {
                 display: true,
-                text: '주차 (월-일)',
+                text: '주차',
                 color: '#5a2e87',
                 font: {
                   size: 14,

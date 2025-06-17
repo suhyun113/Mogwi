@@ -49,7 +49,7 @@ export default {
   align-items: center;
   width: 100%;
   height: 100%; /* 부모 컨테이너에 맞춰 높이 차지 */
-  padding: 0; /* 내부 패딩 제거 */
+  padding: 20px; /* 모든 방향으로 패딩 추가 */
   box-sizing: border-box;
   background-color: transparent; /* 배경색을 투명으로 설정 */
 }
@@ -58,15 +58,15 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center; /* 가로 중앙 정렬 */
-  justify-content: space-between; /* 세로 공간에 내용 균등 분배 */
+  justify-content: center; /* 세로 공간에 내용 중앙 정렬 */
   width: 100%;
   height: 100%; /* 부모 높이 채우기 */
+  flex-grow: 1; /* 남은 공간을 차지하도록 설정 */
 }
 
 .selected-date-display {
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 15px;
   color: white; /* 텍스트 색상을 흰색으로 */
 }
 
@@ -130,6 +130,5 @@ export default {
   font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.8); /* 흰색 투명도 적용 */
   text-align: center;
-  margin-top: 20px;
 }
 </style>

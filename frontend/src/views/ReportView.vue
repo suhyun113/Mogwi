@@ -25,7 +25,7 @@
       <button @click="showLoginModal = true" class="login-button">로그인</button>
     </div>
 
-    <div v-else class="report-container">
+    <div v-else>
       <div class="tab-buttons">
         <button
           :class="{ 'tab-button': true, 'active': activeTab === 'daily' }"
@@ -41,22 +41,24 @@
         </button>
       </div>
 
-      <section v-if="activeTab === 'daily'" class="report-section calendar-section">
-        <div class="calendar-and-detail-wrapper">
-          <div class="daily-detail-wrapper">
-            <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
-            <img :src="dailyCharacterImage" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
-            <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" :style="{ flexGrow: 1 }" />
+      <div class="report-container">
+        <section v-if="activeTab === 'daily'" class="report-section calendar-section">
+          <div class="calendar-and-detail-wrapper">
+            <div class="daily-detail-wrapper">
+              <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
+              <img :src="dailyCharacterImage" alt="모귀 캐릭터" class="mogwi-daily-detail-character">
+              <DailyStudyDetail :selectedDate="selectedDate" :dailyStudyData="dailyStudyData" :style="{ flexGrow: 1 }" />
+            </div>
+            <div class="calendar-wrapper">
+              <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
+            </div>
           </div>
-          <div class="calendar-wrapper">
-            <StudyCalendar :studyDates="studyDates" @date-selected="handleDateSelected" />
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section v-if="activeTab === 'weekly'" class="report-section chart-section">
-        <WeeklyBarChart :chartData="weeklyChartData" />
-      </section>
+        <section v-if="activeTab === 'weekly'" class="report-section chart-section">
+          <WeeklyBarChart :chartData="weeklyChartData" />
+        </section>
+      </div>
     </div>
 
     <LoginModal v-if="showLoginModal" @close="showLoginModal = false" @open-register="openRegisterModal" />
@@ -156,25 +158,62 @@ export default {
           dailyStudyData.value = null;
         }
 
+        // --- Weekly data calculation adjusted to start from Sunday ---
         const weeklyResponse = await axios.get(`/api/report/weekly-records/${currentUserId.value}`);
-        weeklyChartData.value = weeklyResponse.data.map(item => {
-          const weekStartDate = new Date(item.weekStart);
-          const weekEndDate = new Date(weekStartDate);
-          weekEndDate.setDate(weekEndDate.getDate() + 6); // Add 6 days to get the end of the week
+        
+        // Group data by week, starting from Sunday
+        const weeklyDataMap = new Map();
 
-          const startMonth = String(weekStartDate.getMonth() + 1).padStart(2, '0');
-          const startDay = String(weekStartDate.getDate()).padStart(2, '0');
-          const endMonth = String(weekEndDate.getMonth() + 1).padStart(2, '0');
-          const endDay = String(weekEndDate.getDate()).padStart(2, '0');
+        weeklyResponse.data.forEach(item => {
+          const recordDate = new Date(item.weekStart); // item.weekStart is the Monday of the week from backend
+          
+          // Find the Sunday of the week containing recordDate
+          const dayOfWeek = recordDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+          const sundayOfWeek = new Date(recordDate);
+          sundayOfWeek.setDate(recordDate.getDate() - dayOfWeek); // Adjust to Sunday
+
+          // Format Sunday's date for the map key
+          const weekKey = sundayOfWeek.toISOString().slice(0, 10);
+
+          if (!weeklyDataMap.has(weekKey)) {
+            weeklyDataMap.set(weekKey, {
+              perfect: 0,
+              vague: 0,
+              forgotten: 0,
+              total: 0,
+              weekStartDate: sundayOfWeek, // Store the Sunday date for later label creation
+            });
+          }
+
+          const currentWeekData = weeklyDataMap.get(weekKey);
+          currentWeekData.perfect += item.perfect || 0;
+          currentWeekData.vague += item.vague || 0;
+          currentWeekData.forgotten += item.forgotten || 0;
+          currentWeekData.total += item.total || 0;
+        });
+
+        // Convert map to array and format labels
+        const sortedWeeklyData = Array.from(weeklyDataMap.values()).sort((a, b) => a.weekStartDate.getTime() - b.weekStartDate.getTime());
+
+        weeklyChartData.value = sortedWeeklyData.map(item => {
+          const sundayDate = item.weekStartDate;
+          const saturdayDate = new Date(sundayDate);
+          saturdayDate.setDate(sundayDate.getDate() + 6); // Add 6 days to get Saturday
+
+          const startMonth = String(sundayDate.getMonth() + 1).padStart(2, '0');
+          const startDay = String(sundayDate.getDate()).padStart(2, '0');
+          const endMonth = String(saturdayDate.getMonth() + 1).padStart(2, '0');
+          const endDay = String(saturdayDate.getDate()).padStart(2, '0');
 
           return {
             label: `${startMonth}-${startDay} ~ ${endMonth}-${endDay}`,
-            perfect: item.perfect || 0,
-            vague: item.vague || 0,
-            forgotten: item.forgotten || 0,
-            total: item.total || 0,
+            perfect: item.perfect,
+            vague: item.vague,
+            forgotten: item.forgotten,
+            total: item.total,
           };
         });
+        // --- End of Weekly data calculation adjustment ---
 
       } catch (err) {
         console.error('리포트 데이터 불러오기 실패:', err);
@@ -381,13 +420,13 @@ export default {
 
 /* Report Container & Common Section Styles */
 .report-container {
-  padding: 40px;
+  padding: 10px 40px;
   width: 100%;
   max-width: 1100px;
-  margin-top: 20px;
+  margin-top: -10px;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 30px;
 }
 
 .loading-message, .error-message {
@@ -401,39 +440,42 @@ export default {
 .tab-buttons {
   display: flex;
   justify-content: center;
-  margin-bottom: 30px;
   width: 100%;
-  max-width: 350px; /* Adjusted max-width to reduce overall button width */
-  margin: 0 auto 30px auto;
-  border-radius: 30px; /* Pill shape */
-  background-color: transparent; /* Remove the gray background container */
-  padding: 0; /* Remove padding from the container */
-  box-shadow: none; /* Remove container shadow */
+  max-width: 350px;
+  margin: -20px auto 15px auto;
+  border-radius: 30px;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+  position: relative;
+  z-index: 20;
 }
 
 .tab-button {
   flex: 1;
-  padding: 10px 15px; /* Adjusted padding to reduce button width */
+  padding: 10px 15px;
   border: none;
-  background-color: transparent; /* Default transparent background */
-  color: #666; /* Default text color (gray) */
-  font-size: 1.1rem; /* Adjust font size */
-  font-weight: 500; /* Adjust font weight */
+  background-color: white; /* 기본 배경색을 흰색으로 변경 */
+  color: #666;
+  font-size: 1.1rem;
+  font-weight: 500;
   cursor: pointer;
-  border-radius: 25px; /* Pill shape */
+  border-radius: 25px;
   transition: all 0.3s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 버튼에 그림자 추가 */
 }
 
 .tab-button.active {
-  background: linear-gradient(to right, #8c5dff, #a471ff); /* Purple gradient for active button */
-  color: white; /* White text for active button */
-  box-shadow: 0 4px 10px rgba(140, 93, 255, 0.3); /* Subtle shadow for active button matching the banner */
+  background: linear-gradient(to right, #8c5dff, #a471ff);
+  color: white;
+  box-shadow: 0 4px 10px rgba(140, 93, 255, 0.3);
 }
 
 .tab-button:hover:not(.active) {
-  background-color: #f0f0f0; /* Light hover background */
-  color: #333; /* Slightly darker text on hover */
+  background-color: #f8f4ff;
+  color: #5a2e87;
+  transform: translateY(-1px);
 }
 
 /* Report Section General Styles */
@@ -488,6 +530,7 @@ export default {
   width: 100%;
   justify-content: center;
   align-items: stretch; /* 세로 길이를 같게 늘리기 */
+  min-height: 600px; /* 캘린더의 최대 높이에 맞춰 최소 높이 설정 */
 }
 
 .daily-detail-wrapper {
@@ -496,13 +539,11 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly; /* 내용을 세로 공간에 균등 분배 */
-  padding: 30px 25px; /* 상하단 패딩 조정 */
+  justify-content: flex-start; /* 내용을 상단에 정렬하여 flex-grow가 작동하도록 */
+  padding: 25px; /* 패딩 통일 */
   color: white; /* 텍스트 색상 흰색으로 변경 */
   box-sizing: border-box;
   text-align: center;
-  height: 100%; /* 세로 길이를 부모 컨테이너에 맞춤 */
-  min-height: 620px; /* 캘린더의 세로 길이에 맞추기 위한 최소 높이 설정 */
 }
 
 .section-title-daily-detail {
@@ -520,8 +561,8 @@ export default {
 }
 
 /* DailyStudyDetail 컴포넌트 내부의 스타일을 조절해야 할 수 있습니다.
-   여기서는 ReportView에서 DailyStudyDetail 컴포넌트 자체에는
-   배경이나 패딩을 주지 않고, daily-detail-wrapper에서 전체 스타일을 제어합니다. */
+    여기서는 ReportView에서 DailyStudyDetail 컴포넌트 자체에는
+    배경이나 패딩을 주지 않고, daily-detail-wrapper에서 전체 스타일을 제어합니다. */
 .daily-detail-wrapper >>> .daily-study-detail {
   width: 100%; /* DailyStudyDetail이 부모 너비를 차지하도록 */
   background-color: transparent; /* DailyStudyDetail 자체 배경 투명 */
@@ -541,7 +582,7 @@ export default {
   background-color: #ffffff; /* 흰색 배경 */
   display: flex;
   flex-direction: column;
-  padding: 13px; /* 패딩 통일 */
+  padding: 25px; /* 패딩 통일 */
   box-sizing: border-box;
 }
 
