@@ -144,7 +144,10 @@ export default {
 <style scoped>
 .study-calendar {
   width: 100%;
-  padding: 0; /* ReportView의 .calendar-wrapper에서 padding을 처리하므로 여기서는 0으로 */
+  padding: 0;
+  border: 2px solid #e0d0ff;
+  border-radius: 12px;
+  background-color: white;
 }
 
 .calendar-header {
@@ -152,6 +155,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
+  padding: 15px 20px 0;
 }
 
 .nav-button {
@@ -181,7 +185,8 @@ export default {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 5px;
+  padding: 0 15px 15px;
 }
 
 .day-label {
@@ -190,15 +195,17 @@ export default {
   color: #8c5dff;
   font-size: 0.95rem;
   padding: 8px 0;
+  border-bottom: 1px solid #e0d0ff;
+  margin-bottom: 5px;
 }
 
 .calendar-day {
-  padding: 10px 0;
+  padding: 3px 0;
   text-align: center;
   border-radius: 8px;
   font-size: 1rem;
   color: #333;
-  min-height: 70px;
+  min-height: 50px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -241,9 +248,9 @@ export default {
 
 .study-counts-bubble {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   font-size: 0.75rem;
-  margin-top: 6px;
+  margin-top: 2px;
   width: 100%;
   justify-content: center;
   flex-wrap: wrap;
@@ -287,9 +294,9 @@ export default {
     gap: 5px;
   }
   .calendar-day {
-    min-height: 60px;
+    min-height: 40px;
     font-size: 0.9rem;
-    padding: 8px 0;
+    padding: 2px 0;
   }
   .day-label {
     font-size: 0.8rem;
