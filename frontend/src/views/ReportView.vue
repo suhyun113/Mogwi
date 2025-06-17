@@ -295,7 +295,12 @@ export default {
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
-  overflow-x: hidden; /* 가로 스크롤 제거 */
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Report Banner Styles */
@@ -306,13 +311,13 @@ export default {
 
 .report-banner {
   width: 100%;
-  padding: 60px 20px;
+  padding: 80px 20px;
   background: linear-gradient(to right, #8c5dff, #a471ff);
   color: white;
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  min-height: 300px;
+  min-height: 350px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,8 +383,8 @@ export default {
 
 @media (max-width: 768px) {
   .report-banner {
-    padding: 40px 15px;
-    min-height: 250px;
+    padding: 50px 15px;
+    min-height: 300px;
   }
   .banner-content {
     flex-direction: column;
@@ -406,8 +411,8 @@ export default {
 
 @media (max-width: 480px) {
   .report-banner {
-    padding: 30px 10px;
-    min-height: 200px;
+    padding: 40px 10px;
+    min-height: 250px;
   }
   .banner-title {
     font-size: 1.7rem;
@@ -429,6 +434,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 30px;
+  overflow: hidden;
+  height: 100%;
 }
 
 .loading-message, .error-message {
@@ -532,7 +539,7 @@ export default {
   margin: 0 auto;
   justify-content: center;
   align-items: stretch;
-  min-height: 500px; /* 최소 높이 설정 */
+  min-height: 450px;
   background-color: transparent;
   border: none;
   border-radius: 12px;
@@ -552,13 +559,13 @@ export default {
   color: white;
   box-sizing: border-box;
   text-align: center;
-  height: 100%; /* 부모 컨테이너의 높이에 맞춤 */
+  height: 450px; /* 고정 높이 설정 */
   border-radius: 8px;
 }
 
 .section-title-daily-detail {
   color: white;
-  font-size: 2rem;
+  font-size: 1.7rem;
   font-weight: 600;
   position: relative;
   padding-bottom: 10px;
@@ -567,7 +574,7 @@ export default {
 
 .mogwi-daily-detail-character {
   width: 120px;
-  height: 130px; /* 컨테이너 크기 고정 */
+  height: 160px; /* 컨테이너 크기 고정 */
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
   margin-bottom: 5px;
   display: flex;
@@ -605,7 +612,7 @@ export default {
   flex-direction: column;
   padding: 0;
   box-sizing: border-box;
-  height: 100%; /* 부모 컨테이너의 높이에 맞춤 */
+  height: 450px; /* 고정 높이 설정 */
 }
 
 .chart-section {
@@ -757,12 +764,28 @@ export default {
   }
   .daily-detail-wrapper {
     padding: 20px; /* 모바일에서 다시 패딩 적용 */
+    min-height: 400px; /* 모바일에서의 최소 높이 조정 */
   }
   .section-title-daily-detail {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
   .mogwi-daily-detail-character {
-    width: 100px;
+    width: 80px;
+  }
+  .calendar-and-detail-wrapper {
+    min-height: 400px;
+  }
+  .daily-detail-wrapper {
+    height: 400px;
+  }
+  .calendar-wrapper {
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title-daily-detail {
+    font-size: 1rem;
   }
 }
 </style>

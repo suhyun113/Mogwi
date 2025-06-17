@@ -22,13 +22,13 @@ export default {
 <style scoped>
 .report-banner {
   width: 100%;
-  padding: 60px 20px; /* 전체 배너의 상하 패딩 */
+  padding: 80px 20px; /* 패딩을 60px에서 80px로 증가 */
   background: linear-gradient(to right, #8c5dff, #a471ff); /* 그라데이션 배경 */
   color: white;
   position: relative;
   overflow: hidden; /* 캐릭터가 튀어나오지 않도록 */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  min-height: 300px; /* 최소 높이 설정 */
+  min-height: 350px; /* 최소 높이를 300px에서 350px로 증가 */
   display: flex;
   align-items: center; /* 세로 중앙 정렬 */
   justify-content: center; /* 가로 중앙 정렬 (내부 컨텐츠) */
@@ -98,8 +98,8 @@ export default {
 
 @media (max-width: 768px) {
   .report-banner {
-    padding: 40px 15px;
-    min-height: 250px;
+    padding: 50px 15px; /* 모바일에서도 패딩 증가 */
+    min-height: 300px; /* 모바일에서의 최소 높이도 증가 */
   }
   .banner-content {
     flex-direction: column; /* 화면이 작아지면 세로로 전환 */
@@ -127,8 +127,8 @@ export default {
 
 @media (max-width: 480px) {
   .report-banner {
-    padding: 30px 10px;
-    min-height: 200px;
+    padding: 40px 10px; /* 작은 화면에서도 패딩 증가 */
+    min-height: 250px; /* 작은 화면에서의 최소 높이도 증가 */
   }
   .banner-title {
     font-size: 1.7rem;

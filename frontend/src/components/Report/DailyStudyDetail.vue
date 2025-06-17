@@ -58,24 +58,26 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
   flex-grow: 1;
-  gap: 10px; /* 요소들 사이의 간격 추가 */
+  gap: 10px;
+  padding-top: 15px; /* 10px에서 15px로 증가 */
 }
 
 .selected-date-display {
-  font-size: 1.3rem; /* 폰트 크기를 1.5rem에서 1.3rem으로 줄임 */
+  font-size: 1.3rem;
   font-weight: 600;
   color: white;
-  margin-bottom: 10px; /* 하단 마진 추가 */
+  margin-bottom: 5px;
+  margin-top: 10px; /* 0에서 10px로 변경하여 더 아래로 내림 */
 }
 
 .study-summary-tags {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* 태그 간격을 15px에서 10px로 줄임 */
+  gap: 10px; /* 태그 간격을 15px에서 10px로 줄임 */
   width: 80%;
   max-width: 250px;
 }
@@ -86,7 +88,7 @@ export default {
   align-items: center;
   width: 100%;
   gap: 10px; /* 태그와 숫자 사이 간격을 15px에서 10px로 줄임 */
-  margin-bottom: 7px;
+  margin-bottom: 0px;
 }
 
 .tag {
@@ -95,6 +97,7 @@ export default {
   padding: 6px 12px; /* 패딩을 8px 15px에서 6px 12px로 줄임 */
   border-radius: 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin-top: 15px;
 }
 
 .perfect-tag {
