@@ -444,7 +444,7 @@ export default {
   justify-content: center;
   width: 100%;
   max-width: 350px;
-  margin: -20px auto 15px auto;
+  margin: 0px auto 15px auto;
   border-radius: 30px;
   background-color: transparent;
   padding: 0;
