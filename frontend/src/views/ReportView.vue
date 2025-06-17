@@ -538,6 +538,7 @@ export default {
   border-radius: 12px;
   padding: 20px;
   box-sizing: border-box;
+  margin-top: -20px;
 }
 
 .daily-detail-wrapper {
@@ -614,7 +615,12 @@ export default {
   gap: 25px;
   width: 100%;
   max-width: 1000px;
-  margin: 0 auto;
+  margin-top: 25px;
+  background-color: white;
+  border: 2px solid #e0d0ff;
+  border-radius: 12px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* Logged out prompt styles */
