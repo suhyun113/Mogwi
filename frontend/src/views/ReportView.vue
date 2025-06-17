@@ -457,7 +457,7 @@ export default {
   flex: 1;
   padding: 10px 15px;
   border: none;
-  background-color: white; /* 기본 배경색을 흰색으로 변경 */
+  background: none; /* 기본 배경색을 흰색으로 변경 */
   color: #666;
   font-size: 1.1rem;
   font-weight: 500;
@@ -465,7 +465,6 @@ export default {
   border-radius: 25px;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 버튼에 그림자 추가 */
 }
 
 .tab-button.active {
@@ -519,20 +518,21 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  margin-bottom: 10px;
 }
 
 .calendar-and-detail-wrapper {
   display: flex;
-  flex-direction: row; /* 가로 배치 */
-  gap: 20px; /* 각 섹션 사이 간격 */
+  flex-direction: row;
+  gap: 20px;
   width: 100%;
   justify-content: center;
-  align-items: stretch; /* 세로 길이를 같게 늘리기 */
-  min-height: 600px; /* 캘린더의 최대 높이에 맞춰 최소 높이 설정 */
+  align-items: stretch;
+  min-height: 500px; /* 최소 높이 설정 */
 }
 
 .daily-detail-wrapper {
@@ -546,6 +546,7 @@ export default {
   color: white;
   box-sizing: border-box;
   text-align: center;
+  height: 100%; /* 부모 컨테이너의 높이에 맞춤 */
 }
 
 .section-title-daily-detail {
@@ -553,9 +554,8 @@ export default {
   font-size: 2rem;
   font-weight: 600;
   position: relative;
-  padding-bottom: 5px;
-  margin-bottom: 0;
-  margin-top: -5px;
+  padding-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .mogwi-daily-detail-character {
@@ -591,16 +591,15 @@ export default {
   color: white; /* DailyStudyDetail 내부 텍스트 색상을 흰색으로 */
 }
 
-
 .calendar-wrapper {
-  flex: 2; /* 캘린더 섹션을 더 넓게 */
-  background-color: #ffffff; /* 흰색 배경 */
+  flex: 2;
+  background-color: transparent;
   display: flex;
   flex-direction: column;
-  padding: 25px; /* 패딩 통일 */
+  padding: 0;
   box-sizing: border-box;
+  height: 100%; /* 부모 컨테이너의 높이에 맞춤 */
 }
-
 
 .chart-section {
   display: flex;
