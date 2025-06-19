@@ -1,33 +1,11 @@
 <template>
   <section class="mypage-section user-profile-section">
     <div class="profile-header">
-      <h2 class="section-title">내 정보</h2>
+      <h2 class="section-title">{{ nickname }} 님 안녕하세요.</h2>
       <button @click="$emit('edit-info')" class="edit-info-button">
         <i class="fas fa-user-edit"></i> 정보 수정
       </button>
     </div>
-    <div class="profile-content">
-      <div class="profile-item nickname-display" v-if="!isEditingNickname">
-        <span class="label">닉네임:</span>
-        <span class="value">{{ nickname }}</span>
-        <button @click="startEditingNickname" class="edit-nickname-button">
-          <i class="fas fa-pencil-alt"></i>
-        </button>
-      </div>
-      <div class="profile-item nickname-edit" v-else>
-        <label for="nickname-input" class="label">새 닉네임:</label>
-        <input
-          type="text"
-          id="nickname-input"
-          v-model="newNickname"
-          class="nickname-input"
-          @keyup.enter="saveNickname"
-          maxlength="15"
-        />
-        <button @click="saveNickname" class="save-nickname-button">저장</button>
-        <button @click="cancelEditingNickname" class="cancel-nickname-button">취소</button>
-      </div>
-      </div>
   </section>
 </template>
 
@@ -82,20 +60,22 @@ export default {
 
 <style scoped>
 .user-profile-section {
-  background-color: #f7f0ff;
+  background-color: #fff;
   border: 1px solid #e5d8f7;
   border-radius: 10px;
-  padding: 25px;
+  padding: 64px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   margin-bottom: 30px;
+  max-width: 1400px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: 40px;
 }
 
 .profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px dashed #f0e6ff;
-  padding-bottom: 15px;
   margin-bottom: 20px;
 }
 

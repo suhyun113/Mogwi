@@ -12,7 +12,8 @@
     <div v-else class="mypage-layout">
       <!-- Left Sidebar Navigation -->
       <aside class="sidebar">
-        <h2 class="sidebar-title">MY PAGE</h2>
+        <!-- 'MY PAGE' 영어 텍스트 제거 -->
+        <h2 class="sidebar-title" style="display: none;">MY PAGE</h2> 
         <nav class="sidebar-nav">
           <a href="#" :class="{ 'nav-item': true, 'active': activeSection === 'profile' }" @click.prevent="activeSection = 'profile'">
             <i class="fas fa-user-circle"></i> 내 정보
@@ -32,6 +33,7 @@
 
       <!-- Main Content Area -->
       <main class="main-content">
+        <!-- '내 정보' 텍스트 제거 (getSectionTitle에서 빈 문자열 반환) -->
         <h1 class="page-title">{{ getSectionTitle(activeSection) }}</h1>
 
         <section v-if="activeSection === 'profile'" class="content-section">
@@ -167,7 +169,7 @@ export default {
     const getSectionTitle = (section) => {
       switch (section) {
         case 'profile':
-          return '내 정보';
+          return '';
         case 'liked-scrapped':
           return '좋아요 & 스크랩';
         case 'my-problems':
@@ -376,7 +378,6 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
-  /* 변경: 더 밝고 부드러운 보라색 계열 배경 */
   background-color: #f7f3ff; /* 연한 보라색 배경 */
   min-height: 100vh;
   width: 100%;
@@ -388,51 +389,65 @@ export default {
 .mypage-layout {
   display: flex;
   width: 100%;
-  max-width: 1200px;
-  background: #ffffff;
+  max-width: 100%;
+  background: transparent; /* 흰색 배경 제거 */
   border-radius: 12px;
-  /* 변경: 그림자 더 부드럽고 옅게 */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Soft, subtle shadow */
+  /* 변경: 그림자 및 테두리 제거 */
+  box-shadow: none; /* 그림자 제거 */
+  border: none; /* 테두리 제거 */
   overflow: hidden;
   min-height: 700px;
-  border: 1px solid #e0d0ff; /* 기존 보라색 테두리 유지 */
+  align-items: flex-start; /* 메인 컨텐츠와 사이드바 상단 정렬 */
+  margin-left: 0;
+  margin-right: auto;
+}
+
+@media (min-width: 1200px) {
+  .mypage-layout {
+    justify-content: flex-start;
+    margin-left: 0;
+    margin-right: auto;
+  }
 }
 
 /* Sidebar Styling */
 .sidebar {
   flex: 0 0 250px;
-  background-color: #fcfaff; /* Sidebar 배경을 더 밝게 */
+  background-color: transparent; /* 배경 제거 */
   padding: 30px 20px;
-  border-right: 1px solid #efdfff; /* 테두리 색상 조정 */
+  border-right: 1px solid #efdfff;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-left: 32px;
 }
 
 .sidebar-title {
+  /* 'MY PAGE' 영어 텍스트 제거 */
+  display: none;
   font-size: 1.8rem;
   font-weight: 700;
-  color: #6a0dad; /* 보라색 계열로 변경 */
+  color: #6a0dad;
   margin-bottom: 40px;
   text-align: center;
   width: 100%;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e9dffc; /* 테두리 색상 조정 */
+  border-bottom: 1px solid #e9dffc;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 8px; /* 간격 살짝 줄임 */
+  gap: 8px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px; /* 아이콘과 텍스트 간격 조정 */
-  padding: 14px 20px; /* 패딩 조정 */
-  font-size: 1.05rem; /* 폰트 크기 조정 */
+  gap: 12px;
+  padding: 14px 20px;
+  font-size: 1.05rem;
   font-weight: 500;
   color: #555;
   text-decoration: none;
@@ -445,25 +460,23 @@ export default {
 }
 
 .nav-item i {
-  font-size: 1.1rem; /* 아이콘 크기 조정 */
-  color: #8a2be2; /* 보라색 계열로 변경 */
+  font-size: 1.1rem;
+  color: #8a2be2;
 }
 
 .nav-item:hover {
-  background-color: #f0e6ff; /* 연한 보라색 호버 */
-  color: #6a0dad; /* 호버 시 진한 보라색 */
+  background-color: #f0e6ff;
+  color: #6a0dad;
 }
 
 .nav-item.active {
-  background-color: #e6e0ff; /* 활성 상태 배경색 (더 밝은 보라색) */
-  color: #6a0dad; /* 활성 상태 텍스트 색상 */
+  background-color: #e6e0ff;
+  color: #6a0dad;
   font-weight: 600;
-  /* 변경: 그림자 더 옅게 */
-  box-shadow: 0 1px 6px rgba(106, 13, 219, 0.1); /* Subtle purple shadow */
-  position: relative; /* 테두리 효과를 위해 */
+  box-shadow: 0 1px 6px rgba(106, 13, 219, 0.1);
+  position: relative;
 }
 
-/* 활성 상태 아이템의 왼쪽 보더 강조 (참고 이미지처럼) */
 .nav-item.active::before {
   content: '';
   position: absolute;
@@ -472,21 +485,20 @@ export default {
   transform: translateY(-50%);
   height: 80%;
   width: 4px;
-  background-color: #8a2be2; /* 강조 보라색 */
+  background-color: #8a2be2;
   border-radius: 2px;
 }
 
-
 .nav-item.active i {
-  color: #6a0dad; /* 활성 상태 아이콘 색상 */
+  color: #6a0dad;
 }
 
 .nav-item-danger {
-  color: #e2586a; /* 더 부드러운 빨간색 계열 */
+  color: #e2586a;
   margin-top: 20px;
 }
 .nav-item-danger:hover {
-  background-color: #ffe6e9; /* 연한 빨간색 호버 */
+  background-color: #ffe6e9;
   color: #d13a4f;
 }
 
@@ -494,23 +506,28 @@ export default {
 /* Main Content Styling */
 .main-content {
   flex: 1;
-  padding: 40px;
-  background-color: #ffffff; /* 메인 컨텐츠 배경을 흰색으로 유지하여 깔끔하게 */
+  padding: 0 40px 40px 40px; /* 상단 패딩 더 줄임 */
+  background-color: transparent; /* 흰색 배경 제거 */
 }
 
 .page-title {
-  font-size: 2.2rem;
+  /* '내 정보' 텍스트 제거에 따른 스타일 조정:
+     높이 유지를 위해 padding-top/bottom 조정, border-bottom은 유지 */
+  font-size: 2.2rem; /* 폰트 크기 유지 */
   font-weight: 700;
   color: #2c3e50;
   margin-bottom: 30px;
-  border-bottom: 2px solid #e9ecef;
+  border-bottom: none; /* 구분선 제거 */
   padding-bottom: 15px;
+  padding-top: 0; /* 상단 패딩 제거 또는 조정 */
+  min-height: 2.2rem; /* 폰트 크기만큼 최소 높이 유지 */
+  line-height: 1; /* 한 줄 높이 */
   text-align: left;
 }
 
 .content-section {
-  background: #ffffff;
-  border-radius: 8px;
+  background: none;
+  border-radius: 0;
   padding: 0;
 }
 
@@ -564,7 +581,7 @@ export default {
 
 /* 로그인 버튼 스타일도 통일된 보라색 그라데이션으로 변경 */
 .login-button {
-  background-image: linear-gradient(to right, #8a2be2 0%, #a471ff 100%); /* 보라색 그라데이션 */
+  background-image: linear-gradient(to right, #8a2be2 0%, #a471ff 100%);
   color: white;
   border: none;
   padding: 15px 35px;
@@ -573,12 +590,12 @@ export default {
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4); /* 보라색 그림자 */
+  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
 }
 
 .login-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6); /* 보라색 그림자 */
+  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6);
   background-position: right center;
 }
 
@@ -599,11 +616,11 @@ export default {
 }
 
 .alert-message.success {
-  background-color: #4CAF50; /* Green */
+  background-color: #4CAF50;
 }
 
 .alert-message.error {
-  background-color: #F44336; /* Red */
+  background-color: #F44336;
 }
 
 @keyframes fadeInOut {
@@ -631,7 +648,6 @@ export default {
   background: white;
   padding: 30px;
   border-radius: 10px;
-  /* 변경: 모달 그림자 더 부드럽게 */
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 90%;
@@ -670,13 +686,13 @@ export default {
 }
 
 .confirm-button {
-  background-color: #8a2be2; /* 보라색으로 변경 */
+  background-color: #8a2be2;
   color: white;
-  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3); /* 보라색 그림자 */
+  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3);
 }
 
 .confirm-button:hover {
-  background-color: #6a0dad; /* 더 진한 보라색 */
+  background-color: #6a0dad;
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(138, 43, 226, 0.4);
 }
@@ -707,7 +723,7 @@ export default {
     flex: none;
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #efdfff; /* 테두리 색상 조정 */
+    border-bottom: 1px solid #efdfff;
     padding: 20px;
   }
 
@@ -751,7 +767,7 @@ export default {
 
   .mypage-layout {
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03); /* 더 옅은 그림자 */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
   }
 
   .sidebar {
