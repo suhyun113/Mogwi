@@ -1,7 +1,7 @@
 <template>
   <div class="weekly-bar-chart">
-    <canvas ref="chartCanvas"></canvas>
-    <div v-if="chartData.length === 0" class="no-chart-data">
+    <canvas ref="chartCanvas" v-if="chartData.length > 0"></canvas>
+    <div v-else class="no-chart-data">
         <img src="@/assets/mogwi-confused.png" alt="모귀 혼란" class="mogwi-confused-icon" />
         <p>지난 주간 학습 기록이 없습니다.</p>
     </div>
@@ -10,13 +10,12 @@
 
 <script>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
-import Chart from 'chart.js/auto'; // Import Chart.js
-import mogwiConfused from '@/assets/mogwi-confused.png'; // Assuming you have this image
+import Chart from 'chart.js/auto';
+import mogwiConfused from '@/assets/mogwi-confused.png';
 
 export default {
   name: 'WeeklyBarChart',
   props: {
-    // chartData: [{ label: 'MM-DD', perfect: N, vague: M, forgotten: O, total: P }, ...]
     chartData: {
       type: Array,
       default: () => []
@@ -39,10 +38,6 @@ export default {
       const perfectData = props.chartData.map(d => d.perfect);
       const vagueData = props.chartData.map(d => d.vague);
       const forgottenData = props.chartData.map(d => d.forgotten);
-      // The 'totalData' variable is not directly used for plotting datasets
-      // as the 'total' is calculated in the tooltip footer.
-      // Therefore, it's safe to remove this line to fix the ESLint error.
-      // const totalData = props.chartData.map(d => d.total);
 
       const ctx = chartCanvas.value.getContext('2d');
       chartInstance = new Chart(ctx, {
@@ -53,15 +48,15 @@ export default {
             {
               label: '완벽한 기억',
               data: perfectData,
-              backgroundColor: '#8BC34A', // Green
+              backgroundColor: '#8BC34A',
               borderColor: '#689F38',
               borderWidth: 1,
-              stack: 'study', // To stack these bars
+              stack: 'study',
             },
             {
               label: '희미한 기억',
               data: vagueData,
-              backgroundColor: '#FFEB3B', // Yellow
+              backgroundColor: '#FFEB3B',
               borderColor: '#FBC02D',
               borderWidth: 1,
               stack: 'study',
@@ -69,7 +64,7 @@ export default {
             {
               label: '사라진 기억',
               data: forgottenData,
-              backgroundColor: '#F44336', // Red
+              backgroundColor: '#F44336',
               borderColor: '#D32F2F',
               borderWidth: 1,
               stack: 'study',
@@ -85,7 +80,7 @@ export default {
               intersect: false,
               callbacks: {
                 title: function(tooltipItems) {
-                    return `${tooltipItems[0].label} 주차`;
+                    return tooltipItems[0].label;
                 },
                 label: function(tooltipItem) {
                     const datasetLabel = tooltipItem.dataset.label || '';
@@ -117,7 +112,7 @@ export default {
               stacked: true,
               title: {
                 display: true,
-                text: '주차 (월-일)',
+                text: '주차',
                 color: '#5a2e87',
                 font: {
                   size: 14,
@@ -132,7 +127,7 @@ export default {
                 }
               },
               grid: {
-                display: false, // Hide vertical grid lines
+                display: false,
               }
             },
             y: {
@@ -150,13 +145,13 @@ export default {
               },
               ticks: {
                 color: '#666',
-                stepSize: 10, // Example step size
+                stepSize: 10,
                 font: {
                     family: 'Pretendard',
                 }
               },
               grid: {
-                color: '#e0e0e0', // Light grey horizontal grid lines
+                color: '#e0e0e0',
               }
             }
           }
@@ -169,12 +164,12 @@ export default {
     });
 
     watch(() => props.chartData, () => {
-      createChart(); // Recreate chart when data changes
+      createChart();
     }, { deep: true });
 
     onBeforeUnmount(() => {
       if (chartInstance) {
-        chartInstance.destroy(); // Clean up chart instance before component unmounts
+        chartInstance.destroy();
       }
     });
 
@@ -189,17 +184,12 @@ export default {
 <style scoped>
 .weekly-bar-chart {
   width: 100%;
-  max-width: 700px; /* Adjust max-width as needed */
-  height: 350px; /* Set a fixed height for the chart container */
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  border: 1px solid #dcd0f0;
-  display: flex; /* Use flexbox to center content */
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  position: relative; /* For no-chart-data positioning */
+  height: 400px;
+  padding: 0; /* ReportView의 .report-section에서 padding을 처리하므로 여기서는 0으로 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 canvas {
@@ -219,22 +209,22 @@ canvas {
     align-items: center;
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
-    z-index: 10; /* Ensure it's above the canvas if data is empty */
+    z-index: 10;
     color: #888;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     text-align: center;
 }
 
 .mogwi-confused-icon {
-    width: 100px;
+    width: 110px;
     height: auto;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 @media (max-width: 768px) {
   .weekly-bar-chart {
-    height: 300px; /* Adjust height for smaller screens */
-    padding: 15px;
+    height: 300px;
+    padding: 0; /* ReportView에서 처리 */
   }
   .mogwi-confused-icon {
       width: 70px;

@@ -5,6 +5,7 @@
       <span>모귀</span>
     </div>
     <nav class="menu">
+      <!-- router-link 사용 시 active 클래스 자동 적용 -->
       <router-link to="/mystudy">나의 학습</router-link>
       <router-link to="/create">문제 만들기</router-link>
       <router-link to="/report">학습 리포트</router-link>
@@ -92,8 +93,9 @@ const onLogout = () => {
   transition: color 0.2s ease;
 }
 
-.menu a:hover, .auth a:hover {
-  color: #a471ff;
+.menu a:hover,
+.menu a.router-link-exact-active {
+  color: #a471ff; /* 호버 시 색상과 동일하게 설정 */
 }
 
 .auth {
@@ -129,5 +131,28 @@ const onLogout = () => {
 .register-btn:hover {
   background-color: #a471ff;
   color: white;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.8rem 1rem;
+  }
+  .logo img {
+    height: 30px;
+  }
+  .logo span {
+    font-size: 18px;
+  }
+  .menu {
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+  .auth {
+    gap: 1rem;
+  }
+  .login-btn, .register-btn {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+  }
 }
 </style>

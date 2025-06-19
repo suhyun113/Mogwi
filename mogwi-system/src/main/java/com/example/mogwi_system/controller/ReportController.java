@@ -207,18 +207,19 @@ public class ReportController {
             List<LocalDate> weekStarts = new ArrayList<>();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            // 지난 5주차의 월요일부터 계산 (일요일을 주의 시작으로 하는 경우도 있지만, 일반적으로 월요일이 더 흔함)
-            // 현재 주가 아닌, 지난 5개 주를 포함하도록 조정
+            // 지난 5주차의 일요일부터 계산
             for (int i = 0; i < 5; i++) { // Fetch data for the last 5 weeks
                 // Go back 'i' weeks from today
-                LocalDate weekStart = today.minusWeeks(i).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                // 해당 주의 일요일을 찾습니다. (이전 또는 현재 일요일)
+                LocalDate weekStart = today.minusWeeks(i).with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
                 weekStarts.add(weekStart);
             }
             // 가장 오래된 주부터 정렬
             weekStarts.sort(null);
 
             for (LocalDate weekStart : weekStarts) {
-                LocalDate weekEnd = weekStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+                // 해당 주의 토요일을 찾습니다. (다음 또는 현재 토요일)
+                LocalDate weekEnd = weekStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
 
                 String sql = "SELECT " +
                         "SUM(CASE WHEN card_status = 'perfect' THEN 1 ELSE 0 END) AS perfect_count, " +

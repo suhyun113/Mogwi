@@ -35,7 +35,6 @@ import { ref, computed, watch } from 'vue';
 export default {
   name: 'StudyCalendar',
   props: {
-    // studyDates: { 'YYYY-MM-DD': { perfect: N, vague: M, forgotten: O }, ... }
     studyDates: {
       type: Object,
       default: () => ({})
@@ -46,7 +45,7 @@ export default {
     const today = new Date();
     const currentMonth = ref(today.getMonth());
     const currentYear = ref(today.getFullYear());
-    const selectedDay = ref(null); // Stores the day number (e.g., 15) of the selected date in the current month
+    const selectedDay = ref(null);
 
     const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -56,11 +55,11 @@ export default {
     });
 
     const firstDayOfMonth = computed(() => {
-      return new Date(currentYear.value, currentMonth.value, 1).getDay(); // 0 for Sunday, 1 for Monday, etc.
+      return new Date(currentYear.value, currentMonth.value, 1).getDay();
     });
 
     const daysInMonth = computed(() => {
-      return new Date(currentYear.value, currentMonth.value + 1, 0).getDate(); // Last day of current month
+      return new Date(currentYear.value, currentMonth.value + 1, 0).getDate();
     });
 
     const startDayOffset = computed(() => firstDayOfMonth.value);
@@ -101,7 +100,7 @@ export default {
       } else {
         currentMonth.value--;
       }
-      selectedDay.value = null; // Clear selection on month change
+      selectedDay.value = null;
     };
 
     const nextMonth = () => {
@@ -111,17 +110,15 @@ export default {
       } else {
         currentMonth.value++;
       }
-      selectedDay.value = null; // Clear selection on month change
+      selectedDay.value = null;
     };
 
-    // Watch for changes in studyDates to potentially update initial selection
     watch(() => props.studyDates, (newVal) => {
         const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         if (newVal[todayString] && selectedDay.value === null) {
-            // If today has study data and no date is selected yet, select today
             selectDate(today.getDate());
         }
-    }, { immediate: true }); // Run immediately on component mount
+    }, { immediate: true });
 
     return {
       currentMonth,
@@ -138,7 +135,7 @@ export default {
       selectDate,
       prevMonth,
       nextMonth,
-      selectedDay // Expose for debugging if needed
+      selectedDay
     };
   }
 };
@@ -147,36 +144,35 @@ export default {
 <style scoped>
 .study-calendar {
   width: 100%;
-  max-width: 600px;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  padding: 25px;
-  border: 1px solid #dcd0f0;
+  padding: 0;
+  border: 2px solid #e0d0ff;
+  border-radius: 12px;
+  background-color: white;
 }
 
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  padding: 15px 20px 0;
 }
 
 .nav-button {
-  background-color: #e6e0f4;
+  background-color: #f5f0ff;
   color: #5a2e87;
   border: none;
-  padding: 8px 15px;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1.1rem;
-  font-weight: bold;
-  transition: background-color 0.2s, transform 0.2s;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .nav-button:hover {
-  background-color: #d1c4e9;
-  transform: scale(1.05);
+  background-color: #e8e0ff;
+  transform: translateY(-1px);
 }
 
 .current-month {
@@ -189,32 +185,35 @@ export default {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 5px;
+  padding: 0 15px 15px;
 }
 
 .day-label {
-  font-weight: bold;
+  font-weight: 600;
   text-align: center;
   color: #8c5dff;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   padding: 8px 0;
+  border-bottom: 1px solid #e0d0ff;
+  margin-bottom: 5px;
 }
 
 .calendar-day {
-  padding: 10px 0;
+  padding: 3px 0;
   text-align: center;
   border-radius: 8px;
   font-size: 1rem;
   color: #333;
-  min-height: 70px; /* Adjust height to accommodate bubble */
+  min-height: 50px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Align number to top */
+  justify-content: flex-start;
   align-items: center;
-  position: relative; /* For positioning the bubble */
+  position: relative;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
-  border: 1px solid transparent; /* Default transparent border */
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
 .calendar-day.blank-day {
@@ -224,34 +223,34 @@ export default {
 
 .calendar-day.today {
   border: 2px solid #a471ff;
-  background-color: #f0e6ff;
-  font-weight: bold;
+  background-color: #f8f4ff;
+  font-weight: 600;
   color: #4a1e77;
 }
 
 .calendar-day.has-study {
-  background-color: #e6f7e6; /* Light green for study activity */
+  background-color: #f0f7ff;
   font-weight: 500;
-  color: #333;
 }
 
 .calendar-day.selected {
   border: 2px solid #8c5dff;
-  background-color: #d8c8ff;
-  font-weight: bold;
+  background-color: #f0e6ff;
+  font-weight: 600;
   color: #4a1e77;
 }
 
 .calendar-day:hover:not(.blank-day) {
-  background-color: #f0e6ff;
+  background-color: #f8f4ff;
   border-color: #a471ff;
+  transform: translateY(-1px);
 }
 
 .study-counts-bubble {
   display: flex;
-  gap: 5px;
+  gap: 3px;
   font-size: 0.75rem;
-  margin-top: 5px;
+  margin-top: 2px;
   width: 100%;
   justify-content: center;
   flex-wrap: wrap;
@@ -260,7 +259,7 @@ export default {
 .study-counts-bubble span {
   padding: 2px 4px;
   border-radius: 4px;
-  font-weight: bold;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -279,7 +278,7 @@ export default {
 
 @media (max-width: 768px) {
   .study-calendar {
-    padding: 15px;
+    padding: 0;
   }
   .calendar-header {
     margin-bottom: 15px;
@@ -295,9 +294,9 @@ export default {
     gap: 5px;
   }
   .calendar-day {
-    min-height: 60px;
+    min-height: 40px;
     font-size: 0.9rem;
-    padding: 8px 0;
+    padding: 2px 0;
   }
   .day-label {
     font-size: 0.8rem;

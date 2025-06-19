@@ -1,5 +1,23 @@
 <template>
   <div class="main-view-wrapper">
+    <section class="banner-section">
+      <CustomCarousel :slides="bannerSlides">
+        <template #slide-0>
+          <BannerOne bgColor="#A471FF" />
+        </template>
+        <template #slide-1>
+          <BannerTwo bgColor="#FFC107" />
+        </template>
+        <template #slide-2>
+          <BannerThree bgColor="#4CAF50" />
+        </template>
+      </CustomCarousel>
+    </section>
+
+    <div class="search-guidance">
+      <p>아래의 검색창에 문제를 검색해보세요.</p>
+    </div>
+
     <div class="main-inner">
       <div class="sticky-search">
         <SearchBar @search="handleSearch" :categories="categories" />
@@ -40,7 +58,6 @@
   </div>
 </template>
 
-
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
@@ -51,18 +68,31 @@ import ProblemSummary from '@/components/Main/ProblemSummary.vue'
 import LoginPromptModal from '@/components/Login/LoginPromptModal.vue'
 import LoginModal from '@/components/Login/LoginModal.vue'
 import StudyStartModal from '@/components/Study/StudyStartModal.vue'
+import CustomCarousel from '@/components/Main/CustomCarousel.vue'; // CustomCarousel 임포트
+import BannerOne from '@/components/Main/BannerOne.vue';     // BannerOne 임포트
+import BannerTwo from '@/components/Main/BannerTwo.vue';     // BannerTwo 임포트
+import BannerThree from '@/components/Main/BannerThree.vue'; // BannerThree 임포트
 
 export default {
-  components: { SearchBar, ProblemSummary, LoginPromptModal, LoginModal, StudyStartModal },
+  components: {
+    SearchBar,
+    ProblemSummary,
+    LoginPromptModal,
+    LoginModal,
+    StudyStartModal,
+    CustomCarousel, // 컴포넌트 등록
+    BannerOne,      // 컴포넌트 등록
+    BannerTwo,      // 컴포넌트 등록
+    BannerThree,    // 컴포넌트 등록
+  },
   emits: ['open-login'],
   setup() {
     const store = useStore()
     const router = useRouter()
     const problems = ref([])
 
-    // Vuex 스토어의 실제 키값인 'store_userid'를 사용합니다.
     const isAuthenticated = computed(() => !!store.state.store_userid)
-    const currentUserId = computed(() => store.state.store_userid) // 변경됨
+    const currentUserId = computed(() => store.state.store_userid)
 
     const showLoginPrompt = ref(false)
     const showLoginModal = ref(false)
@@ -73,11 +103,18 @@ export default {
     const selectedCategory = ref('#전체')
     const categories = ref([])
 
-    // 카테고리 불러오기
+    // 각 배너의 데이터를 정의합니다. (CustomCarousel의 slides prop에 전달)
+    // 실제 콘텐츠는 각 BannerX.vue 컴포넌트가 담당하므로, 여기서는 슬라이드 수만 맞춰줍니다.
+    const bannerSlides = ref([
+      { id: 1, component: 'BannerOne' },
+      { id: 2, component: 'BannerTwo' },
+      { id: 3, component: 'BannerThree' },
+    ]);
+
+
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/categories')
-        // Sort by id and add '#전체' at the beginning
         const sortedCategories = response.data
           .sort((a, b) => a.id - b.id)
           .map(cat => cat.tag_name)
@@ -87,14 +124,13 @@ export default {
       }
     }
 
-    // 문제 불러오기기
     const fetchProblems = async () => {
       try {
         const response = await axios.get('/api/problems', {
           params: {
             query: query.value,
             category: selectedCategory.value,
-            currentUserId: currentUserId.value // currentUserId가 null/undefined일 수 있음을 고려
+            currentUserId: currentUserId.value
           }
         })
         problems.value = response.data
@@ -135,22 +171,20 @@ export default {
 
     const handleUpdateLike = (problem) => {
       const target = problems.value.find(p => p.id === problem.id)
-      if (target && target.authorId !== currentUserId.value) { // 로그인 안 된 상태에서는 좋아요/스크랩 못하게
+      if (target && target.authorId !== currentUserId.value) {
         target.liked = !target.liked
         target.likes += target.liked ? 1 : -1
       } else if (!currentUserId.value) {
-        // 로그인 필요 메시지
         alert("로그인 후 이용할 수 있습니다.");
       }
     }
 
     const handleUpdateScrap = (problem) => {
       const target = problems.value.find(p => p.id === problem.id)
-      if (target && target.authorId !== currentUserId.value) { // 로그인 안 된 상태에서는 좋아요/스크랩 못하게
+      if (target && target.authorId !== currentUserId.value) {
         target.scrapped = !target.scrapped
         target.scraps += target.scrapped ? 1 : -1
       } else if (!currentUserId.value) {
-        // 로그인 필요 메시지
         alert("로그인 후 이용할 수 있습니다.");
       }
     }
@@ -186,7 +220,8 @@ export default {
       handleAuthRequired,
       openLoginModal,
       handleUpdateLike,
-      handleUpdateScrap
+      handleUpdateScrap,
+      bannerSlides, // bannerSlides를 반환
     }
   }
 }
@@ -195,50 +230,92 @@ export default {
 <style scoped>
 .main-view-wrapper {
   display: flex;
-  justify-content: center;
-  padding-top: 130px;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0;
+  background-color: #f8f0ff;
+  min-height: 100vh;
+}
+
+.banner-section {
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  background-color: #f0e6ff;
+  min0height: 700px;
 }
 
 .main-inner {
   width: 100%;
-  max-width: 720px;
+  max-width: 900px;
   position: relative;
+  padding: 0 16px;
+  box-sizing: border-box;
+  margin-top: 70px;
+  margin: 0 auto;
+}
+
+.search-guidance {
+  width: 100%;
+  max-width: 900px; /* main-inner와 동일한 최대 너비 */
+  text-align: center; /* 텍스트 가운데 정렬 */
+  margin-top: 60px; 
+  color: #555; /* 부드러운 회색 톤 */
+  font-size: 1.25rem; /* 적당히 눈에 띄는 크기 */
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0 16px; /* 좌우 여백 */
+  box-sizing: border-box;
+}
+
+.search-guidance p {
+    margin: 0; /* p 태그의 기본 margin 제거 */
 }
 
 .sticky-search {
-  position: fixed;
+  position: sticky;
   top: 74px;
-  left: 0;
-  right: 0;
-  background-color: #fdf8f4;
   z-index: 999;
+  background-color: transparent;
   padding: 12px 0;
-  display: flex;
-  justify-content: center;
-}
-
-.sticky-search::before {
-  content: '';
-  position: absolute;
-  top: -30px;
-  left: 0;
-  right: 0;
-  height: 30px;
-  background-color: #fdf8f4;
-}
-
-.sticky-search > * {
+  margin-top: 60px;
+  margin-bottom: 10px;
   width: 100%;
-  max-width: 720px;
-  padding: 0 16px;
-  box-sizing: border-box;
+  box-shadow: none;
 }
 
 .problem-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 10px;
-  padding: 0 16px;
+  gap: 20px;
+  margin-top: 25px;
+  margin-bottom: 50px;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .banner-section {
+    height: 55vh;
+  }
+  .main-inner {
+    padding: 0 10px;
+    max-width: 100%;
+    margin: 40px auto;
+  }
+  .sticky-search {
+    top: 60px;
+    padding: 10px 0;
+    margin: 0;
+    width: 100%;
+  }
+  .sticky-search > * {
+    padding: 0;
+    max-width: 100%;
+  }
+  .problem-list {
+    gap: 15px;
+    margin-top: 20px;
+    padding: 0;
+  }
 }
 </style>

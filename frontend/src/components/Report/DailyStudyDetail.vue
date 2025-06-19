@@ -1,175 +1,141 @@
 <template>
   <div class="daily-study-detail">
-    <h3 class="detail-title">
-      {{ selectedDate ? `${formatDate(selectedDate)} 학습 기록` : '날짜를 선택해주세요' }}
-    </h3>
-    <div v-if="dailyStudyData && selectedDate" class="detail-stats">
-      <div class="stat-item perfect">
-        <span class="stat-label">완벽한 기억</span>
-        <span class="stat-count">{{ dailyStudyData.perfect }}</span>
+    <div v-if="selectedDate" class="detail-content">
+      <p class="selected-date-display">{{ selectedDate }} 학습 기록</p>
+      <div v-if="dailyStudyData && (dailyStudyData.perfect > 0 || dailyStudyData.vague > 0 || dailyStudyData.forgotten > 0)" class="study-summary-tags">
+        <div class="tag-item">
+          <span class="tag perfect-tag">완벽한 기억</span>
+          <span class="count perfect-count-color">{{ dailyStudyData.perfect }}</span>
+        </div>
+        <div class="tag-item">
+          <span class="tag vague-tag">희미한 기억</span>
+          <span class="count vague-count-color">{{ dailyStudyData.vague }}</span>
+        </div>
+        <div class="tag-item">
+          <span class="tag forgotten-tag">사라진 기억</span>
+          <span class="count forgotten-count-color">{{ dailyStudyData.forgotten }}</span>
+        </div>
       </div>
-      <div class="stat-item vague">
-        <span class="stat-label">희미한 기억</span>
-        <span class="stat-count">{{ dailyStudyData.vague }}</span>
-      </div>
-      <div class="stat-item forgotten">
-        <span class="stat-label">사라진 기억</span>
-        <span class="stat-count">{{ dailyStudyData.forgotten }}</span>
-      </div>
-      <div class="no-data" v-if="dailyTotal === 0">
-        <img src="@/assets/mogwi-sleep.png" alt="모귀 잠자기" class="mogwi-sleep-icon" />
-        <p>선택하신 날짜에 학습 기록이 없습니다.</p>
+      <div v-else class="no-data-message">
+        해당 날짜에 학습 기록이 없습니다.
       </div>
     </div>
-    <div v-else-if="!selectedDate" class="no-selection">
-      <img src="@/assets/mogwi-look.png" alt="모귀 보기" class="mogwi-look-icon" />
-      <p>달력에서 날짜를 클릭하여 상세 기록을 확인하세요.</p>
-    </div>
-    <div v-else class="no-data">
-        <img src="@/assets/mogwi-sleep.png" alt="모귀 잠자기" class="mogwi-sleep-icon" />
-        <p>선택하신 날짜에 학습 기록이 없습니다.</p>
+    <div v-else class="no-date-selected-message">
+      날짜를 선택하여 학습 기록을 확인하세요.
     </div>
   </div>
 </template>
 
 <script>
-import { computed } from 'vue';
-import mogwiSleep from '@/assets/mogwi-sleep.png'; // Assuming you have this image
-import mogwiLook from '@/assets/mogwi-look.png'; // Assuming you have this image
-
 export default {
   name: 'DailyStudyDetail',
   props: {
     selectedDate: {
-      type: String, // YYYY-MM-DD
-      default: null
+      type: String,
+      default: null,
     },
     dailyStudyData: {
-      type: Object, // { perfect: N, vague: M, forgotten: O }
-      default: null
-    }
+      type: Object,
+      default: () => ({ perfect: 0, vague: 0, forgotten: 0 }),
+    },
   },
-  setup(props) {
-    const formatDate = (dateString) => {
-      if (!dateString) return '';
-      const [year, month, day] = dateString.split('-');
-      return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
-    };
-
-    const dailyTotal = computed(() => {
-      if (!props.dailyStudyData) return 0;
-      return props.dailyStudyData.perfect + props.dailyStudyData.vague + props.dailyStudyData.forgotten;
-    });
-
-    return {
-      formatDate,
-      dailyTotal,
-      mogwiSleep,
-      mogwiLook
-    };
-  }
 };
 </script>
 
 <style scoped>
 .daily-study-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  max-width: 600px;
-  background-color: #fcf8ff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  padding: 20px;
-  border: 1px solid #e9dffc;
-  text-align: center;
+  height: 100%;
+  padding: 10px; /* 패딩을 20px에서 10px로 줄임 */
+  box-sizing: border-box;
+  background-color: transparent;
 }
 
-.detail-title {
-  font-size: 1.5rem;
-  color: #5a2e87;
-  margin-bottom: 20px;
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  flex-grow: 1;
+  gap: 10px;
+  padding-top: 15px; /* 10px에서 15px로 증가 */
+}
+
+.selected-date-display {
+  font-size: 1.3rem;
   font-weight: 600;
-  border-bottom: 1px dashed #f0e6ff;
-  padding-bottom: 10px;
+  color: white;
+  margin-bottom: 5px;
+  margin-top: 10px; /* 0에서 10px로 변경하여 더 아래로 내림 */
 }
 
-.detail-stats {
+.study-summary-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* 태그 간격을 15px에서 10px로 줄임 */
+  width: 80%;
+  max-width: 250px;
+}
+
+.tag-item {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.detail-stats .stat-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 12px 18px;
-  border-radius: 8px;
-  background-color: #ffffff;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-  min-width: 120px;
-  flex: 1;
-  border: 1px solid #f2eaff;
+  width: 100%;
+  gap: 10px; /* 태그와 숫자 사이 간격을 15px에서 10px로 줄임 */
+  margin-bottom: 0px;
 }
 
-.detail-stats .stat-label {
-  font-size: 0.9rem;
-  color: #7a4bb7;
-  margin-bottom: 5px;
+.tag {
+  font-size: 0.9rem; /* 폰트 크기를 1rem에서 0.9rem으로 줄임 */
+  font-weight: 500;
+  padding: 6px 12px; /* 패딩을 8px 15px에서 6px 12px로 줄임 */
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin-top: 15px;
 }
 
-.detail-stats .stat-count {
-  font-size: 1.8rem;
+.perfect-tag {
+  background-color: #e8f5e9; /* 이미지의 숫자 배경색과 동일한 연한 초록색 */
+  color: #4CAF50; /* 이미지의 숫자 색상과 동일한 초록색 */
+}
+
+.vague-tag {
+  background-color: #fffde7; /* 이미지의 숫자 배경색과 동일한 연한 노란색 */
+  color: #FFC107; /* 이미지의 숫자 색상과 동일한 노란색 */
+}
+
+.forgotten-tag {
+  background-color: #ffebee; /* 이미지의 숫자 배경색과 동일한 연한 빨간색 */
+  color: #F44336; /* 이미지의 숫자 색상과 동일한 빨간색 */
+}
+
+.count {
+  font-size: 1.1rem; /* 폰트 크기를 1.2rem에서 1.1rem으로 줄임 */
   font-weight: 700;
+  color: white;
 }
 
-.detail-stats .perfect .stat-count {
-  color: #4CAF50;
+.count.perfect-count-color {
+  /* Removed color: #4CAF50; */
 }
-.detail-stats .vague .stat-count {
-  color: #FFC107;
+.count.vague-count-color {
+  /* Removed color: #FFC107; */
 }
-.detail-stats .forgotten .stat-count {
-  color: #F44336;
-}
-
-.no-data, .no-selection {
-  margin-top: 20px;
-  color: #888;
-  font-size: 1.1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+.count.forgotten-count-color {
+  /* Removed color: #F44336; */
 }
 
-.mogwi-sleep-icon, .mogwi-look-icon {
-    width: 80px;
-    height: auto;
-    margin-bottom: 5px;
-}
-
-@media (max-width: 768px) {
-  .daily-study-detail {
-    padding: 15px;
-  }
-  .detail-title {
-    font-size: 1.3rem;
-    margin-bottom: 15px;
-  }
-  .detail-stats .stat-item {
-    padding: 10px 15px;
-    min-width: unset;
-    width: 100%;
-  }
-  .detail-stats .stat-count {
-    font-size: 1.5rem;
-  }
-  .no-data, .no-selection {
-    font-size: 0.95rem;
-  }
-  .mogwi-sleep-icon, .mogwi-look-icon {
-    width: 60px;
-  }
+.no-data-message,
+.no-date-selected-message {
+  font-size: 1rem; /* 폰트 크기를 1.1rem에서 1rem으로 줄임 */
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin-top: 5px; /* 상단 마진 추가 */
 }
 </style>
