@@ -96,11 +96,11 @@ export default {
 
 <style scoped>
 .my-problems-section {
-  background-color: #fcf9fc;
-  border: 1px solid #ede1ff;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   margin-left: 40px;
 }
 
