@@ -1,152 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 메인 뷰 검색창 고정">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Report/DailyStudyDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Report/DailyStudyDetail.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Report/WeeklyBarChart.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Report/WeeklyBarChart.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/ReportView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/ReportView.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ReportController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ReportController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" afterDir="false" />
-    </list>
+    <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExternalProjectsData">
-    <projectState path="$PROJECT_DIR$/mogwi-system">
-      <ProjectState />
-    </projectState>
-  </component>
-  <component name="ExternalProjectsManager">
-    <system id="GRADLE">
-      <state>
-        <projects_view>
-          <tree_state>
-            <expand>
-              <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="mogwi-system" type="f1a62948:ProjectNode" />
-              </path>
-            </expand>
-            <select />
-          </tree_state>
-        </projects_view>
-      </state>
-    </system>
-  </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Class" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
-    <option name="RECENT_BRANCH_BY_REPOSITORY">
-      <map>
-        <entry key="$PROJECT_DIR$" value="ee107af703f01c985d56cadc8658112b99dce15f" />
-      </map>
-    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitRewordedCommitMessages">
-    <option name="commitMessagesMapping">
-      <RewordedCommitMessageMapping>
-        <option name="originalMessage" value="Feat (frontend): 로그인 api 연동" />
-        <option name="rewordedMessage" value="Feat (frontend): 로그인 api 연동" />
-      </RewordedCommitMessageMapping>
-    </option>
-    <option name="currentCommit" value="1" />
-    <option name="onto" value="ba29737d074d3264644d186026899d134dc97227" />
-  </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
-  </component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 6
-}</component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 6
+}]]></component>
   <component name="ProjectId" id="2wwifeOpK4FCAeV3nXTYmtfCGFQ" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.mogwi-system 빌드.executor&quot;: &quot;Run&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.MogwiSystemApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/13-feat-report&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/internetDB/Mogwi/mogwi-system&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "E:/internetDB/Mogwi/mogwi-system",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
-  <component name="RunManager">
-    <configuration default="true" type="Application" factoryName="Application">
-      <module name="Mogwi" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MogwiSystemApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <option name="ACTIVE_PROFILES" value="com.example.project_system.ProjectSystemApplication" />
-      <module name="mogwi-system.main" />
-      <selectedOptions>
-        <option name="module.classpath" />
-      </selectedOptions>
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.mogwi_system.MogwiSystemApplication" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-      <option name="ACTIVE_PROFILES" value="com.example.project_system.ProjectSystemApplication" />
-      <module name="Mogwi" />
-      <selectedOptions>
-        <option name="module.classpath" />
-      </selectedOptions>
-      <option name="SPRING_BOOT_MAIN_CLASS" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="TestNG">
-      <shortenClasspath name="NONE" />
-      <useClassPathOnly />
-      <option name="SUITE_NAME" value="" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="MAIN_CLASS_NAME" value="" />
-      <option name="GROUP_NAME" value="" />
-      <option name="TEST_OBJECT" value="CLASS" />
-      <option name="PARAMETERS" value="" />
-      <option name="OUTPUT_DIRECTORY" value="" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
-      <option name="PROPERTIES_FILE" value="" />
-      <properties />
-      <listeners />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-  </component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -164,211 +46,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746959142961</updated>
       <workItem from="1746959144403" duration="49000" />
-      <workItem from="1747058881994" duration="110000" />
-      <workItem from="1747059000672" duration="151000" />
-      <workItem from="1747059162526" duration="26000" />
-      <workItem from="1747059218084" duration="4977000" />
-      <workItem from="1747148676015" duration="49000" />
-      <workItem from="1747227081852" duration="2069000" />
-      <workItem from="1747235204266" duration="2555000" />
-      <workItem from="1747245222379" duration="1412000" />
-      <workItem from="1747630928559" duration="303000" />
-      <workItem from="1747736720319" duration="920000" />
-      <workItem from="1747991904033" duration="1428000" />
-      <workItem from="1748085500749" duration="9927000" />
-      <workItem from="1748185183763" duration="7722000" />
-      <workItem from="1748704684313" duration="1140000" />
-      <workItem from="1748840808151" duration="867000" />
-      <workItem from="1748846888542" duration="4315000" />
-      <workItem from="1748947062091" duration="1812000" />
-      <workItem from="1748963894607" duration="3028000" />
-      <workItem from="1749001539022" duration="1493000" />
-      <workItem from="1749053516569" duration="937000" />
-      <workItem from="1749286542124" duration="635000" />
-      <workItem from="1749302916387" duration="9792000" />
-      <workItem from="1749320919143" duration="1287000" />
-      <workItem from="1749327534140" duration="184000" />
-      <workItem from="1749327835061" duration="1103000" />
-      <workItem from="1749445879232" duration="8985000" />
-      <workItem from="1749727394974" duration="265000" />
-      <workItem from="1749917814010" duration="5239000" />
-      <workItem from="1749976777629" duration="1480000" />
-      <workItem from="1749978282483" duration="8457000" />
-      <workItem from="1750001426727" duration="7748000" />
-      <workItem from="1750049539049" duration="1754000" />
-      <workItem from="1750071182952" duration="2032000" />
-      <workItem from="1750136781809" duration="850000" />
     </task>
-    <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
-      <option name="closed" value="true" />
-      <created>1747064568630</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1747064568630</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Feat (frontend): 로그인 api 연동">
-      <option name="closed" value="true" />
-      <created>1747064594631</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1747064594631</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Feat (frontend): 로그인 api 연동">
-      <option name="closed" value="true" />
-      <created>1747064616495</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1747064616495</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Feat (backend): 이메일 인증코드 전송 api 구현">
-      <option name="closed" value="true" />
-      <created>1748090981113</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1748090981113</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Feat (backend): SMTP 설정">
-      <option name="closed" value="true" />
-      <created>1748091224299</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1748091224299</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Feat (backend): 의존성 추가">
-      <option name="closed" value="true" />
-      <created>1748091403193</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1748091403193</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Feat (backend): SMTP 설정 추가">
-      <option name="closed" value="true" />
-      <created>1748092011965</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1748092011965</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Feat (backend): MailSender 주입 및 이메일 인증코드 전송 api 구현">
-      <option name="closed" value="true" />
-      <created>1748092068045</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1748092068045</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Feat (backend): 인증코드 발송 메일 설정">
-      <option name="closed" value="true" />
-      <created>1748094314213</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1748094314213</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Feat (backend): 의존성 변경">
-      <option name="closed" value="true" />
-      <created>1748101056749</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1748101056749</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Feat (backend): 회원가입 정보 저장 api 구현">
-      <option name="closed" value="true" />
-      <created>1748188208760</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1748188208760</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Feat (backend): 좋아요 상태 변경 api 구현">
-      <option name="closed" value="true" />
-      <created>1748980371831</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1748980371831</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Feat (frontend): 좋아요 상태 변경 api 연동">
-      <option name="closed" value="true" />
-      <created>1748980404287</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1748980404287</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Feat (backend): 스크랩 상태 변경 api 구현">
-      <option name="closed" value="true" />
-      <created>1748980994848</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1748980994848</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Feat (frontend): 스크랩 상태 변경 api 연동">
-      <option name="closed" value="true" />
-      <created>1748981024903</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1748981024903</updated>
-    </task>
-    <task id="LOCAL-00016" summary="Chore (frontend): 함수 위치 이동">
-      <option name="closed" value="true" />
-      <created>1749002397003</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1749002397003</updated>
-    </task>
-    <task id="LOCAL-00017" summary="Feat (frontend): 메인 뷰 검색창 고정">
-      <option name="closed" value="true" />
-      <created>1749003076812</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1749003076812</updated>
-    </task>
-    <option name="localTasksCounter" value="18" />
     <servers />
-  </component>
-  <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="3" />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Feat (backend): 로그인 api 구현" />
-    <MESSAGE value="Feat (frontend): 로그인 api 연동" />
-    <MESSAGE value="Feat (backend): 이메일 인증코드 전송 api 구현" />
-    <MESSAGE value="Feat (backend): SMTP 설정" />
-    <MESSAGE value="Feat (backend): 의존성 추가" />
-    <MESSAGE value="Feat (backend): SMTP 설정 추가" />
-    <MESSAGE value="Feat (backend): MailSender 주입 및 이메일 인증코드 전송 api 구현" />
-    <MESSAGE value="Feat (backend): 인증코드 발송 메일 설정" />
-    <MESSAGE value="Feat (backend): 의존성 변경" />
-    <MESSAGE value="Feat (backend): 회원가입 정보 저장 api 구현" />
-    <MESSAGE value="Feat (backend): 좋아요 상태 변경 api 구현" />
-    <MESSAGE value="Feat (frontend): 좋아요 상태 변경 api 연동" />
-    <MESSAGE value="Feat (backend): 스크랩 상태 변경 api 구현" />
-    <MESSAGE value="Feat (frontend): 스크랩 상태 변경 api 연동" />
-    <MESSAGE value="Chore (frontend): 함수 위치 이동" />
-    <MESSAGE value="Feat (frontend): 메인 뷰 검색창 고정" />
-    <option name="LAST_COMMIT_MESSAGE" value="Feat (frontend): 메인 뷰 검색창 고정" />
   </component>
 </project>

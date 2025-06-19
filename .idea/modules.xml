@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Mogwi.iml" filepath="$PROJECT_DIR$/.idea/Mogwi.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mogwi-system.main.iml" filepath="$PROJECT_DIR$/.idea/modules/mogwi-system.main.iml" />
     </modules>
   </component>
 </project>
