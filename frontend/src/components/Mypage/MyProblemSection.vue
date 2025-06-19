@@ -1,6 +1,5 @@
 <template>
   <section class="mypage-section my-problems-section">
-    <h2 class="section-title">내가 만든 문제</h2>
     <div class="tabs">
       <button
         :class="{ 'tab-button': true, active: activeTab === 'public' }"
@@ -25,17 +24,13 @@
           v-for="problem in publicProblems"
           :key="problem.id"
           :problem="problem"
-          @click="goToProblem(problem.id)"
-        >
-          <template #actions>
-            <button @click.stop="editProblem(problem.id)" class="action-button edit-button">
-              <i class="fas fa-edit"></i> 수정
-            </button>
-            <button @click.stop="deleteProblem(problem.id)" class="action-button delete-button">
-              <i class="fas fa-trash-alt"></i> 삭제
-            </button>
-          </template>
-        </ProblemListItem>
+          :isLiked="problem.isLiked"
+          :showPublicTag="true"
+          :showCounts="true"
+          :likeCount="problem.likeCount"
+          :scrapCount="problem.scrapCount"
+          @toggle-like="onToggleLike"
+        />
       </div>
 
       <div v-if="activeTab === 'private'" class="problem-list">
@@ -46,17 +41,13 @@
           v-for="problem in privateProblems"
           :key="problem.id"
           :problem="problem"
-          @click="goToProblem(problem.id)"
-        >
-          <template #actions>
-            <button @click.stop="editProblem(problem.id)" class="action-button edit-button">
-              <i class="fas fa-edit"></i> 수정
-            </button>
-            <button @click.stop="deleteProblem(problem.id)" class="action-button delete-button">
-              <i class="fas fa-trash-alt"></i> 삭제
-            </button>
-          </template>
-        </ProblemListItem>
+          :isLiked="problem.isLiked"
+          :showPublicTag="true"
+          :showCounts="true"
+          :likeCount="problem.likeCount"
+          :scrapCount="problem.scrapCount"
+          @toggle-like="onToggleLike"
+        />
       </div>
     </div>
   </section>
@@ -77,7 +68,7 @@ export default {
       default: () => [],
     },
   },
-  emits: ['go-to-problem', 'edit-problem', 'delete-problem'],
+  emits: ['toggle-like'],
   setup(props, { emit }) {
     const activeTab = ref('public'); // 'public' or 'private'
 
@@ -89,25 +80,15 @@ export default {
       props.myProblems.filter(problem => !problem.is_public)
     );
 
-    const goToProblem = (problemId) => {
-      emit('go-to-problem', problemId);
-    };
-
-    const editProblem = (problemId) => {
-      emit('edit-problem', problemId);
-    };
-
-    const deleteProblem = (problemId) => {
-      emit('delete-problem', problemId);
+    const onToggleLike = (problem) => {
+      emit('toggle-like', problem);
     };
 
     return {
       activeTab,
       publicProblems,
       privateProblems,
-      goToProblem,
-      editProblem,
-      deleteProblem,
+      onToggleLike,
     };
   },
 };
@@ -115,21 +96,12 @@ export default {
 
 <style scoped>
 .my-problems-section {
-  background-color: #fcf9fc;
-  border: 1px solid #ede1ff;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.section-title {
-  color: #5a2e87;
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-align: center;
-  border-bottom: 1px dashed #f0e6ff;
-  padding-bottom: 15px;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  margin-left: 40px;
 }
 
 .tabs {
@@ -191,41 +163,9 @@ export default {
   color: #bbb;
 }
 
-.action-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.edit-button {
-  color: #2196F3; /* Blue */
-}
-
-.edit-button:hover {
-  background-color: #e3f2fd;
-}
-
-.delete-button {
-  color: #F44336; /* Red */
-}
-
-.delete-button:hover {
-  background-color: #ffebee;
-}
-
 @media (max-width: 768px) {
   .my-problems-section {
     padding: 20px;
-  }
-  .section-title {
-    font-size: 1.5rem;
   }
   .tabs {
     flex-wrap: wrap;
@@ -236,10 +176,6 @@ export default {
     font-size: 0.9rem;
     flex-grow: 1;
     justify-content: center;
-  }
-  .action-button {
-    font-size: 0.8rem;
-    padding: 3px 8px;
   }
 }
 </style>

@@ -1,62 +1,62 @@
 <template>
   <section class="mypage-section user-profile-section">
     <div class="profile-header">
-      <h2 class="section-title">내 정보</h2>
+      <h2 class="section-title">{{ nickname }} 님 안녕하세요.</h2>
+      <!-- 정보 수정 버튼 클릭 시 모달 열기 -->
       <button @click="$emit('edit-info')" class="edit-info-button">
-        <i class="fas fa-user-edit"></i> 정보 수정
+        <img src="@/assets/icons/edit.png" alt="수정" class="edit-icon" /> 수정
       </button>
     </div>
-    <div class="profile-content">
-      <div class="profile-item nickname-display" v-if="!isEditingNickname">
-        <span class="label">닉네임:</span>
-        <span class="value">{{ nickname }}</span>
-        <button @click="startEditingNickname" class="edit-nickname-button">
-          <i class="fas fa-pencil-alt"></i>
-        </button>
-      </div>
-      <div class="profile-item nickname-edit" v-else>
-        <label for="nickname-input" class="label">새 닉네임:</label>
-        <input
-          type="text"
-          id="nickname-input"
-          v-model="newNickname"
-          class="nickname-input"
-          @keyup.enter="saveNickname"
-          maxlength="15"
-        />
-        <button @click="saveNickname" class="save-nickname-button">저장</button>
-        <button @click="cancelEditingNickname" class="cancel-nickname-button">취소</button>
-      </div>
-      </div>
+
+    <!-- 정보 수정 모달 컴포넌트 -->
+    <EditProfileModal
+      v-if="showEditProfileModal"
+      :initial-nickname="nickname"
+      :initial-email="userEmail"
+      @close="closeEditProfileModal"
+      @update-profile="handleProfileUpdate"
+    />
   </section>
 </template>
 
 <script>
 import { ref, watch } from 'vue';
+import EditProfileModal from './EditProfileModal.vue'; // 새로운 모달 컴포넌트 임포트
 
 export default {
   name: 'UserProfile',
+  components: {
+    EditProfileModal, // 컴포넌트 등록
+  },
   props: {
     nickname: {
       type: String,
       required: true,
     },
+    // UserProfile에서 이메일 정보를 받아서 표시할 수 있도록 prop 추가
+    userEmail: {
+      type: String,
+      default: null,
+    }
   },
-  emits: ['update-nickname', 'edit-info'],
+  emits: ['update-nickname', 'edit-info'], // edit-info는 이제 직접 모달을 띄우므로 필요 없을 수 있음 (선택적)
   setup(props, { emit }) {
     const isEditingNickname = ref(false);
     const newNickname = ref('');
+    const showEditProfileModal = ref(false); // 정보 수정 모달 표시 여부
 
     // props.nickname이 변경될 때마다 newNickname을 초기화 (외부에서 닉네임이 변경될 경우 대비)
     watch(() => props.nickname, (val) => {
       newNickname.value = val;
     }, { immediate: true });
 
+    // 닉네임 편집 시작
     const startEditingNickname = () => {
-      newNickname.value = props.nickname; // 현재 닉네임을 편집 필드에 로드
+      newNickname.value = props.nickname;
       isEditingNickname.value = true;
     };
 
+    // 닉네임 저장
     const saveNickname = () => {
       if (newNickname.value.trim() && newNickname.value !== props.nickname) {
         emit('update-nickname', newNickname.value.trim());
@@ -64,39 +64,76 @@ export default {
       isEditingNickname.value = false;
     };
 
+    // 닉네임 편집 취소
     const cancelEditingNickname = () => {
       isEditingNickname.value = false;
-      newNickname.value = props.nickname; // 취소 시 원래 닉네임으로 되돌림
+      newNickname.value = props.nickname;
+    };
+
+    // 정보 수정 모달 열기
+    const openEditProfileModal = () => {
+      showEditProfileModal.value = true;
+      // 기존 emit('edit-info')는 이제 모달이 직접 팝업되므로 필요 없을 수 있습니다.
+      // 필요하다면 부모에게 알림용으로 유지할 수 있습니다.
+      emit('edit-info'); // MypageView에 alert 메시지를 띄우기 위해 유지
+    };
+
+    // 정보 수정 모달 닫기
+    const closeEditProfileModal = () => {
+      showEditProfileModal.value = false;
+    };
+
+    // 모달에서 프로필 업데이트 이벤트 수신
+    const handleProfileUpdate = (updatedData) => {
+      // 여기서는 UserProfile 컴포넌트의 닉네임만 업데이트
+      // 실제로는 MypageView로 이벤트를 다시 올려서 전체 데이터를 새로고침하거나
+      // Vuex 스토어에서 사용자 정보를 업데이트해야 합니다.
+      if (updatedData.nickname) {
+        emit('update-nickname', updatedData.nickname); // 닉네임 업데이트 이벤트 발생
+      }
+      // 이메일이나 다른 정보는 MypageView에서 다시 fetchMypageData()를 통해 갱신
+      closeEditProfileModal();
     };
 
     return {
       isEditingNickname,
       newNickname,
+      showEditProfileModal,
       startEditingNickname,
       saveNickname,
       cancelEditingNickname,
+      openEditProfileModal,
+      closeEditProfileModal,
+      handleProfileUpdate,
     };
   },
 };
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 (MypageView.vue의 스타일과 연동) */
 .user-profile-section {
-  background-color: #f7f0ff;
+  background-color: #fff;
   border: 1px solid #e5d8f7;
   border-radius: 10px;
-  padding: 25px;
+  padding: 50px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   margin-bottom: 30px;
+  max-width: 1400px;
+  width: 100%;
+  box-sizing: border-box;
+  /* margin-left는 MypageView의 main-content 패딩으로 충분하므로 제거 */
+  margin-left: 0; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100px;
 }
 
 .profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px dashed #f0e6ff;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
 }
 
 .section-title {
@@ -107,26 +144,40 @@ export default {
 }
 
 .edit-info-button {
-  background-color: #8c5dff;
-  color: white;
-  border: none;
-  padding: 8px 15px;
+  background-color: #f3eaff;
+  color: #6a2dbd;
+  border: 1.5px solid #e0d0ff;
+  padding: 10px 18px;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  line-height: 1.2;
+  box-shadow: 0 2px 8px rgba(106, 45, 189, 0.06);
+  outline: none;
 }
 
-.edit-info-button:hover {
-  background-color: #7a4bb7;
-  transform: translateY(-2px);
+.edit-info-button:hover, .edit-info-button:focus {
+  background-color: #e6dbff;
+  color: #4a1e77;
+  box-shadow: 0 4px 16px rgba(106, 45, 189, 0.10);
+  border-color: #cbb6f7;
+}
+
+.edit-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .profile-content {
   text-align: left;
+  padding-top: 10px; /* 닉네임/이메일 정보 섹션 상단 여백 */
 }
 
 .profile-item {
@@ -135,8 +186,8 @@ export default {
   margin-bottom: 15px;
   font-size: 1.1rem;
   color: #4a1e77;
-  background-color: #fff;
-  padding: 10px 15px;
+  background-color: #fcfaff; /* 더 밝은 배경색으로 구분 */
+  padding: 12px 18px; /* 패딩 조정 */
   border-radius: 8px;
   border: 1px solid #e9dffc;
 }
@@ -147,7 +198,7 @@ export default {
 
 .label {
   font-weight: 600;
-  margin-right: 10px;
+  margin-right: 15px; /* 라벨과 값 사이 간격 증가 */
   color: #6a3d9a;
   min-width: 80px;
 }
@@ -155,6 +206,7 @@ export default {
 .value {
   flex-grow: 1;
   font-weight: 500;
+  color: #333;
 }
 
 .nickname-display {
@@ -180,7 +232,8 @@ export default {
 .nickname-edit {
   justify-content: flex-start;
   gap: 10px;
-  flex-wrap: wrap; /* 모바일에서 버튼이 줄바꿈되도록 */
+  flex-wrap: wrap;
+  flex-grow: 1; /* 입력 필드와 버튼이 공간을 채우도록 */
 }
 
 .nickname-input {
@@ -189,7 +242,7 @@ export default {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1rem;
-  max-width: 250px; /* 입력 필드 최대 너비 제한 */
+  max-width: 250px;
 }
 
 .save-nickname-button, .cancel-nickname-button {
@@ -241,7 +294,7 @@ export default {
   }
   .label {
     min-width: 60px;
-    margin-bottom: 5px; /* 모바일에서 줄바꿈 시 간격 */
+    margin-bottom: 5px;
   }
   .nickname-edit {
     flex-direction: column;

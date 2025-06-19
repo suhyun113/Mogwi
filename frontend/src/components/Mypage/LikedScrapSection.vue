@@ -1,6 +1,5 @@
 <template>
   <section class="mypage-section liked-scrap-section">
-    <h2 class="section-title">활동 내역</h2>
     <div class="tabs">
       <button
         :class="{ 'tab-button': true, active: activeTab === 'liked' }"
@@ -25,7 +24,10 @@
           v-for="problem in likedProblems"
           :key="problem.id"
           :problem="problem"
-          @click="goToProblem(problem.id)"
+          :isLiked="true"
+          :isScrapped="false"
+          :showPublicTag="false"
+          @toggle-like="onToggleLike"
         />
       </div>
 
@@ -37,7 +39,10 @@
           v-for="problem in scrapedProblems"
           :key="problem.id"
           :problem="problem"
-          @click="goToProblem(problem.id)"
+          :isLiked="problem.isLiked"
+          :isScrapped="true"
+          :showPublicTag="false"
+          @toggle-like="onToggleLike"
         />
       </div>
     </div>
@@ -63,17 +68,17 @@ export default {
       default: () => [],
     },
   },
-  emits: ['go-to-problem'],
+  emits: ['toggle-like'],
   setup(props, { emit }) {
     const activeTab = ref('liked'); // 'liked' or 'scraped'
 
-    const goToProblem = (problemId) => {
-      emit('go-to-problem', problemId);
+    const onToggleLike = (problem) => {
+      emit('toggle-like', problem);
     };
 
     return {
       activeTab,
-      goToProblem,
+      onToggleLike,
     };
   },
 };
@@ -81,21 +86,12 @@ export default {
 
 <style scoped>
 .liked-scrap-section {
-  background-color: #fcf9fc;
-  border: 1px solid #ede1ff;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.section-title {
-  color: #5a2e87;
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-align: center;
-  border-bottom: 1px dashed #f0e6ff;
-  padding-bottom: 15px;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  margin-left: 40px;
 }
 
 .tabs {
@@ -160,9 +156,6 @@ export default {
 @media (max-width: 768px) {
   .liked-scrap-section {
     padding: 20px;
-  }
-  .section-title {
-    font-size: 1.5rem;
   }
   .tabs {
     flex-wrap: wrap;
