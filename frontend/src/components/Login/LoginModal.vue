@@ -60,7 +60,7 @@ function onLogin() {
     return
   }
 
-  axios.post('/api/login', {
+  axios.post('/api/auth/login', {
     userid: userid.value,
     userpass: userpass.value
   })
