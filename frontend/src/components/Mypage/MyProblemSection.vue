@@ -25,6 +25,10 @@
           :key="problem.id"
           :problem="problem"
           :isLiked="problem.isLiked"
+          :showPublicTag="true"
+          :showCounts="true"
+          :likeCount="problem.likeCount"
+          :scrapCount="problem.scrapCount"
           @toggle-like="onToggleLike"
         />
       </div>
@@ -38,6 +42,10 @@
           :key="problem.id"
           :problem="problem"
           :isLiked="problem.isLiked"
+          :showPublicTag="true"
+          :showCounts="true"
+          :likeCount="problem.likeCount"
+          :scrapCount="problem.scrapCount"
           @toggle-like="onToggleLike"
         />
       </div>

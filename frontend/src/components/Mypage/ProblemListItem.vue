@@ -2,14 +2,25 @@
   <div class="problem-list-item">
     <div class="problem-info">
       <span class="problem-title">{{ problem.title }}</span>
-      <span v-if="problem.is_public !== undefined" :class="['problem-status', { 'public': problem.is_public, 'private': !problem.is_public }]">
+      <span v-if="showPublicTag && problem.is_public !== undefined" :class="['problem-status', { 'public': problem.is_public, 'private': !problem.is_public }]">
         {{ problem.is_public ? '공개' : '비공개' }}
       </span>
       <span v-if="problem.topic" class="problem-topic">{{ problem.topic }}</span>
     </div>
     <div class="problem-actions">
-      <button class="like-btn" @click.stop="toggleLike">
-        <img :src="isLiked ? require('@/assets/icons/like_filled.png') : require('@/assets/icons/like_outline.png')" alt="좋아요" />
+      <template v-if="showCounts">
+        <span class="count-item">
+          <img src="@/assets/icons/like_outline.png" alt="좋아요" />
+          <span class="count-text">{{ likeCount }}</span>
+        </span>
+        <span class="count-item">
+          <img src="@/assets/icons/scrap_filled.png" alt="스크랩" />
+          <span class="count-text">{{ scrapCount }}</span>
+        </span>
+      </template>
+      <button v-else class="like-btn" @click.stop="toggleLike">
+        <img v-if="isScrapped" :src="require('@/assets/icons/scrap_filled.png')" alt="스크랩" />
+        <img v-else :src="isLiked ? require('@/assets/icons/like_filled.png') : require('@/assets/icons/like_outline.png')" alt="좋아요" />
       </button>
     </div>
   </div>
@@ -26,6 +37,26 @@ export default {
     isLiked: {
       type: Boolean,
       default: false,
+    },
+    isScrapped: {
+      type: Boolean,
+      default: false,
+    },
+    showPublicTag: {
+      type: Boolean,
+      default: true,
+    },
+    showCounts: {
+      type: Boolean,
+      default: false,
+    },
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    scrapCount: {
+      type: Number,
+      default: 0,
     },
   },
   emits: ['toggle-like'],
@@ -94,7 +125,24 @@ export default {
 .problem-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
+}
+.count-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1rem;
+  color: #b7a3e3;
+}
+.count-item img {
+  width: 22px;
+  height: 22px;
+}
+.count-text {
+  min-width: 16px;
+  text-align: center;
+  font-size: 1rem;
+  color: #b7a3e3;
 }
 .like-btn {
   background: none;

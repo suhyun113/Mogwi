@@ -25,6 +25,8 @@
           :key="problem.id"
           :problem="problem"
           :isLiked="true"
+          :isScrapped="false"
+          :showPublicTag="false"
           @toggle-like="onToggleLike"
         />
       </div>
@@ -38,6 +40,8 @@
           :key="problem.id"
           :problem="problem"
           :isLiked="problem.isLiked"
+          :isScrapped="true"
+          :showPublicTag="false"
           @toggle-like="onToggleLike"
         />
       </div>
