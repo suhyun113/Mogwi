@@ -10,10 +10,8 @@
       <button @click="showLoginModal = true" class="login-button">로그인</button>
     </div>
     <div v-else class="mypage-layout">
-      <!-- Left Sidebar Navigation -->
       <aside class="sidebar">
-        <!-- 'MY PAGE' 영어 텍스트 제거 -->
-        <h2 class="sidebar-title" style="display: none;">MY PAGE</h2> 
+        <h2 class="sidebar-title" style="display: none;">MY PAGE</h2>
         <nav class="sidebar-nav">
           <a href="#" :class="{ 'nav-item': true, 'active': activeSection === 'profile' }" @click.prevent="activeSection = 'profile'">
             <i class="fas fa-user-circle"></i> 내 정보
@@ -24,17 +22,13 @@
           <a href="#" :class="{ 'nav-item': true, 'active': activeSection === 'my-problems' }" @click.prevent="activeSection = 'my-problems'">
             <i class="fas fa-folder-open"></i> 내가 만든 문제
           </a>
-          <!-- Add more navigation items if needed -->
           <a href="#" class="nav-item nav-item-danger" @click.prevent="handleDeleteAccount">
             <i class="fas fa-user-times"></i> 회원 탈퇴
           </a>
         </nav>
       </aside>
 
-      <!-- Main Content Area -->
       <main class="main-content">
-        <!-- '내 정보' 텍스트 제거 (타이틀 없음) -->
-
         <section v-if="activeSection === 'profile'" class="content-section">
           <UserProfile
             :nickname="userNickname"
@@ -68,7 +62,6 @@
       {{ nicknameUpdateMessage }}
     </div>
 
-    <!-- Custom Confirmation Modal for Delete Account or Problem -->
     <div v-if="showDeleteConfirmModal" class="modal-overlay">
       <div class="modal-content">
         <h3 class="modal-title">
@@ -76,8 +69,8 @@
         </h3>
         <p class="modal-message">
             {{ deleteTarget === 'account' ?
-               '정말로 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.' :
-               '정말로 이 문제를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' }}
+                '정말로 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.' :
+                '정말로 이 문제를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' }}
         </p>
         <div class="modal-actions">
           <button @click="deleteTarget === 'account' ? confirmDeleteAccount() : confirmDeleteProblem()" class="confirm-button">
@@ -97,6 +90,7 @@
 </template>
 
 <script>
+// (Your existing script tag content goes here, no changes needed from the previous fix)
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
@@ -129,7 +123,7 @@ export default {
 
     const userNickname = ref('');
     const likedProblems = ref([]);
-    const scrapedProblems = ref([]);
+    const scrapedProblems = ref([]); // FIX: Ensure this is declared as a ref
     const myProblems = ref([]);
 
     const activeSection = ref('profile');
@@ -287,7 +281,7 @@ export default {
       isLoggedIn,
       userNickname,
       likedProblems,
-      scrapedProblems,
+      scrapedProblems, 
       myProblems,
       activeSection,
       showLoginModal,
@@ -309,6 +303,21 @@ export default {
 };
 </script>
 
+<style>
+/* 전역 스타일: HTML 및 BODY에 적용하여 스크롤바를 없앱니다. */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* 뷰포트 높이 전체를 사용 */
+    overflow: hidden; /* 스크롤바 숨기기 */
+    box-sizing: border-box; /* 모든 요소에 적용 (패딩/보더를 너비/높이에 포함) */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit; /* 상속받도록 설정 */
+}
+</style>
+
 <style scoped>
 /* Google Fonts - Inter (or Pretendard if available via local import) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -319,11 +328,12 @@ export default {
   align-items: center;
   padding: 40px 20px;
   background-color: #f7f3ff; /* 연한 보라색 배경 */
-  min-height: 100vh;
+  min-height: 100vh; /* 이 부분을 유지하면서 내부 콘텐츠가 넘치지 않게 합니다. */
   width: 100%;
   box-sizing: border-box;
   font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
+  /* overflow-y: auto;  필요시 이 부분은 개별 섹션에 적용하여 해당 섹션만 스크롤되게 할 수 있습니다. */
 }
 
 .mypage-layout {
@@ -336,7 +346,8 @@ export default {
   box-shadow: none; /* 그림자 제거 */
   border: none; /* 테두리 제거 */
   overflow: hidden;
-  min-height: 700px;
+  /* min-height: 700px;  이 값을 제거하거나 `auto`로 변경하여 콘텐츠에 따라 높이 조절 */
+  height: calc(100vh - 80px); /* 뷰포트 높이에서 상하 패딩을 뺀 값으로 설정 */
   align-items: flex-start; /* 메인 컨텐츠와 사이드바 상단 정렬 */
   margin-left: 0;
   margin-right: auto;
@@ -361,6 +372,8 @@ export default {
   align-items: center;
   margin-top: 60px;
   margin-left: 140px;
+  /* 높이 조정을 통해 부모와 동일하게 채우기 */
+  height: 100%;
 }
 
 .sidebar-title {
@@ -450,6 +463,16 @@ export default {
   padding: 0 40px 40px 40px; /* 상단 패딩 더 줄임 */
   background-color: transparent; /* 흰색 배경 제거 */
   margin-top: 100px;
+  /* 높이 조정을 통해 부모와 동일하게 채우고, 필요시 내부 스크롤 허용 */
+  height: calc(100% - 100px); /* main-content 자체의 margin-top을 뺀 높이 */
+  overflow-y: auto; /* 이 섹션만 내용이 넘칠 때 스크롤 가능하게 함 */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Chrome, Safari, Opera 숨기기 */
+.main-content::-webkit-scrollbar {
+    display: none;
 }
 
 .content-section {
@@ -482,6 +505,7 @@ export default {
   max-width: 600px;
   margin-top: 80px;
   border: 1px solid #e0d0ff;
+  height: auto; /* 높이를 콘텐츠에 맞게 조절 */
 }
 
 .mogwi-character-small {
@@ -644,6 +668,7 @@ export default {
   .mypage-layout {
     flex-direction: column;
     max-width: 700px;
+    height: auto; /* 모바일에서는 높이 자동 조절 */
   }
 
   .sidebar {
@@ -652,6 +677,9 @@ export default {
     border-right: none;
     border-bottom: 1px solid #efdfff;
     padding: 20px;
+    margin-top: 0; /* 모바일에서 마진 제거 */
+    margin-left: 0; /* 모바일에서 마진 제거 */
+    height: auto; /* 모바일에서 높이 자동 조절 */
   }
 
   .sidebar-nav {
@@ -678,6 +706,9 @@ export default {
 
   .main-content {
     padding: 30px 20px;
+    margin-top: 0; /* 모바일에서 마진 제거 */
+    height: auto; /* 모바일에서 높이 자동 조절 */
+    overflow-y: visible; /* 모바일에서는 스크롤 숨기지 않음 */
   }
 
   .page-title {
