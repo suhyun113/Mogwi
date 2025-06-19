@@ -24,7 +24,8 @@
           v-for="problem in likedProblems"
           :key="problem.id"
           :problem="problem"
-          @click="goToProblem(problem.id)"
+          :isLiked="true"
+          @toggle-like="onToggleLike"
         />
       </div>
 
@@ -36,7 +37,8 @@
           v-for="problem in scrapedProblems"
           :key="problem.id"
           :problem="problem"
-          @click="goToProblem(problem.id)"
+          :isLiked="problem.isLiked"
+          @toggle-like="onToggleLike"
         />
       </div>
     </div>
@@ -62,17 +64,17 @@ export default {
       default: () => [],
     },
   },
-  emits: ['go-to-problem'],
+  emits: ['toggle-like'],
   setup(props, { emit }) {
     const activeTab = ref('liked'); // 'liked' or 'scraped'
 
-    const goToProblem = (problemId) => {
-      emit('go-to-problem', problemId);
+    const onToggleLike = (problem) => {
+      emit('toggle-like', problem);
     };
 
     return {
       activeTab,
-      goToProblem,
+      onToggleLike,
     };
   },
 };
@@ -80,11 +82,11 @@ export default {
 
 <style scoped>
 .liked-scrap-section {
-  background-color: #fcf9fc;
-  border: 1px solid #ede1ff;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   margin-left: 40px;
 }
 
