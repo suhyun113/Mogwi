@@ -419,7 +419,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: 32px;
+  margin-top: 60px;
+  margin-left: 140px;
 }
 
 .sidebar-title {

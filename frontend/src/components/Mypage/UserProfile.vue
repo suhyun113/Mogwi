@@ -63,20 +63,23 @@ export default {
   background-color: #fff;
   border: 1px solid #e5d8f7;
   border-radius: 10px;
-  padding: 64px;
+  padding: 50px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   margin-bottom: 30px;
   max-width: 1400px;
   width: 100%;
   box-sizing: border-box;
   margin-left: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100px;
 }
 
 .profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
 }
 
 .section-title {
