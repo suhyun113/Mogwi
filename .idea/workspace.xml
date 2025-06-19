@@ -5,12 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 메인 뷰 검색창 고정">
+      <change afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/MypageController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/UserController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Report/DailyStudyDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Report/DailyStudyDetail.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Report/WeeklyBarChart.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Report/WeeklyBarChart.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/ReportView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/ReportView.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ReportController.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/controller/ReportController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +62,7 @@
     <option name="onto" value="ba29737d074d3264644d186026899d134dc97227" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="보안 분석" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -86,7 +83,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.MogwiSystemApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/13-feat-report&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/16-feat-mypage&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;E:/internetDB/Mogwi/mogwi-system&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -198,6 +195,7 @@
       <workItem from="1750049539049" duration="1754000" />
       <workItem from="1750071182952" duration="2032000" />
       <workItem from="1750136781809" duration="850000" />
+      <workItem from="1750349630313" duration="890000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />
