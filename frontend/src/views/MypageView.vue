@@ -376,31 +376,34 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
-  background-color: #f0f2f5; /* Soft light gray background */
+  /* 변경: 더 밝고 부드러운 보라색 계열 배경 */
+  background-color: #f7f3ff; /* 연한 보라색 배경 */
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
-  font-family: 'Inter', 'Pretendard', sans-serif; /* Prefer Inter, fallback to Pretendard */
+  font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
 }
 
 .mypage-layout {
   display: flex;
   width: 100%;
-  max-width: 1200px; /* Increased max-width for wider layout */
+  max-width: 1200px;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Softer, larger shadow */
-  overflow: hidden; /* Ensures rounded corners are respected */
-  min-height: 700px; /* Minimum height for better visual */
+  /* 변경: 그림자 더 부드럽고 옅게 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Soft, subtle shadow */
+  overflow: hidden;
+  min-height: 700px;
+  border: 1px solid #e0d0ff; /* 기존 보라색 테두리 유지 */
 }
 
 /* Sidebar Styling */
 .sidebar {
-  flex: 0 0 250px; /* Fixed width sidebar */
-  background-color: #f8f9fa; /* Lighter sidebar background */
+  flex: 0 0 250px;
+  background-color: #fcfaff; /* Sidebar 배경을 더 밝게 */
   padding: 30px 20px;
-  border-right: 1px solid #e0e0e0; /* Subtle separator */
+  border-right: 1px solid #efdfff; /* 테두리 색상 조정 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -409,27 +412,27 @@ export default {
 .sidebar-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #2c3e50; /* Darker text for title */
+  color: #6a0dad; /* 보라색 계열로 변경 */
   margin-bottom: 40px;
   text-align: center;
   width: 100%;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #e9dffc; /* 테두리 색상 조정 */
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 10px; /* Spacing between nav items */
+  gap: 8px; /* 간격 살짝 줄임 */
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 15px; /* Icon and text spacing */
-  padding: 15px 20px;
-  font-size: 1.1rem;
+  gap: 12px; /* 아이콘과 텍스트 간격 조정 */
+  padding: 14px 20px; /* 패딩 조정 */
+  font-size: 1.05rem; /* 폰트 크기 조정 */
   font-weight: 500;
   color: #555;
   text-decoration: none;
@@ -442,40 +445,57 @@ export default {
 }
 
 .nav-item i {
-  font-size: 1.2rem;
-  color: #888;
+  font-size: 1.1rem; /* 아이콘 크기 조정 */
+  color: #8a2be2; /* 보라색 계열로 변경 */
 }
 
 .nav-item:hover {
-  background-color: #e9ecef; /* Lighter hover background */
-  color: #2c3e50;
+  background-color: #f0e6ff; /* 연한 보라색 호버 */
+  color: #6a0dad; /* 호버 시 진한 보라색 */
 }
 
 .nav-item.active {
-  background-color: #e0f7fa; /* Active item background - light blue/cyan */
-  color: #007bff; /* Primary active color */
+  background-color: #e6e0ff; /* 활성 상태 배경색 (더 밝은 보라색) */
+  color: #6a0dad; /* 활성 상태 텍스트 색상 */
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1); /* Subtle shadow for active item */
+  /* 변경: 그림자 더 옅게 */
+  box-shadow: 0 1px 6px rgba(106, 13, 219, 0.1); /* Subtle purple shadow */
+  position: relative; /* 테두리 효과를 위해 */
 }
 
+/* 활성 상태 아이템의 왼쪽 보더 강조 (참고 이미지처럼) */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 80%;
+  width: 4px;
+  background-color: #8a2be2; /* 강조 보라색 */
+  border-radius: 2px;
+}
+
+
 .nav-item.active i {
-  color: #007bff; /* Active icon color */
+  color: #6a0dad; /* 활성 상태 아이콘 색상 */
 }
 
 .nav-item-danger {
-  color: #dc3545; /* Red for delete/danger actions */
-  margin-top: 20px; /* Separator for delete button */
+  color: #e2586a; /* 더 부드러운 빨간색 계열 */
+  margin-top: 20px;
 }
 .nav-item-danger:hover {
-  background-color: #f8d7da; /* Light red hover */
-  color: #a71d2a;
+  background-color: #ffe6e9; /* 연한 빨간색 호버 */
+  color: #d13a4f;
 }
 
 
 /* Main Content Styling */
 .main-content {
-  flex: 1; /* Takes remaining space */
+  flex: 1;
   padding: 40px;
+  background-color: #ffffff; /* 메인 컨텐츠 배경을 흰색으로 유지하여 깔끔하게 */
 }
 
 .page-title {
@@ -483,16 +503,15 @@ export default {
   font-weight: 700;
   color: #2c3e50;
   margin-bottom: 30px;
-  border-bottom: 2px solid #e9ecef; /* Lighter border */
+  border-bottom: 2px solid #e9ecef;
   padding-bottom: 15px;
-  text-align: left; /* Align to left like the reference image */
+  text-align: left;
 }
 
 .content-section {
-  background: #ffffff; /* Sections inside main content can have a subtle background if needed */
+  background: #ffffff;
   border-radius: 8px;
-  /* Removed box-shadow here, as mypage-layout already has it */
-  padding: 0; /* UserProfile, LikedScrapSection, MyProblemSection should manage their own padding */
+  padding: 0;
 }
 
 /* General Messages */
@@ -504,7 +523,7 @@ export default {
   width: 100%;
 }
 
-/* Logged-out Prompt */
+/* Logged-out Prompt - 기존 디자인 유지 (모귀 캐릭터와 잘 어울림) */
 .logged-out-prompt {
   display: flex;
   flex-direction: column;
@@ -513,12 +532,12 @@ export default {
   text-align: center;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   padding: 60px 40px;
   width: 100%;
   max-width: 600px;
   margin-top: 80px;
-  border: 1px solid #e0d0ff; /* Keeping the original border style as it fits */
+  border: 1px solid #e0d0ff;
 }
 
 .mogwi-character-small {
@@ -543,8 +562,9 @@ export default {
   color: #8c5dff;
 }
 
+/* 로그인 버튼 스타일도 통일된 보라색 그라데이션으로 변경 */
 .login-button {
-  background-image: linear-gradient(to right, #8c5dff 0%, #a471ff 100%);
+  background-image: linear-gradient(to right, #8a2be2 0%, #a471ff 100%); /* 보라색 그라데이션 */
   color: white;
   border: none;
   padding: 15px 35px;
@@ -553,12 +573,12 @@ export default {
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(140, 93, 255, 0.4);
+  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4); /* 보라색 그림자 */
 }
 
 .login-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(140, 93, 255, 0.6);
+  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6); /* 보라색 그림자 */
   background-position: right center;
 }
 
@@ -611,7 +631,8 @@ export default {
   background: white;
   padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  /* 변경: 모달 그림자 더 부드럽게 */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 90%;
   max-width: 450px;
@@ -649,19 +670,19 @@ export default {
 }
 
 .confirm-button {
-  background-color: #dc3545; /* Red for confirmation */
+  background-color: #8a2be2; /* 보라색으로 변경 */
   color: white;
-  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3); /* 보라색 그림자 */
 }
 
 .confirm-button:hover {
-  background-color: #c82333;
+  background-color: #6a0dad; /* 더 진한 보라색 */
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(220, 53, 69, 0.4);
+  box-shadow: 0 6px 15px rgba(138, 43, 226, 0.4);
 }
 
 .cancel-button {
-  background-color: #e9ecef; /* Light gray for cancel */
+  background-color: #e9ecef;
   color: #444;
 }
 
@@ -678,7 +699,7 @@ export default {
 /* Media Queries for Responsiveness */
 @media (max-width: 992px) {
   .mypage-layout {
-    flex-direction: column; /* Stack sidebar and content */
+    flex-direction: column;
     max-width: 700px;
   }
 
@@ -686,13 +707,13 @@ export default {
     flex: none;
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #e0e0e0; /* Add bottom border */
+    border-bottom: 1px solid #efdfff; /* 테두리 색상 조정 */
     padding: 20px;
   }
 
   .sidebar-nav {
-    flex-direction: row; /* Horizontal nav for smaller screens */
-    flex-wrap: wrap; /* Allow wrapping */
+    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
   }
 
@@ -700,6 +721,11 @@ export default {
     padding: 10px 15px;
     font-size: 0.95rem;
     gap: 10px;
+  }
+
+  /* 모바일에서 사이드바 메뉴는 왼쪽 보더 강조 제거 */
+  .nav-item.active::before {
+    display: none;
   }
 
   .sidebar-title {
@@ -713,7 +739,7 @@ export default {
 
   .page-title {
     font-size: 2rem;
-    text-align: center; /* Center title on mobile */
+    text-align: center;
     margin-bottom: 25px;
   }
 }
@@ -725,7 +751,7 @@ export default {
 
   .mypage-layout {
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03); /* 더 옅은 그림자 */
   }
 
   .sidebar {
