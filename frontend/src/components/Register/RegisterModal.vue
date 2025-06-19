@@ -180,7 +180,7 @@ const onRegister = async () => {
   }
 
   try {
-    const res = await axios.post('/api/register', {
+    const res = await axios.post('/api/auth/register', {
       userid: userid.value,
       userpass: userpass.value,
       username: username.value,
