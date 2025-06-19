@@ -38,8 +38,7 @@
         <section v-if="activeSection === 'profile'" class="content-section">
           <UserProfile
             :nickname="userNickname"
-            @update-nickname="handleNicknameUpdate"
-            @edit-info="handleEditInfo"
+            @edit-info="showEditProfileModal = true"
           />
         </section>
 
@@ -88,6 +87,12 @@
         </div>
       </div>
     </div>
+
+    <EditProfileModal
+      v-if="showEditProfileModal"
+      :initialNickname="userNickname"
+      @close="showEditProfileModal = false"
+    />
   </div>
 </template>
 
@@ -102,6 +107,7 @@ import LikedScrapSection from '@/components/Mypage/LikedScrapSection.vue';
 import MyProblemSection from '@/components/Mypage/MyProblemSection.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
+import EditProfileModal from '@/components/Mypage/EditProfileModal.vue';
 
 export default {
   name: 'MypageView',
@@ -111,6 +117,7 @@ export default {
     MyProblemSection,
     LoginModal,
     RegisterModal,
+    EditProfileModal,
   },
   setup() {
     const store = useStore();
@@ -130,6 +137,7 @@ export default {
     const showLoginModal = ref(false);
     const showRegisterModal = ref(false);
     const showDeleteConfirmModal = ref(false);
+    const showEditProfileModal = ref(false);
     const deleteTarget = ref(null); // 'account' or 'problem'
     const problemIdToDelete = ref(null); // 삭제할 문제의 ID
 
@@ -295,6 +303,7 @@ export default {
       confirmDeleteAccount,
       confirmDeleteProblem,
       cancelDelete,
+      showEditProfileModal,
     };
   },
 };
