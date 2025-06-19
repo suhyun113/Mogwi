@@ -91,7 +91,7 @@
 
 <script>
 // (Your existing script tag content goes here, no changes needed from the previous fix)
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
 
@@ -257,6 +257,10 @@ export default {
 
     onMounted(() => {
       fetchMypageData();
+      document.body.classList.add('hide-vertical-scroll');
+    });
+    onUnmounted(() => {
+      document.body.classList.remove('hide-vertical-scroll');
     });
 
     watch(isLoggedIn, (newVal, oldVal) => {
@@ -309,7 +313,6 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%; /* 뷰포트 높이 전체를 사용 */
-    overflow: hidden; /* 스크롤바 숨기기 */
     box-sizing: border-box; /* 모든 요소에 적용 (패딩/보더를 너비/높이에 포함) */
 }
 
@@ -460,14 +463,13 @@ html, body {
 /* Main Content Styling */
 .main-content {
   flex: 1;
-  padding: 0 40px 40px 40px; /* 상단 패딩 더 줄임 */
-  background-color: transparent; /* 흰색 배경 제거 */
+  padding: 0 40px 40px 40px;
+  background-color: transparent;
   margin-top: 100px;
-  /* 높이 조정을 통해 부모와 동일하게 채우고, 필요시 내부 스크롤 허용 */
-  height: calc(100% - 100px); /* main-content 자체의 margin-top을 뺀 높이 */
-  overflow-y: auto; /* 이 섹션만 내용이 넘칠 때 스크롤 가능하게 함 */
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  height: calc(100% - 100px);
+  overflow-y: hidden !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Chrome, Safari, Opera 숨기기 */
