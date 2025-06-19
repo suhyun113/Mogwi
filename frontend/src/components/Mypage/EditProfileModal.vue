@@ -174,7 +174,7 @@ export default {
   background: white;
   padding: 2.5rem 2rem; /* 패딩 조정 */
   width: 100%;
-  max-width: 420px; /* 너비 조정 */
+  max-width: 340px; /* 너비 조정 */
   border-radius: 0; /* 각진 모서리 */
   position: relative;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
