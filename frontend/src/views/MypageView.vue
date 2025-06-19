@@ -33,8 +33,7 @@
 
       <!-- Main Content Area -->
       <main class="main-content">
-        <!-- '내 정보' 텍스트 제거 (getSectionTitle에서 빈 문자열 반환) -->
-        <h1 class="page-title">{{ getSectionTitle(activeSection) }}</h1>
+        <!-- '내 정보' 텍스트 제거 (타이틀 없음) -->
 
         <section v-if="activeSection === 'profile'" class="content-section">
           <UserProfile
@@ -166,68 +165,6 @@ export default {
       }
     };
 
-    const getSectionTitle = (section) => {
-      switch (section) {
-        case 'profile':
-          return '';
-        case 'liked-scrapped':
-          return '좋아요 & 스크랩';
-        case 'my-problems':
-          return '내가 만든 문제';
-        default:
-          return '마이페이지';
-      }
-    };
-
-    const handleNicknameUpdate = async (newNickname) => {
-      if (!isLoggedIn.value) {
-        return;
-      }
-      try {
-        await axios.put(`/api/user/${currentUserId.value}/nickname`, { nickname: newNickname });
-        userNickname.value = newNickname;
-        nicknameUpdateMessage.value = '닉네임이 성공적으로 변경되었습니다.';
-        nicknameUpdateStatus.value = 'success';
-      } catch (err) {
-        console.error('닉네임 업데이트 실패:', err);
-        nicknameUpdateMessage.value = '닉네임 변경에 실패했습니다. 다시 시도해주세요.';
-        nicknameUpdateStatus.value = 'error';
-      } finally {
-        showNicknameUpdateMessage.value = true;
-        setTimeout(() => {
-          showNicknameUpdateMessage.value = false;
-        }, 3000);
-      }
-    };
-
-    const handleEditInfo = () => {
-      nicknameUpdateMessage.value = '정보 수정 페이지로 이동합니다. (기능 미구현)';
-      nicknameUpdateStatus.value = 'success';
-      showNicknameUpdateMessage.value = true;
-      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
-    };
-
-    const goToProblem = (problemId) => {
-      nicknameUpdateMessage.value = `문제 ID ${problemId} 상세 페이지로 이동 (기능 미구현)`;
-      nicknameUpdateStatus.value = 'success';
-      showNicknameUpdateMessage.value = true;
-      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
-    };
-
-    const editProblem = (problemId) => {
-      nicknameUpdateMessage.value = `문제 ID ${problemId} 수정 페이지/모달 열기 (기능 미구현)`;
-      nicknameUpdateStatus.value = 'success';
-      showNicknameUpdateMessage.value = true;
-      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
-    };
-
-    // 내가 만든 문제 삭제 확인 모달 띄우기
-    const deleteProblem = (problemId) => {
-      problemIdToDelete.value = problemId; // 삭제할 문제 ID 저장
-      deleteTarget.value = 'problem'; // 대상 설정
-      showDeleteConfirmModal.value = true;
-    };
-
     // 회원 탈퇴 확인 모달 띄우기
     const handleDeleteAccount = () => {
       deleteTarget.value = 'account'; // 대상 설정
@@ -345,12 +282,6 @@ export default {
       scrapedProblems,
       myProblems,
       activeSection,
-      getSectionTitle,
-      handleNicknameUpdate,
-      handleEditInfo,
-      goToProblem,
-      editProblem,
-      deleteProblem,
       showLoginModal,
       showRegisterModal,
       openLoginModal,
@@ -509,21 +440,7 @@ export default {
   flex: 1;
   padding: 0 40px 40px 40px; /* 상단 패딩 더 줄임 */
   background-color: transparent; /* 흰색 배경 제거 */
-}
-
-.page-title {
-  /* '내 정보' 텍스트 제거에 따른 스타일 조정:
-     높이 유지를 위해 padding-top/bottom 조정, border-bottom은 유지 */
-  font-size: 2.2rem; /* 폰트 크기 유지 */
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 30px;
-  border-bottom: none; /* 구분선 제거 */
-  padding-bottom: 15px;
-  padding-top: 0; /* 상단 패딩 제거 또는 조정 */
-  min-height: 2.2rem; /* 폰트 크기만큼 최소 높이 유지 */
-  line-height: 1; /* 한 줄 높이 */
-  text-align: left;
+  margin-top: 100px;
 }
 
 .content-section {
