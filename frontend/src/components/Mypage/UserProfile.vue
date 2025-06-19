@@ -3,7 +3,7 @@
     <div class="profile-header">
       <h2 class="section-title">{{ nickname }} 님 안녕하세요.</h2>
       <button @click="$emit('edit-info')" class="edit-info-button">
-        <i class="fas fa-user-edit"></i> 정보 수정
+        <img src="@/assets/icons/edit.png" alt="수정" class="edit-icon" /> 수정
       </button>
     </div>
   </section>
@@ -90,22 +90,35 @@ export default {
 }
 
 .edit-info-button {
-  background-color: #8c5dff;
-  color: white;
-  border: none;
-  padding: 8px 15px;
+  background-color: #f3eaff;
+  color: #6a2dbd;
+  border: 1.5px solid #e0d0ff;
+  padding: 10px 18px;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  line-height: 1.2;
+  box-shadow: 0 2px 8px rgba(106, 45, 189, 0.06);
+  outline: none;
 }
 
-.edit-info-button:hover {
-  background-color: #7a4bb7;
-  transform: translateY(-2px);
+.edit-info-button:hover, .edit-info-button:focus {
+  background-color: #e6dbff;
+  color: #4a1e77;
+  box-shadow: 0 4px 16px rgba(106, 45, 189, 0.10);
+  border-color: #cbb6f7;
+}
+
+.edit-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .profile-content {
