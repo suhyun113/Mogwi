@@ -53,7 +53,7 @@
           </p>
         </div>
         <div v-else class="image-preview-wrapper">
-          <img :src="card.image_url" alt="Image Preview" class="preview-img" @error="handleImageError"/>
+          <img :src="getFullImageUrl(card.image_url)" alt="Image Preview" class="preview-img" @error="handleImageError"/>
           <p v-if="imageLoadError" class="image-error-msg">이미지를 불러올 수 없습니다. 파일 형식을 확인하거나 다른 이미지를 시도해주세요.</p>
           <div class="image-actions">
             <button @click="clearImage" class="action-btn clear-image-btn" title="이미지 제거">
@@ -90,6 +90,12 @@ export default {
     const imageLoadError = ref(false);
     const isDragging = ref(false); // For drag and drop visual feedback
     const fileInput = ref(null); // Reference to the hidden file input
+
+    const getFullImageUrl = (relativeUrl) => {
+      if (!relativeUrl) return '';
+      if (relativeUrl.startsWith('http')) return relativeUrl;
+      return `http://localhost:8000${relativeUrl}`; // 실제 백엔드 주소에 따라 조정
+    };
 
     const processFile = (file) => {
       if (file && file.type.startsWith('image/')) {
@@ -173,6 +179,7 @@ export default {
       handleDrop,
       handleImageError,
       clearImage,
+      getFullImageUrl
     };
   },
 };
