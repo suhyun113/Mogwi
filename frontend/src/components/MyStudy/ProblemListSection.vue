@@ -186,7 +186,7 @@ export default {
         const handleToggleLike = async (problemId) => {
             if (!checkLoginAndExecute()) return;
             try {
-                const response = await axios.post(`/api/mystudy/problems/${problemId}/toggle-like`, {
+                const response = await axios.post(`/api/like/${problemId}`, {
                     userId: props.currentUserId,
                     field: 'isLiked',
                 });
@@ -206,7 +206,7 @@ export default {
         const handleToggleScrap = async (problemId) => {
             if (!checkLoginAndExecute()) return;
             try {
-                const response = await axios.post(`/api/mystudy/problems/${problemId}/toggle-scrap`, {
+                const response = await axios.post(`/api/scrap/${problemId}/toggle-scrap`, {
                     userId: props.currentUserId,
                     field: 'isScrapped',
                 });

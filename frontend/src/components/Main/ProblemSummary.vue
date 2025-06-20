@@ -109,8 +109,7 @@ export default {
       this.localProblem.likes += newLiked ? 1 : -1
 
       axios.post(`/api/like/${this.localProblem.id}`, {
-        userId: this.currentUserId,
-        liked: newLiked
+        userId: this.currentUserId
       }).then(() => {
         this.$emit('update-like', this.localProblem)
       }).catch((error) => {
@@ -127,8 +126,7 @@ export default {
       this.localProblem.scraps += newScrapped ? 1 : -1
 
       axios.post(`/api/scrap/${this.localProblem.id}`, {
-        userId: this.currentUserId,
-        scrapped: newScrapped
+        userId: this.currentUserId
       }).then(() => {
         this.$emit('update-scrap', this.localProblem)
       }).catch(() => {
