@@ -8,9 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigInteger;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -20,7 +18,9 @@ public class ProblemController {
     @PersistenceContext
     private EntityManager entityManager;
 
-    // --- 문제 목록 조회 API (color_code 추가) ---
+    /** 문제 목록 조회 API
+     * GET /api/problems
+     */
     @GetMapping("/api/problems")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
@@ -103,114 +103,9 @@ public class ProblemController {
         }
     }
 
-
-    // --- 기존 좋아요 상태 변경 API (변경 없음) ---
-    @PostMapping("/api/like/{problemId}")
-    public ResponseEntity<Map<String, Object>> toggleLike(
-            @PathVariable Long problemId,
-            @RequestBody Map<String, Object> data) {
-
-        String userId = (String) data.get("userId");
-        Boolean liked = (Boolean) data.get("liked");
-
-        if (userId == null || liked == null || problemId == null) {
-            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", "입력값 누락"));
-        }
-
-        try {
-            List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
-                    .setParameter(1, userId)
-                    .getResultList();
-
-            if (userResult.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자 없음"));
-            }
-
-            Long internalUserId = ((Number) userResult.get(0)).longValue();
-
-            List<?> existing = entityManager.createNativeQuery(
-                            "SELECT id FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2")
-                    .setParameter(1, internalUserId)
-                    .setParameter(2, problemId)
-                    .getResultList();
-
-            if (existing.isEmpty()) {
-                entityManager.createNativeQuery(
-                                "INSERT INTO user_problem_status (user_id, problem_id, is_liked) VALUES (?1, ?2, ?3)")
-                        .setParameter(1, internalUserId)
-                        .setParameter(2, problemId)
-                        .setParameter(3, liked ? 1 : 0)
-                        .executeUpdate();
-            } else {
-                entityManager.createNativeQuery(
-                                "UPDATE user_problem_status SET is_liked = ?1 WHERE user_id = ?2 AND problem_id = ?3")
-                        .setParameter(1, liked ? 1 : 0)
-                        .setParameter(2, internalUserId)
-                        .setParameter(3, problemId)
-                        .executeUpdate();
-            }
-
-            return ResponseEntity.ok(Map.of("status", "OK"));
-        } catch (Exception e) {
-            log.error("좋아요 처리 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
-        }
-    }
-
-    // --- 기존 스크랩 상태 변경 API (변경 없음) ---
-    @PostMapping("/api/scrap/{problemId}")
-    public ResponseEntity<Map<String, Object>> toggleScrap(
-            @PathVariable Long problemId,
-            @RequestBody Map<String, Object> data) {
-
-        String userId = (String) data.get("userId");
-        Boolean scrapped = (Boolean) data.get("scrapped");
-
-        if (userId == null || scrapped == null || problemId == null) {
-            return ResponseEntity.badRequest().body(Map.of("status", "ERROR", "message", "입력값 누락"));
-        }
-
-        try {
-            List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
-                    .setParameter(1, userId)
-                    .getResultList();
-
-            if (userResult.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자 없음"));
-            }
-
-            Long internalUserId = ((Number) userResult.get(0)).longValue();
-
-            List<?> existing = entityManager.createNativeQuery(
-                            "SELECT id FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2")
-                    .setParameter(1, internalUserId)
-                    .setParameter(2, problemId)
-                    .getResultList();
-
-            if (existing.isEmpty()) {
-                entityManager.createNativeQuery(
-                                "INSERT INTO user_problem_status (user_id, problem_id, is_scrapped) VALUES (?1, ?2, ?3)")
-                        .setParameter(1, internalUserId)
-                        .setParameter(2, problemId)
-                        .setParameter(3, scrapped ? 1 : 0)
-                        .executeUpdate();
-            } else {
-                entityManager.createNativeQuery(
-                                "UPDATE user_problem_status SET is_scrapped = ?1 WHERE user_id = ?2 AND problem_id = ?3")
-                        .setParameter(1, scrapped ? 1 : 0)
-                        .setParameter(2, internalUserId)
-                        .setParameter(3, problemId)
-                        .executeUpdate();
-            }
-
-            return ResponseEntity.ok(Map.of("status", "OK"));
-        } catch (Exception e) {
-            log.error("스크랩 처리 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류"));
-        }
-    }
-
-    // --- 문제 상세 조회 API (color_code 추가) ---
+    /** 문제 상세 조회 API
+     * GET /api/problems/{id}
+     */
     @GetMapping("/api/problems/{id}")
     public ResponseEntity<Map<String, Object>> getProblemDetail(
             @PathVariable Long id,
@@ -295,7 +190,7 @@ public class ProblemController {
         }
     }
 
-    // --- 새로운 API: 카테고리 목록 조회 (color_code 추가) ---
+    // 카테고리 목록 조회 API
     @GetMapping("/api/categories")
     public ResponseEntity<List<Map<String, Object>>> getAllCategories() {
         try {
@@ -320,7 +215,9 @@ public class ProblemController {
         }
     }
 
-    // --- 새로운 API: 문제 생성 (변경 없음) ---
+    /** 문제 생성 API
+     * POST /api/problems
+     */
     @PostMapping("/api/problems")
     public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
         Map<String, String> response = new HashMap<>();
