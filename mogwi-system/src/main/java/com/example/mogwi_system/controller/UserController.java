@@ -72,32 +72,50 @@ public class UserController {
         String currentPassword = body.get("currentPassword");
         String newPassword = body.get("newPassword");
 
-        // 1. 닉네임 유효성 검사
-        if (newNickname == null || newNickname.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "닉네임은 필수 입력입니다."));
-        }
+        boolean isNicknameProvided = (newNickname != null && !newNickname.trim().isEmpty());
+        boolean isPasswordChangeAttempt = (newPassword != null && !newPassword.trim().isEmpty());
 
-        // 2. 현재 사용자 정보 조회 (특히 비밀번호 검증을 위해)
-        String selectSql = "SELECT userpass FROM users WHERE userid = ?";
+        // 현재 사용자 정보 조회 (닉네임 비교 및 비밀번호 검증을 위해)
+        String selectSql = "SELECT userpass, username FROM users WHERE userid = ?";
         Query selectQuery = entityManager.createNativeQuery(selectSql);
         selectQuery.setParameter(1, userId);
 
         String storedHashedPassword;
+        String storedNickname; // 현재 저장된 닉네임을 가져옵니다.
         try {
-            storedHashedPassword = (String) selectQuery.getSingleResult();
+            Object[] row = (Object[]) selectQuery.getSingleResult();
+            storedHashedPassword = (String) row[0];
+            storedNickname = (String) row[1]; // DB에 저장된 현재 닉네임
         } catch (NoResultException e) {
             log.warn("사용자 ID를 찾을 수 없습니다: {}", userId);
             return ResponseEntity.ok(Map.of("status", "NOT_FOUND", "message", "사용자를 찾을 수 없습니다."));
         } catch (Exception e) {
-            log.error("사용자 비밀번호 조회 중 오류 발생: {}", e.getMessage());
+            log.error("사용자 정보 조회 중 오류 발생: {}", e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("status", "ERROR", "message", "데이터베이스 오류가 발생했습니다."));
         }
 
-        // 3. 비밀번호 변경 로직 처리
-        String updateSql = "UPDATE users SET username = ?";
-        // 닉네임만 변경할 경우, 비밀번호 필드들은 무시합니다.
-        // newPassword가 제공되었을 때만 비밀번호 변경 로직을 수행합니다.
-        if (newPassword != null && !newPassword.trim().isEmpty()) {
+        // 닉네임 변경 여부 확인
+        boolean isNicknameChanged = isNicknameProvided && !newNickname.equals(storedNickname);
+        // 새 비밀번호 시도 시도했지만 실제 비밀번호가 변경될지에 대한 여부는 아래 로직에서 결정됩니다.
+        boolean isPasswordActuallyChanged = false;
+
+        // 아무것도 변경할 내용이 없는 경우
+        if (!isNicknameChanged && !isPasswordChangeAttempt) {
+            return ResponseEntity.ok(Map.of("status", "NO_CHANGE", "message", "변경할 정보가 없습니다."));
+        }
+
+
+        StringBuilder updateSqlBuilder = new StringBuilder("UPDATE users SET ");
+        Map<Integer, Object> params = new HashMap<>(); // 파라미터를 동적으로 관리
+        int paramIndex = 1;
+
+        if (isNicknameChanged) {
+            updateSqlBuilder.append("username = ?");
+            params.put(paramIndex++, newNickname);
+            log.info("사용자 {}의 닉네임을 변경합니다. 새 닉네임: {}", userId, newNickname);
+        }
+
+        if (isPasswordChangeAttempt) {
             // 현재 비밀번호 유효성 검사
             if (currentPassword == null || currentPassword.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다."));
@@ -105,38 +123,63 @@ public class UserController {
             if (!bCryptPasswordEncoder.matches(currentPassword, storedHashedPassword)) {
                 return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "현재 비밀번호가 일치하지 않습니다."));
             }
+
+            // 새 비밀번호가 현재 비밀번호와 동일한지 확인 (새 비밀번호로 변경 시에만)
+            if (bCryptPasswordEncoder.matches(newPassword, storedHashedPassword)) {
+                return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "새 비밀번호가 현재 비밀번호와 동일합니다. 다른 비밀번호를 설정해주세요."));
+            }
+
             // 새 비밀번호 해싱
             String hashedNewPassword = bCryptPasswordEncoder.encode(newPassword);
-            updateSql += ", userpass = ?"; // SQL에 비밀번호 업데이트 필드 추가
+            if (isNicknameChanged) { // 닉네임도 변경하는 경우 콤마 추가
+                updateSqlBuilder.append(", ");
+            }
+            updateSqlBuilder.append("userpass = ?");
+            params.put(paramIndex++, hashedNewPassword);
+            isPasswordActuallyChanged = true; // 비밀번호가 실제로 변경됨
             log.info("사용자 {}의 비밀번호를 변경합니다.", userId);
         } else {
-            // 새 비밀번호를 입력하지 않았는데, 현재 비밀번호나 새 비밀번호 확인 필드가 채워져 있다면 오류
-            if ((currentPassword != null && !currentPassword.trim().isEmpty()) || (body.get("confirmNewPassword") != null && !body.get("confirmNewPassword").trim().isEmpty())) {
-                return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "새 비밀번호를 입력하지 않으려면, 현재 비밀번호 및 확인 필드를 비워두세요."));
+            // 새 비밀번호를 입력하지 않았는데, 현재 비밀번호 필드가 채워져 있다면 오류
+            // (confirmNewPassword는 백엔드에서 받지 않으므로 currentPassword만 체크)
+            if (currentPassword != null && !currentPassword.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "새 비밀번호를 입력하지 않으려면, 현재 비밀번호 필드를 비워두세요."));
             }
         }
 
-        updateSql += " WHERE userid = ?"; // WHERE 절 추가
+        // 최종 UPDATE 쿼리 생성
+        updateSqlBuilder.append(" WHERE userid = ?");
+        params.put(paramIndex, userId); // 마지막 파라미터는 userId
 
-        Query updateQuery = entityManager.createNativeQuery(updateSql);
-        int paramIndex = 1;
-
-        updateQuery.setParameter(paramIndex++, newNickname); // 닉네임 파라미터 설정
-
-        if (newPassword != null && !newPassword.trim().isEmpty()) {
-            updateQuery.setParameter(paramIndex++, bCryptPasswordEncoder.encode(newPassword)); // 해싱된 새 비밀번호 파라미터 설정
+        // 변경할 내용이 정말 없는 경우 (닉네임 변경 시도했지만 값 동일, 비밀번호 변경 시도 안함)
+        if (!isNicknameChanged && !isPasswordActuallyChanged) {
+            return ResponseEntity.ok(Map.of("status", "NO_CHANGE", "message", "변경할 정보가 없습니다."));
         }
 
-        updateQuery.setParameter(paramIndex, userId); // userId 파라미터 설정
+        Query updateQuery = entityManager.createNativeQuery(updateSqlBuilder.toString());
+        for (Map.Entry<Integer, Object> entry : params.entrySet()) {
+            updateQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         try {
             int result = updateQuery.executeUpdate();
 
             if (result > 0) {
+                String successMessage;
+                if (isNicknameChanged && isPasswordActuallyChanged) {
+                    successMessage = "프로필 정보(닉네임, 비밀번호)가 성공적으로 업데이트되었습니다.";
+                } else if (isNicknameChanged) {
+                    successMessage = "닉네임이 성공적으로 변경되었습니다.";
+                } else if (isPasswordActuallyChanged) {
+                    successMessage = "비밀번호가 성공적으로 변경되었습니다.";
+                } else {
+                    successMessage = "프로필 정보가 성공적으로 수정되었습니다."; // 예상치 못한 경우
+                }
                 log.info("사용자 {}의 프로필이 성공적으로 업데이트되었습니다.", userId);
-                return ResponseEntity.ok(Map.of("status", "OK", "message", "프로필 정보가 성공적으로 수정되었습니다."));
+                return ResponseEntity.ok(Map.of("status", "OK", "message", successMessage));
             } else {
-                log.warn("사용자 {}의 프로필 업데이트 실패: 사용자를 찾을 수 없거나 변경 사항이 없습니다.", userId);
+                // 이 else 블록은 대부분 유효한 userId를 찾았지만 아무것도 업데이트되지 않은 경우입니다.
+                // 이는 이미 위에서 isNicknameChanged, isPasswordActuallyChanged 로 체크했지만 혹시 모를 경우를 대비합니다.
+                log.warn("사용자 {}의 프로필 업데이트 실패: 변경 사항이 없거나 사용자를 찾을 수 없습니다.", userId);
                 return ResponseEntity.ok(Map.of("status", "NOT_FOUND", "message", "프로필 업데이트에 실패했습니다. 사용자를 찾을 수 없거나 변경 사항이 없습니다."));
             }
         } catch (Exception e) {
