@@ -116,7 +116,7 @@ export default {
 
             try {
                 console.log(`Fetching study summary for userId: ${currentUserId.value}`);
-                const summaryResponse = await axios.get(`/api/mystudy/summary/${currentUserId.value}`);
+                const summaryResponse = await axios.get(`/api/mystudy/problem/${currentUserId.value}`);
                 const summary = summaryResponse.data;
                 overallPerfectCount.value = summary.perfect || 0;
                 overallVagueCount.value = summary.vague || 0;
