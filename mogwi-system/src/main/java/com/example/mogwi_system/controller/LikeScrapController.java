@@ -26,12 +26,10 @@ public class LikeScrapController {
         String userId = data.get("userId");
         try {
             Long internalUserId = getInternalUserId(userId);
-            Integer isLiked = getStatus("is_liked", internalUserId, problemId);
+            Integer isLiked = getOrCreateStatus("is_liked", internalUserId, problemId);
             int newStatus = (isLiked == 1) ? 0 : 1;
             updateStatus("is_liked", newStatus, internalUserId, problemId);
             return ResponseEntity.ok(Map.of("status", "OK", "isLiked", newStatus == 1));
-        } catch (NoResultException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "기록 없음"));
         } catch (Exception e) {
             log.error("좋아요 토글 오류: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", e.getMessage()));
@@ -45,12 +43,10 @@ public class LikeScrapController {
         String userId = data.get("userId");
         try {
             Long internalUserId = getInternalUserId(userId);
-            Integer isScrapped = getStatus("is_scrapped", internalUserId, problemId);
+            Integer isScrapped = getOrCreateStatus("is_scrapped", internalUserId, problemId);
             int newStatus = (isScrapped == 1) ? 0 : 1;
             updateStatus("is_scrapped", newStatus, internalUserId, problemId);
             return ResponseEntity.ok(Map.of("status", "OK", "isScrapped", newStatus == 1));
-        } catch (NoResultException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "기록 없음"));
         } catch (Exception e) {
             log.error("스크랩 토글 오류: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", e.getMessage()));
@@ -134,14 +130,14 @@ public class LikeScrapController {
         }
     }
 
-    // 내부 유저 ID 조회
+    /** 내부 유저 ID 조회 */
     private Long getInternalUserId(String userId) {
         return ((Number) entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
                 .setParameter(1, userId)
                 .getSingleResult()).longValue();
     }
 
-    // 상태 조회
+    /** 상태 조회 (단순 조회) */
     private Integer getStatus(String column, Long userId, Long problemId) {
         Object result = entityManager.createNativeQuery(
                         "SELECT " + column + " FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2")
@@ -149,19 +145,30 @@ public class LikeScrapController {
                 .setParameter(2, problemId)
                 .getSingleResult();
 
-        if (result instanceof Number) {
-            return ((Number) result).intValue();
-        } else if (result instanceof Boolean) {
-            return (Boolean) result ? 1 : 0;
-        } else {
-            throw new IllegalStateException("Unexpected type: " + result.getClass());
+        if (result instanceof Number) return ((Number) result).intValue();
+        if (result instanceof Boolean) return ((Boolean) result ? 1 : 0);
+        throw new IllegalStateException("Unexpected type: " + result.getClass());
+    }
+
+    /** 상태 조회 또는 새 레코드 생성 후 기본값 반환 */
+    private Integer getOrCreateStatus(String column, Long userId, Long problemId) {
+        try {
+            return getStatus(column, userId, problemId);
+        } catch (NoResultException e) {
+            // 새 레코드 삽입
+            entityManager.createNativeQuery(
+                            "INSERT INTO user_problem_status (user_id, problem_id, is_liked, is_scrapped, problem_status, created_at, updated_at) " +
+                                    "VALUES (?1, ?2, 0, 0, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
+                    .setParameter(1, userId)
+                    .setParameter(2, problemId)
+                    .executeUpdate();
+            return 0;
         }
     }
 
-
-    // 상태 업데이트
+    /** 상태 업데이트 */
     private void updateStatus(String column, int status, Long userId, Long problemId) {
-        entityManager.createNativeQuery("UPDATE user_problem_status SET " + column + " = ?1 WHERE user_id = ?2 AND problem_id = ?3")
+        entityManager.createNativeQuery("UPDATE user_problem_status SET " + column + " = ?1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?2 AND problem_id = ?3")
                 .setParameter(1, status)
                 .setParameter(2, userId)
                 .setParameter(3, problemId)
