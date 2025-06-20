@@ -279,7 +279,7 @@ export default {
           }))
         };
 
-        const response = await axios.put(`/api/problems/${problemId.value}`, payload);
+        const response = await axios.put(`/api/problem/${problemId.value}`, payload);
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 수정되었습니다!');
