@@ -19,13 +19,14 @@ public class ProblemController {
     private EntityManager entityManager;
 
     /** 문제 목록 조회 API
-     * GET /api/problems
+     * GET /api/problem
      */
     @GetMapping("/api/problem")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String currentUserId
+            @RequestParam(required = false) String currentUserId,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyMine
     ) {
         try {
             // SQL 쿼리에 c.color_code 추가
@@ -50,6 +51,10 @@ public class ProblemController {
             }
             if (category != null && !category.equals("#전체")) {
                 sql.append("AND c.tag_name = :category ");
+            }
+
+            if (onlyMine && currentUserId != null && !currentUserId.isEmpty()) {
+                sql.append("AND u.userid = :currentUserId ");
             }
 
             // GROUP BY 절에 category_name, category_color 추가
@@ -216,7 +221,7 @@ public class ProblemController {
     }
 
     /** 문제 생성 API
-     * POST /api/problems
+     * POST /api/problem
      */
     @PostMapping("/api/problem")
     public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
@@ -343,4 +348,96 @@ public class ProblemController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+
+    /** 문제 수정 API
+     * POST /api/problem/{id}
+     */
+    @PutMapping("/api/problem/{id}")
+    public ResponseEntity<Map<String, String>> updateProblem(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> requestBody) {
+
+        Map<String, String> response = new HashMap<>();
+        try {
+            // 1. 요청 데이터 파싱
+            String title = (String) requestBody.get("title");
+            String description = (String) requestBody.get("description");
+            Integer isPublicInt = (Integer) requestBody.get("is_public");
+            boolean isPublic = (isPublicInt != null && isPublicInt == 1);
+
+            @SuppressWarnings("unchecked")
+            List<Integer> categoryIds = (List<Integer>) requestBody.get("categories");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> cards = (List<Map<String, Object>>) requestBody.get("cards");
+
+            // 2. 유효성 검사
+            if (title == null || title.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", "제목은 필수입니다."));
+            }
+            if (categoryIds == null || categoryIds.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", "태그는 1개 이상 필요합니다."));
+            }
+            if (cards == null || cards.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", "카드는 최소 1개 이상이어야 합니다."));
+            }
+
+            for (Map<String, Object> card : cards) {
+                String question = (String) card.get("question");
+                String answer = (String) card.get("answer");
+                if (question == null || question.trim().isEmpty() || answer == null || answer.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", "모든 카드에 질문과 정답을 입력해주세요."));
+                }
+            }
+
+            // 3. 문제 수정
+            String updateSql = "UPDATE problems SET title = ?1, description = ?2, card_count = ?3, is_public = ?4 WHERE id = ?5";
+            entityManager.createNativeQuery(updateSql)
+                    .setParameter(1, title)
+                    .setParameter(2, description != null && !description.isEmpty() ? description : null)
+                    .setParameter(3, cards.size())
+                    .setParameter(4, isPublic ? 1 : 0)
+                    .setParameter(5, id)
+                    .executeUpdate();
+
+            // 4. 기존 태그 삭제 및 재삽입
+            entityManager.createNativeQuery("DELETE FROM problem_categories WHERE problem_id = ?1")
+                    .setParameter(1, id)
+                    .executeUpdate();
+
+            for (Integer categoryId : categoryIds) {
+                entityManager.createNativeQuery("INSERT INTO problem_categories (problem_id, category_id) VALUES (?1, ?2)")
+                        .setParameter(1, id)
+                        .setParameter(2, categoryId.longValue())
+                        .executeUpdate();
+            }
+
+            // 5. 기존 카드 삭제 및 재삽입
+            entityManager.createNativeQuery("DELETE FROM cards WHERE problem_id = ?1")
+                    .setParameter(1, id)
+                    .executeUpdate();
+
+            for (Map<String, Object> card : cards) {
+                String question = (String) card.get("question");
+                String correct = (String) card.get("answer");
+                String imageUrl = (String) card.get("image_url");
+
+                entityManager.createNativeQuery(
+                                "INSERT INTO cards (problem_id, question, correct, image_url) VALUES (?1, ?2, ?3, ?4)")
+                        .setParameter(1, id)
+                        .setParameter(2, question)
+                        .setParameter(3, correct)
+                        .setParameter(4, imageUrl != null && !imageUrl.isEmpty() ? imageUrl : null)
+                        .executeUpdate();
+            }
+
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "문제가 성공적으로 수정되었습니다."));
+
+        } catch (Exception e) {
+            log.error("문제 수정 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", "문제 수정 중 오류 발생"));
+        }
+    }
+
 }
