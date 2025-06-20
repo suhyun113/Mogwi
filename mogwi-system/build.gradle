@@ -31,6 +31,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	// 시큐리티
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// 비밀번호 해싱(임시)
+	implementation 'org.springframework.security:spring-security-core'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
