@@ -86,7 +86,7 @@
       v-if="showEditProfileModal"
       :initialNickname="userNickname"
       :initialEmail="userEmail"
-      @close="showEditProfileModal = false"
+      :userId="currentUserId" @close="showEditProfileModal = false"
       @update-profile="handleProfileUpdateFromModal"
     />
   </div> </template>
