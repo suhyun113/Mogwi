@@ -20,6 +20,12 @@ public class ProblemController {
 
     /** 문제 목록 조회 API
      * GET /api/problem
+     *
+     * @param query 검색어 (선택 사항)
+     * @param category 카테고리 태그 (선택 사항)
+     * @param currentUserId 현재 로그인된 사용자의 userid (문자열). 이 사용자의 좋아요/스크랩 여부 및 (onlyMine=true 시) 작성 문제를 확인하는 데 사용됩니다.
+     * @param onlyMine true일 경우, currentUserId가 작성한 문제만 조회합니다. (마이페이지 '내가 만든 문제'에서 사용)
+     * @return 문제 목록 (List<Map<String, Object>>)
      */
     @GetMapping("/api/problem")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
@@ -29,48 +35,63 @@ public class ProblemController {
             @RequestParam(required = false, defaultValue = "false") boolean onlyMine
     ) {
         try {
-            // SQL 쿼리에 c.color_code 추가
             StringBuilder sql = new StringBuilder(
                     "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.card_count, " +
                             "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1), 0) AS likes, " +
                             "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_scrapped = 1), 0) AS scraps, " +
                             "IFNULL(ups.is_liked, 0) AS liked, " +
                             "IFNULL(ups.is_scrapped, 0) AS scrapped, " +
-                            "c.tag_name AS category_name, " + // category_name으로 컬럼명 변경
-                            "c.color_code AS category_color " + // category_color 컬럼 추가
+                            "c.tag_name AS category_name, " +
+                            "c.color_code AS category_color " +
                             "FROM problems p " +
                             "JOIN users u ON p.author_id = u.id " +
-                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserId) " +
+                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserIdParam) " + // currentUserIdParam으로 변경
                             "LEFT JOIN problem_categories pc ON p.id = pc.problem_id " +
-                            "LEFT JOIN categories c ON pc.category_id = c.id " +
-                            "WHERE p.is_public = true "
+                            "LEFT JOIN categories c ON pc.category_id = c.id "
             );
 
-            if (query != null && !query.isEmpty()) {
-                sql.append("AND p.title LIKE :query ");
-            }
-            if (category != null && !category.equals("#전체")) {
-                sql.append("AND c.tag_name = :category ");
-            }
+            List<String> conditions = new ArrayList<>();
+            Map<String, Object> parameters = new HashMap<>();
 
+            // onlyMine이 true이면, 현재 사용자 ID로 필터링합니다.
+            // 이 경우 is_public 조건은 제거하고 내가 만든 모든 문제를 가져옵니다.
             if (onlyMine && currentUserId != null && !currentUserId.isEmpty()) {
-                sql.append("AND u.userid = :currentUserId ");
+                conditions.add("u.userid = :currentUserIdForAuthor"); // 작성자 ID로 필터링
+                parameters.put("currentUserIdForAuthor", currentUserId);
+            } else {
+                // onlyMine이 false이거나 currentUserId가 없으면 공개된 문제만 조회합니다.
+                conditions.add("p.is_public = true");
             }
 
-            // GROUP BY 절에 category_name, category_color 추가
-            sql.append("GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
-            sql.append("ORDER BY p.id DESC");
+            // 검색어 조건
+            if (query != null && !query.isEmpty()) {
+                conditions.add("p.title LIKE :query");
+                parameters.put("query", "%" + query + "%");
+            }
+            // 카테고리 조건
+            if (category != null && !category.equals("#전체")) {
+                conditions.add("c.tag_name = :category");
+                parameters.put("category", category);
+            }
+
+            // 조건들을 WHERE 절에 추가
+            if (!conditions.isEmpty()) {
+                sql.append("WHERE ").append(String.join(" AND ", conditions));
+            }
+
+            // GROUP BY 및 ORDER BY 절
+            sql.append(" GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
+            sql.append(" ORDER BY p.id DESC");
 
             var queryObj = entityManager.createNativeQuery(sql.toString());
 
-            if (query != null && !query.isEmpty()) {
-                queryObj.setParameter("query", "%" + query + "%");
+            // 쿼리 파라미터 설정
+            if (currentUserId == null) currentUserId = ""; // currentUserId가 null이면 빈 문자열로 처리
+            queryObj.setParameter("currentUserIdParam", currentUserId); // 좋아요/스크랩 상태 조회용 파라미터
+
+            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                queryObj.setParameter(entry.getKey(), entry.getValue());
             }
-            if (category != null && !category.equals("#전체")) {
-                queryObj.setParameter("category", category);
-            }
-            if (currentUserId == null) currentUserId = "";
-            queryObj.setParameter("currentUserId", currentUserId);
 
             List<Object[]> results = queryObj.getResultList();
             Map<Long, Map<String, Object>> problemMap = new LinkedHashMap<>();
@@ -89,14 +110,13 @@ public class ProblemController {
                     item.put("scraps", row[6]);
                     item.put("liked", ((Number) row[7]).intValue() == 1);
                     item.put("scrapped", ((Number) row[8]).intValue() == 1);
-                    item.put("categories", new ArrayList<Map<String, String>>()); // List<Map<String, String>>으로 변경
+                    item.put("categories", new ArrayList<Map<String, String>>());
                     problemMap.put(problemId, item);
                 }
-                // row[9]는 tag_name, row[10]은 color_code
                 if (row[9] != null) {
                     Map<String, String> categoryMap = new HashMap<>();
                     categoryMap.put("tag_name", row[9].toString());
-                    categoryMap.put("color_code", row[10] != null ? row[10].toString() : "#CCCCCC"); // null 처리 및 기본값
+                    categoryMap.put("color_code", row[10] != null ? row[10].toString() : "#CCCCCC");
                     ((List<Map<String, String>>) problemMap.get(problemId).get("categories")).add(categoryMap);
                 }
             }
@@ -151,7 +171,6 @@ public class ProblemController {
             response.put("liked", ((Number) row[8]).intValue() == 1);
             response.put("scrapped", ((Number) row[9]).intValue() == 1);
 
-            // 카테고리 조회 (tag_name과 color_code 포함)
             List<?> categoryResults = entityManager.createNativeQuery(
                             "SELECT c.tag_name, c.color_code FROM problem_categories pc " +
                                     "JOIN categories c ON pc.category_id = c.id " +
@@ -159,18 +178,16 @@ public class ProblemController {
                     .setParameter(1, id)
                     .getResultList();
 
-            // List<Map<String, String>> 형태로 변환
             List<Map<String, String>> categoriesWithColor = new ArrayList<>();
             for (Object result : categoryResults) {
                 Object[] categoryRow = (Object[]) result;
                 Map<String, String> categoryMap = new HashMap<>();
                 categoryMap.put("tag_name", categoryRow[0].toString());
-                categoryMap.put("color_code", categoryRow[1] != null ? categoryRow[1].toString() : "#CCCCCC"); // null 처리 및 기본값
+                categoryMap.put("color_code", categoryRow[1] != null ? categoryRow[1].toString() : "#CCCCCC");
                 categoriesWithColor.add(categoryMap);
             }
             response.put("categories", categoriesWithColor);
 
-            // 카드 리스트 조회 (정답 컬럼은 'correct'임, 'answer' 아님)
             List<?> cardResults = entityManager.createNativeQuery(
                             "SELECT question, correct, image_url FROM cards WHERE problem_id = ?1 ORDER BY id ASC")
                     .setParameter(1, id)
@@ -199,7 +216,6 @@ public class ProblemController {
     @GetMapping("/api/categories")
     public ResponseEntity<List<Map<String, Object>>> getAllCategories() {
         try {
-            // SQL 쿼리에 color_code 컬럼 추가
             List<?> results = entityManager.createNativeQuery("SELECT id, tag_name, color_code FROM categories ORDER BY tag_name ASC")
                     .getResultList();
 
@@ -209,8 +225,7 @@ public class ProblemController {
                 Map<String, Object> categoryMap = new HashMap<>();
                 categoryMap.put("id", ((Number) row[0]).longValue());
                 categoryMap.put("tag_name", row[1].toString());
-                // color_code 추가
-                categoryMap.put("color_code", row[2] != null ? row[2].toString() : "#CCCCCC"); // null 처리 및 기본값 설정
+                categoryMap.put("color_code", row[2] != null ? row[2].toString() : "#CCCCCC");
                 categories.add(categoryMap);
             }
             return ResponseEntity.ok(categories);
@@ -227,7 +242,6 @@ public class ProblemController {
     public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
         Map<String, String> response = new HashMap<>();
         try {
-            // 1. 요청 데이터 파싱 및 기본 유효성 검사
             String title = (String) requestBody.get("title");
             String authorIdString = (String) requestBody.get("author_id");
             String description = (String) requestBody.get("description");
@@ -241,7 +255,6 @@ public class ProblemController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> cards = (List<Map<String, Object>>) requestBody.get("cards");
 
-            // --- 유효성 검사 로직 (변경 없음) ---
             if (title == null || title.trim().isEmpty()) {
                 response.put("status", "FAIL");
                 response.put("message", "문제 제목은 필수입니다.");
@@ -276,9 +289,7 @@ public class ProblemController {
                     return ResponseEntity.badRequest().body(response);
                 }
             }
-            // --- 유효성 검사 로직 끝 ---
 
-            // 2. Vue의 author_id (userid 문자열)를 실제 users 테이블의 id (Long)로 변환
             Long authorInternalId;
             List<?> userResult = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
                     .setParameter(1, authorIdString)
@@ -291,7 +302,6 @@ public class ProblemController {
             }
             authorInternalId = ((Number) userResult.get(0)).longValue();
 
-            // 3. problems 테이블에 문제 삽입
             String insertProblemSql = "INSERT INTO problems (title, description, author_id, card_count, is_public) VALUES (?1, ?2, ?3, ?4, ?5)";
             entityManager.createNativeQuery(insertProblemSql)
                     .setParameter(1, title)
@@ -301,14 +311,9 @@ public class ProblemController {
                     .setParameter(5, isPublic ? 1 : 0)
                     .executeUpdate();
 
-            // 삽입된 문제의 ID 조회 (auto_increment 된 ID)
-            // Long으로 직접 캐스팅하거나 Number로 받은 후 longValue()를 사용
-            // 기존: BigInteger problemIdBigInt = (BigInteger) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult();
             Number lastInsertId = (Number) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult();
-            Long problemId = lastInsertId.longValue(); // Number에서 longValue()를 호출하여 안전하게 Long으로 변환
+            Long problemId = lastInsertId.longValue();
 
-
-            // 4. problem_categories 테이블에 카테고리 연결
             String insertProblemCategorySql = "INSERT INTO problem_categories (problem_id, category_id) VALUES (?1, ?2)";
             for (Integer categoryId : categoryIds) {
                 entityManager.createNativeQuery(insertProblemCategorySql)
@@ -317,7 +322,6 @@ public class ProblemController {
                         .executeUpdate();
             }
 
-            // 5. cards 테이블에 학습 카드 삽입
             String insertCardSql = "INSERT INTO cards (problem_id, question, correct, image_url) VALUES (?1, ?2, ?3, ?4)";
             for (Map<String, Object> card : cards) {
                 String question = (String) card.get("question");
@@ -351,7 +355,7 @@ public class ProblemController {
 
 
     /** 문제 수정 API
-     * POST /api/problem/{id}
+     * PUT /api/problem/{id}
      */
     @PutMapping("/api/problem/{id}")
     public ResponseEntity<Map<String, String>> updateProblem(
@@ -360,7 +364,6 @@ public class ProblemController {
 
         Map<String, String> response = new HashMap<>();
         try {
-            // 1. 요청 데이터 파싱
             String title = (String) requestBody.get("title");
             String description = (String) requestBody.get("description");
             Integer isPublicInt = (Integer) requestBody.get("is_public");
@@ -371,7 +374,6 @@ public class ProblemController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> cards = (List<Map<String, Object>>) requestBody.get("cards");
 
-            // 2. 유효성 검사
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", "제목은 필수입니다."));
             }
@@ -390,7 +392,6 @@ public class ProblemController {
                 }
             }
 
-            // 3. 문제 수정
             String updateSql = "UPDATE problems SET title = ?1, description = ?2, card_count = ?3, is_public = ?4 WHERE id = ?5";
             entityManager.createNativeQuery(updateSql)
                     .setParameter(1, title)
@@ -400,7 +401,6 @@ public class ProblemController {
                     .setParameter(5, id)
                     .executeUpdate();
 
-            // 4. 기존 태그 삭제 및 재삽입
             entityManager.createNativeQuery("DELETE FROM problem_categories WHERE problem_id = ?1")
                     .setParameter(1, id)
                     .executeUpdate();
@@ -412,7 +412,6 @@ public class ProblemController {
                         .executeUpdate();
             }
 
-            // 5. 기존 카드 삭제 및 재삽입
             entityManager.createNativeQuery("DELETE FROM cards WHERE problem_id = ?1")
                     .setParameter(1, id)
                     .executeUpdate();
@@ -440,4 +439,54 @@ public class ProblemController {
         }
     }
 
+    /** 문제 삭제 API
+     * DELETE /api/problem/{id}
+     */
+    @DeleteMapping("/api/problem/{id}")
+    public ResponseEntity<Map<String, String>> deleteProblem(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            Long problemCount = ((Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM problems WHERE id = ?1")
+                    .setParameter(1, id)
+                    .getSingleResult()).longValue();
+
+            if (problemCount == 0) {
+                response.put("status", "FAIL");
+                response.put("message", "삭제할 문제를 찾을 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            entityManager.createNativeQuery("DELETE FROM user_problem_status WHERE problem_id = ?1")
+                    .setParameter(1, id)
+                    .executeUpdate();
+
+            entityManager.createNativeQuery("DELETE FROM problem_categories WHERE problem_id = ?1")
+                    .setParameter(1, id)
+                    .executeUpdate();
+
+            entityManager.createNativeQuery("DELETE FROM cards WHERE problem_id = ?1")
+                    .setParameter(1, id)
+                    .executeUpdate();
+
+            int deletedRows = entityManager.createNativeQuery("DELETE FROM problems WHERE id = ?1")
+                    .setParameter(1, id)
+                    .executeUpdate();
+
+            if (deletedRows > 0) {
+                response.put("status", "OK");
+                response.put("message", "문제가 성공적으로 삭제되었습니다.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "FAIL");
+                response.put("message", "문제 삭제에 실패했습니다.");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+
+        } catch (Exception e) {
+            log.error("문제 삭제 중 오류 발생: {}", e.getMessage(), e);
+            response.put("status", "ERROR");
+            response.put("message", "문제 삭제 중 서버 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
