@@ -11,7 +11,6 @@
     </div>
 
     <div v-else class="edit-container">
-      <h1 class="page-title">문제 수정</h1>
       <ProblemForm
         v-model:title="problem.title"
         v-model:isPublic="problem.is_public"
@@ -384,15 +383,6 @@ export default {
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
-}
-
-.page-title {
-    font-size: 2.5rem;
-    color: #4a1e77;
-    margin-bottom: 40px;
-    font-weight: 700;
-    text-align: center;
-    width: 100%;
 }
 
 .edit-container {
