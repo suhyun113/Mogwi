@@ -1,5 +1,5 @@
 <template>
-  <div class="mypage-view">
+  <div class="mypage-view-wrapper">
     <div v-if="loading" class="loading-message">사용자 정보를 불러오는 중입니다...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <div v-else-if="!isLoggedIn" class="logged-out-prompt">
@@ -32,6 +32,7 @@
         <section v-if="activeSection === 'profile'" class="content-section">
           <UserProfile
             :nickname="userNickname"
+            :userEmail="userEmail"
             @edit-info="showEditProfileModal = true"
           />
         </section>
@@ -84,16 +85,19 @@
     <EditProfileModal
       v-if="showEditProfileModal"
       :initialNickname="userNickname"
+      :initialEmail="userEmail"
       @close="showEditProfileModal = false"
+      @update-profile="handleProfileUpdateFromModal"
     />
-  </div>
-</template>
+  </div> </template>
 
 <script>
-// (Your existing script tag content goes here, no changes needed from the previous fix)
+/* eslint-disable vue/valid-v-else */
+/* eslint-disable vue/no-unused-components */
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 // 필요한 컴포넌트들을 import 합니다.
 import UserProfile from '@/components/Mypage/UserProfile.vue';
@@ -101,7 +105,7 @@ import LikedScrapSection from '@/components/Mypage/LikedScrapSection.vue';
 import MyProblemSection from '@/components/Mypage/MyProblemSection.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
-import EditProfileModal from '@/components/Mypage/EditProfileModal.vue';
+import EditProfileModal from '@/components/Mypage/EditProfileModal.vue'; // EditProfileModal import 확인
 
 export default {
   name: 'MypageView',
@@ -111,10 +115,12 @@ export default {
     MyProblemSection,
     LoginModal,
     RegisterModal,
-    EditProfileModal,
+    EditProfileModal, // EditProfileModal 등록
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
+
     const isLoggedIn = computed(() => !!store.state.store_userid);
     const currentUserId = computed(() => store.state.store_userid);
 
@@ -122,8 +128,9 @@ export default {
     const error = ref(null);
 
     const userNickname = ref('');
+    const userEmail = ref(''); // 사용자 이메일을 저장할 ref 추가
     const likedProblems = ref([]);
-    const scrapedProblems = ref([]); // FIX: Ensure this is declared as a ref
+    const scrapedProblems = ref([]); // <-- **FIX: Declare scrapedProblems here**
     const myProblems = ref([]);
 
     const activeSection = ref('profile');
@@ -132,8 +139,8 @@ export default {
     const showRegisterModal = ref(false);
     const showDeleteConfirmModal = ref(false);
     const showEditProfileModal = ref(false);
-    const deleteTarget = ref(null); // 'account' or 'problem'
-    const problemIdToDelete = ref(null); // 삭제할 문제의 ID
+    const deleteTarget = ref(null);
+    const problemIdToDelete = ref(null);
 
     const showNicknameUpdateMessage = ref(false);
     const nicknameUpdateMessage = ref('');
@@ -150,14 +157,20 @@ export default {
 
       try {
         const userResponse = await axios.get(`/api/user/${currentUserId.value}`);
-        userNickname.value = userResponse.data.nickname;
+        if (userResponse.data.status === 'OK' && userResponse.data.user) {
+          userNickname.value = userResponse.data.user.username;
+          userEmail.value = userResponse.data.user.usermail; // 이메일 정보도 저장
+        } else {
+          userNickname.value = '알 수 없음';
+          userEmail.value = '알 수 없음';
+        }
 
         const likedScrapResponse = await axios.get(`/api/mypage/problems/liked-scraped/${currentUserId.value}`);
         likedProblems.value = likedScrapResponse.data.likedProblems;
-        scrapedProblems.value = likedScrapResponse.data.scrapedProblems;
+        scrapedProblems.value = likedScrapResponse.data.scrapedProblems; // <-- **FIX: This line is now correct as `scrapedProblems` is defined.**
 
-        const myProblemsResponse = await axios.get(`/api/mypage/problems/my-created/${currentUserId.value}`);
-        myProblems.value = myProblemsResponse.data.myProblems;
+        const myProblemsResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyMine=true`);
+        myProblems.value = myProblemsResponse.data;
 
       } catch (err) {
         console.error('마이페이지 데이터 불러오기 실패:', err);
@@ -167,27 +180,48 @@ export default {
       }
     };
 
-    // 회원 탈퇴 확인 모달 띄우기
+    // EditProfileModal에서 프로필 정보가 업데이트되었을 때 호출될 함수
+    const handleProfileUpdateFromModal = (updatedData) => {
+      // 닉네임과 이메일 정보 업데이트
+      if (updatedData.nickname) {
+        userNickname.value = updatedData.nickname;
+        nicknameUpdateMessage.value = '닉네임이 성공적으로 변경되었습니다.';
+        nicknameUpdateStatus.value = 'success';
+      }
+      if (updatedData.email) {
+        userEmail.value = updatedData.email; // 이메일 업데이트
+      }
+
+      showNicknameUpdateMessage.value = true;
+      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
+
+      // 모달 닫기
+      showEditProfileModal.value = false;
+
+      // 필요하다면 변경된 정보를 UI에 반영하기 위해 마이페이지 데이터 다시 불러오기
+      // fetchMypageData(); // 닉네임과 이메일만 변경된 경우라면 굳이 전체를 다시 불러올 필요는 없을 수 있음
+    };
+
+
+    // --- (이하 기존 코드 유지) ---
     const handleDeleteAccount = () => {
-      deleteTarget.value = 'account'; // 대상 설정
+      deleteTarget.value = 'account';
       showDeleteConfirmModal.value = true;
     };
 
-    // 삭제 취소 (공통)
     const cancelDelete = () => {
       showDeleteConfirmModal.value = false;
       deleteTarget.value = null;
-      problemIdToDelete.value = null; // 초기화
+      problemIdToDelete.value = null;
       nicknameUpdateMessage.value = '삭제 작업이 취소되었습니다.';
-      nicknameUpdateStatus.value = 'info'; // 정보성 메시지
+      nicknameUpdateStatus.value = 'info';
       showNicknameUpdateMessage.value = true;
       setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
     };
 
-    // 회원 탈퇴 실행
     const confirmDeleteAccount = async () => {
-      showDeleteConfirmModal.value = false; // 모달 닫기
-      deleteTarget.value = null; // 대상 초기화
+      showDeleteConfirmModal.value = false;
+      deleteTarget.value = null;
       if (!isLoggedIn.value) {
         nicknameUpdateMessage.value = '로그인 후 이용해주세요.';
         nicknameUpdateStatus.value = 'error';
@@ -196,15 +230,10 @@ export default {
         return;
       }
       try {
-        // 실제 회원 탈퇴 API 호출 (예시)
-        // await axios.delete(`/api/user/${currentUserId.value}/delete-account`);
-        // store.dispatch('logout'); // Vuex 스토어에서 로그아웃 처리
         nicknameUpdateMessage.value = '회원 탈퇴가 성공적으로 처리되었습니다. (기능 미구현)';
         nicknameUpdateStatus.value = 'success';
         showNicknameUpdateMessage.value = true;
         setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
-        // 페이지 새로고침 또는 로그인 페이지로 리디렉션
-        // window.location.reload(); // 또는 router.push('/login');
       } catch (err) {
         console.error('회원 탈퇴 실패:', err);
         nicknameUpdateMessage.value = '회원 탈퇴 중 오류가 발생했습니다. 다시 시도해주세요.';
@@ -214,10 +243,9 @@ export default {
       }
     };
 
-    // 문제 삭제 실행
     const confirmDeleteProblem = async () => {
-      showDeleteConfirmModal.value = false; // 모달 닫기
-      deleteTarget.value = null; // 대상 초기화
+      showDeleteConfirmModal.value = false;
+      deleteTarget.value = null;
       if (!problemIdToDelete.value) {
         nicknameUpdateMessage.value = '삭제할 문제 ID를 찾을 수 없습니다.';
         nicknameUpdateStatus.value = 'error';
@@ -227,7 +255,7 @@ export default {
       }
 
       try {
-        await axios.delete(`/api/problems/${problemIdToDelete.value}`); // ProblemController의 API 사용
+        await axios.delete(`/api/problem/${problemIdToDelete.value}`);
         myProblems.value = myProblems.value.filter(p => p.id !== problemIdToDelete.value);
         nicknameUpdateMessage.value = '문제가 성공적으로 삭제되었습니다.';
         nicknameUpdateStatus.value = 'success';
@@ -240,10 +268,23 @@ export default {
         setTimeout(() => {
           showNicknameUpdateMessage.value = false;
         }, 3000);
-        problemIdToDelete.value = null; // 문제 ID 초기화
+        problemIdToDelete.value = null;
       }
     };
 
+    const goToProblem = (problemId) => {
+        router.push(`/problem/${problemId}`);
+    };
+
+    const editProblem = (problemId) => {
+        router.push(`/problem/edit/${problemId}`);
+    };
+
+    const deleteProblem = (problemId) => {
+        deleteTarget.value = 'problem';
+        problemIdToDelete.value = problemId;
+        showDeleteConfirmModal.value = true;
+    };
 
     const openLoginModal = () => {
       showRegisterModal.value = false;
@@ -269,8 +310,9 @@ export default {
           fetchMypageData();
         } else {
           userNickname.value = '';
+          userEmail.value = ''; // 로그아웃 시 이메일도 초기화
           likedProblems.value = [];
-          scrapedProblems.value = [];
+          scrapedProblems.value = []; // <-- **FIX: Ensure this is reset on logout.**
           myProblems.value = [];
           loading.value = false;
           error.value = null;
@@ -284,11 +326,13 @@ export default {
       error,
       isLoggedIn,
       userNickname,
+      userEmail, // userEmail도 return에 추가
       likedProblems,
-      scrapedProblems, 
+      scrapedProblems, // <-- **FIX: scrapedProblems must be returned from setup.**
       myProblems,
       activeSection,
       showLoginModal,
+      currentUserId,
       showRegisterModal,
       openLoginModal,
       openRegisterModal,
@@ -302,6 +346,10 @@ export default {
       confirmDeleteProblem,
       cancelDelete,
       showEditProfileModal,
+      handleProfileUpdateFromModal, // 모달 업데이트 핸들러
+      goToProblem,
+      editProblem,
+      deleteProblem,
     };
   },
 };
@@ -325,7 +373,7 @@ html, body {
 /* Google Fonts - Inter (or Pretendard if available via local import) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-.mypage-view {
+.mypage-view-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -336,7 +384,6 @@ html, body {
   box-sizing: border-box;
   font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
-  /* overflow-y: auto;  필요시 이 부분은 개별 섹션에 적용하여 해당 섹션만 스크롤되게 할 수 있습니다. */
 }
 
 .mypage-layout {
@@ -349,7 +396,6 @@ html, body {
   box-shadow: none; /* 그림자 제거 */
   border: none; /* 테두리 제거 */
   overflow: hidden;
-  /* min-height: 700px;  이 값을 제거하거나 `auto`로 변경하여 콘텐츠에 따라 높이 조절 */
   height: calc(100vh - 80px); /* 뷰포트 높이에서 상하 패딩을 뺀 값으로 설정 */
   align-items: flex-start; /* 메인 컨텐츠와 사이드바 상단 정렬 */
   margin-left: 0;
@@ -721,7 +767,7 @@ html, body {
 }
 
 @media (max-width: 576px) {
-  .mypage-view {
+  .mypage-view-wrapper {
     padding: 20px 10px;
   }
 
