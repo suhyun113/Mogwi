@@ -3,12 +3,13 @@ package com.example.mogwi_system.controller;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,175 +17,131 @@ import java.util.Map;
 @RestController
 @Slf4j
 @Transactional
-@RequestMapping("/api/user") // 사용자 관련 기본 경로
+@RequestMapping("/api/user") // 기본 경로 설정
 public class UserController {
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    /**
-     * Helper method: 외부 사용자 ID(userid)로 내부 사용자 ID(id)를 조회합니다.
-     * 모든 컨트롤러에서 공통으로 사용됩니다.
-     *
-     * @param userId 외부 사용자 ID (예: 로그인 ID)
-     * @return 내부 사용자 ID (Primary Key)
-     * @throws NoResultException 해당 사용자 ID를 찾을 수 없는 경우
-     * @throws RuntimeException 데이터베이스 조회 중 오류 발생 시
-     */
-    private Long getInternalUserId(String userId) throws NoResultException {
-        log.info("UserController: 외부 사용자 ID '{}'에 대한 내부 ID 조회 시도", userId);
-        try {
-            Object result = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
-                    .setParameter(1, userId)
-                    .getSingleResult();
-            return ((Number) result).longValue();
-        } catch (NoResultException e) {
-            log.warn("UserController: 외부 사용자 ID '{}'에 해당하는 내부 사용자를 찾을 수 없음", userId);
-            throw e;
-        } catch (Exception e) {
-            log.error("UserController: 외부 사용자 ID '{}'에 대한 내부 사용자 ID 조회 중 오류 발생: {}", userId, e.getMessage(), e);
-            throw new RuntimeException("내부 사용자 ID를 검색하는 데 실패했습니다.", e);
-        }
-    }
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     /**
-     * 특정 사용자 정보를 조회합니다. (예: 닉네임, 이메일)
+     * 사용자 정보 조회 API
      * GET /api/user/{userId}
-     * Frontend (MypageView.vue)에서 사용자 닉네임을 불러올 때 사용됩니다.
-     *
-     * @param userId 조회할 사용자의 ID (users 테이블의 userid 필드)
-     * @return 사용자 정보 (닉네임, 이메일 등)
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String userId) {
-        log.info("UserController - getUserProfile 호출됨: userId={}", userId);
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<?> getUserInfo(@PathVariable String userId) {
+        String sql = "SELECT userid, userpass, usermail, username, created_at FROM users WHERE userid = ?";
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter(1, userId);
+
         try {
-            if (userId == null || userId.trim().isEmpty()) {
-                log.warn("UserController - getUserProfile: userId가 null이거나 비어있습니다.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("status", "ERROR", "message", "사용자 ID가 누락되었습니다."));
-            }
+            Object[] row = (Object[]) query.getSingleResult();
+            Map<String, Object> user = new HashMap<>();
+            user.put("userid", row[0]);
+            user.put("userpass", row[1]);
+            user.put("usermail", row[2]); // 이메일은 "usermail"이라는 키로 저장
+            user.put("username", row[3]); // 닉네임은 "username"이라는 키로 저장
+            user.put("created_at", row[4]);
 
-            Long internalUserId;
-            try {
-                internalUserId = getInternalUserId(userId); // 먼저 내부 사용자 ID를 조회
-            } catch (NoResultException e) {
-                log.warn("UserController - getUserProfile: 사용자 ID '{}'를 찾을 수 없음. 유효하지 않은 userId 요청.", userId);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자를 찾을 수 없습니다."));
-            }
-
-            // usermail 컬럼을 조회하도록 SQL 쿼리 수정
-            String sql = "SELECT username, usermail FROM users WHERE id = ?1";
-            Object[] result;
-            try {
-                result = (Object[]) entityManager.createNativeQuery(sql)
-                        .setParameter(1, internalUserId)
-                        .getSingleResult();
-            } catch (NoResultException e) {
-                log.warn("UserController - getUserProfile: 내부 사용자 ID '{}'에 대한 프로필 정보를 찾을 수 없음. (데이터베이스에 해당 사용자 프로필 없음)", internalUserId);
-                response.put("id", userId);
-                response.put("nickname", null);
-                response.put("email", null); // usermail이 없거나 null인 경우를 대비하여 null로 설정
-                log.info("UserController - getUserProfile: 프로필 데이터가 없거나 불완전하여 기본값으로 응답 (userId: {})", userId);
-                return ResponseEntity.ok(response);
-            }
-
-            // 조회된 결과에서 username과 usermail을 올바르게 매핑
-            String nickname = (result != null && result.length > 0 && result[0] != null) ? result[0].toString() : null;
-            String usermail = (result != null && result.length > 1 && result[1] != null) ? result[1].toString() : null;
-
-            response.put("id", userId);
-            response.put("nickname", nickname);
-            response.put("email", usermail); // 프론트엔드는 'email'로 받으므로 여기서는 'email'로 매핑
-
-            log.info("UserController - getUserProfile 성공: userId={}, nickname={}, email={}", userId, nickname, usermail);
-            return ResponseEntity.ok(response);
-
+            return ResponseEntity.ok(Map.of("status", "OK", "user", user));
+        } catch (NoResultException e) {
+            return ResponseEntity.status(404).body(Map.of("status", "NOT_FOUND", "message", "사용자를 찾을 수 없습니다."));
         } catch (Exception e) {
-            log.error("UserController - getUserProfile: 사용자 프로필 조회 중 예상치 못한 오류 발생 (userId: {}): {}", userId, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
+            log.error("사용자 정보 조회 실패: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("status", "ERROR", "message", "사용자 정보를 불러오는 데 실패했습니다."));
         }
     }
 
     /**
-     * 사용자의 닉네임을 업데이트합니다.
-     * PUT /api/user/{userId}/nickname
+     * 사용자 정보 수정 (닉네임, 비밀번호)
+     * PUT /api/user/{userId}/profile
      *
-     * @param userId 업데이트할 사용자의 ID (users 테이블의 userid 필드)
-     * @param data   새로운 닉네임을 포함하는 맵 ({"nickname": "새닉네임"})
-     * @return 성공/실패 메시지
+     * 요청 본문 예시:
+     * {
+     * "username": "새닉네임",
+     * "currentPassword": "현재비밀번호",
+     * "newPassword": "새비밀번호"
+     * }
      */
-    @PutMapping("/{userId}/nickname")
-    public ResponseEntity<Map<String, String>> updateNickname(
-            @PathVariable String userId,
-            @RequestBody Map<String, String> data) {
-        log.info("UserController - updateNickname 호출됨: userId={}, data={}", userId, data);
-        Map<String, String> response = new HashMap<>();
-        String newNickname = data.get("nickname");
+    @PutMapping("/{userId}/profile")
+    @Transactional // 데이터 변경 작업을 위해 트랜잭션 처리
+    public ResponseEntity<?> updateUserProfile(@PathVariable String userId, @RequestBody Map<String, String> body) {
+        String newNickname = body.get("username");
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
 
-        if (userId == null || userId.trim().isEmpty() || newNickname == null || newNickname.trim().isEmpty()) {
-            log.warn("UserController - updateNickname: 필수 입력값 누락. userId={}, newNickname={}", userId, newNickname);
-            response.put("status", "ERROR");
-            response.put("message", "사용자 ID 또는 새로운 닉네임이 누락되었습니다.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        // 1. 닉네임 유효성 검사
+        if (newNickname == null || newNickname.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "닉네임은 필수 입력입니다."));
         }
 
-        Long internalUserId;
+        // 2. 현재 사용자 정보 조회 (특히 비밀번호 검증을 위해)
+        String selectSql = "SELECT userpass FROM users WHERE userid = ?";
+        Query selectQuery = entityManager.createNativeQuery(selectSql);
+        selectQuery.setParameter(1, userId);
+
+        String storedHashedPassword;
         try {
-            internalUserId = getInternalUserId(userId);
+            storedHashedPassword = (String) selectQuery.getSingleResult();
         } catch (NoResultException e) {
-            log.warn("UserController - updateNickname: 사용자 ID '{}'를 찾을 수 없음.", userId);
-            response.put("status", "ERROR");
-            response.put("message", "사용자를 찾을 수 없습니다.");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            log.warn("사용자 ID를 찾을 수 없습니다: {}", userId);
+            return ResponseEntity.ok(Map.of("status", "NOT_FOUND", "message", "사용자를 찾을 수 없습니다."));
         } catch (Exception e) {
-            log.error("UserController - updateNickname: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            response.put("status", "ERROR");
-            response.put("message", "서버 오류: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            log.error("사용자 비밀번호 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("status", "ERROR", "message", "데이터베이스 오류가 발생했습니다."));
         }
 
-        try {
-            // 중복 닉네임 확인 (현재 사용자 제외)
-            String checkDuplicateSql = "SELECT COUNT(*) FROM users WHERE username = ?1 AND id != ?2";
-            Long duplicateCount = ((Number) entityManager.createNativeQuery(checkDuplicateSql)
-                    .setParameter(1, newNickname)
-                    .setParameter(2, internalUserId)
-                    .getSingleResult()).longValue();
-
-            if (duplicateCount > 0) {
-                log.warn("UserController - updateNickname: 닉네임 '{}'은 이미 사용 중입니다.", newNickname);
-                response.put("status", "ERROR");
-                response.put("message", "이미 사용 중인 닉네임입니다.");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response); // 409 Conflict
+        // 3. 비밀번호 변경 로직 처리
+        String updateSql = "UPDATE users SET username = ?";
+        // 닉네임만 변경할 경우, 비밀번호 필드들은 무시합니다.
+        // newPassword가 제공되었을 때만 비밀번호 변경 로직을 수행합니다.
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            // 현재 비밀번호 유효성 검사
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다."));
             }
+            if (!bCryptPasswordEncoder.matches(currentPassword, storedHashedPassword)) {
+                return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "현재 비밀번호가 일치하지 않습니다."));
+            }
+            // 새 비밀번호 해싱
+            String hashedNewPassword = bCryptPasswordEncoder.encode(newPassword);
+            updateSql += ", userpass = ?"; // SQL에 비밀번호 업데이트 필드 추가
+            log.info("사용자 {}의 비밀번호를 변경합니다.", userId);
+        } else {
+            // 새 비밀번호를 입력하지 않았는데, 현재 비밀번호나 새 비밀번호 확인 필드가 채워져 있다면 오류
+            if ((currentPassword != null && !currentPassword.trim().isEmpty()) || (body.get("confirmNewPassword") != null && !body.get("confirmNewPassword").trim().isEmpty())) {
+                return ResponseEntity.badRequest().body(Map.of("status", "INVALID", "message", "새 비밀번호를 입력하지 않으려면, 현재 비밀번호 및 확인 필드를 비워두세요."));
+            }
+        }
 
-            // 닉네임 업데이트
-            String updateSql = "UPDATE users SET username = ?1, updated_at = NOW() WHERE id = ?2";
-            int updatedRows = entityManager.createNativeQuery(updateSql)
-                    .setParameter(1, newNickname)
-                    .setParameter(2, internalUserId)
-                    .executeUpdate();
+        updateSql += " WHERE userid = ?"; // WHERE 절 추가
 
-            if (updatedRows > 0) {
-                log.info("UserController - updateNickname 성공: userId={}, 새 닉네임={}", userId, newNickname);
-                response.put("status", "success");
-                response.put("message", "닉네임이 성공적으로 변경되었습니다.");
-                return ResponseEntity.ok(response);
+        Query updateQuery = entityManager.createNativeQuery(updateSql);
+        int paramIndex = 1;
+
+        updateQuery.setParameter(paramIndex++, newNickname); // 닉네임 파라미터 설정
+
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            updateQuery.setParameter(paramIndex++, bCryptPasswordEncoder.encode(newPassword)); // 해싱된 새 비밀번호 파라미터 설정
+        }
+
+        updateQuery.setParameter(paramIndex, userId); // userId 파라미터 설정
+
+        try {
+            int result = updateQuery.executeUpdate();
+
+            if (result > 0) {
+                log.info("사용자 {}의 프로필이 성공적으로 업데이트되었습니다.", userId);
+                return ResponseEntity.ok(Map.of("status", "OK", "message", "프로필 정보가 성공적으로 수정되었습니다."));
             } else {
-                log.warn("UserController - updateNickname: 닉네임 업데이트 실패 - 사용자를 찾을 수 없거나 변경 사항 없음. userId={}", userId);
-                response.put("status", "ERROR");
-                response.put("message", "닉네임 업데이트에 실패했습니다. 사용자를 찾을 수 없거나 변경 사항이 없습니다.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                log.warn("사용자 {}의 프로필 업데이트 실패: 사용자를 찾을 수 없거나 변경 사항이 없습니다.", userId);
+                return ResponseEntity.ok(Map.of("status", "NOT_FOUND", "message", "프로필 업데이트에 실패했습니다. 사용자를 찾을 수 없거나 변경 사항이 없습니다."));
             }
         } catch (Exception e) {
-            log.error("UserController - updateNickname: 닉네임 업데이트 중 오류 발생 (internalUserId: {}, newNickname: {}): {}", internalUserId, newNickname, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            response.put("status", "ERROR");
-            response.put("message", "서버 오류: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            log.error("프로필 수정 중 데이터베이스 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("status", "ERROR", "message", "프로필 업데이트 중 서버 오류가 발생했습니다."));
         }
     }
 }
