@@ -17,4 +17,14 @@ public class SecurityConfig {
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (개발 편의상, 프로덕션에서는 고려)
+                .authorizeHttpRequests(authz -> authz
+                        .anyRequest().permitAll() // 모든 요청 허용 (임시)
+                );
+        return http.build();
+    }
 }
