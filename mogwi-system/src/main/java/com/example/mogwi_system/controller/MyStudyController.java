@@ -3,7 +3,7 @@ package com.example.mogwi_system.controller;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +41,30 @@ public class MyStudyController {
         }
     }
 
+    // Helper method: 문제의 카테고리 태그와 색상 코드 조회
+    private List<Map<String, String>> getCategoriesForProblem(Long problemId) {
+        List<Map<String, String>> categoriesWithColor = new ArrayList<>();
+        try {
+            String tagsSql = "SELECT c.tag_name, c.color_code FROM categories c " +
+                    "JOIN problem_categories pc ON c.id = pc.category_id " +
+                    "WHERE pc.problem_id = ?1";
+            List<Object[]> tagsAndColors = entityManager.createNativeQuery(tagsSql)
+                    .setParameter(1, problemId)
+                    .getResultList();
+
+            for (Object[] tagRow : tagsAndColors) {
+                Map<String, String> categoryMap = new HashMap<>();
+                categoryMap.put("tag_name", tagRow[0].toString());
+                categoryMap.put("color_code", tagRow[1] != null ? tagRow[1].toString() : "#CCCCCC"); // null 처리 및 기본값 설정
+                categoriesWithColor.add(categoryMap);
+            }
+        } catch (Exception e) {
+            log.error("MyStudyController: 문제 ID {}에 대한 카테고리 조회 중 오류 발생: {}", problemId, e.getMessage(), e);
+            // 오류 발생 시에도 빈 리스트 반환 (클라이언트에서 처리할 수 있도록)
+        }
+        return categoriesWithColor;
+    }
+
     /**
      * 특정 사용자의 전체 학습 요약 통계를 조회합니다.
      * GET /api/mystudy/summary/{userId}
@@ -49,7 +73,7 @@ public class MyStudyController {
      * @param userId 현재 로그인한 사용자의 ID (users 테이블의 userid 필드)
      * @return 전체 학습 요약 데이터
      */
-    @GetMapping("/summary/{userId}")
+    @GetMapping("/problem/{userId}")
     public ResponseEntity<Map<String, Object>> getOverallStudySummary(
             @PathVariable String userId) {
         log.info("MyStudyController - getOverallStudySummary 호출됨: userId={}", userId);
@@ -106,6 +130,7 @@ public class MyStudyController {
      * @return 사용자의 문제 목록, 각 문제별 카드 학습 현황, 작성자 닉네임, 태그 포함
      */
     @GetMapping("/problems/detail/{userId}")
+    @Transactional(readOnly = true) // 읽기 전용 트랜잭션으로 지정
     public ResponseEntity<List<Map<String, Object>>> getUserStudyProblemsDetail(
             @PathVariable String userId) {
         log.info("MyStudyController - getUserStudyProblemsDetail 호출됨: userId={}", userId);
@@ -121,11 +146,14 @@ public class MyStudyController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
         } catch (Exception e) {
             log.error("MyStudyController - getUserStudyProblemsDetail: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // 읽기 전용 트랜잭션에서는 롤백이 의미 없거나 자동이므로 명시적 호출 불필요
+            // TransactionAspectSupport.currentTransactionStatus().setRollbackOnly(); // 이 라인은 읽기 전용에서는 보통 제거
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
         }
 
         try {
+            // 핵심 수정: p.id IN (...) 서브쿼리를 제거하고, LEFT JOIN 후 WHERE 절에서
+            // 해당 사용자의 user_problem_status 또는 user_card_status 기록이 있는 문제만 필터링합니다.
             String problemSql = "SELECT " +
                     "p.id AS problem_id, " +
                     "p.title, " +
@@ -143,19 +171,15 @@ public class MyStudyController {
                     "FROM problems p " +
                     "JOIN users u ON p.author_id = u.id " +
                     "LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ?1 " +
-                    "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?2 " +
-                    "WHERE p.id IN (" +
-                    "SELECT p_all.id FROM problems p_all " +
-                    "LEFT JOIN user_problem_status ups_all ON p_all.id = ups_all.problem_id AND ups_all.user_id = ?3 " +
-                    "WHERE ups_all.user_id IS NULL OR ups_all.problem_status IN ('new', 'ongoing', 'completed')" +
-                    ") " +
+                    "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?1 " +
+                    // 변경된 부분: 현재 사용자의 학습 기록(문제 상태 또는 카드 상태)이 있는 문제만 가져옴
+                    "WHERE (ups.user_id = ?1 OR ucs.user_id = ?1) " +
                     "GROUP BY p.id, p.title, p.description, p.card_count, u.username, ups.is_liked, ups.is_scrapped, ups.problem_status " +
                     "ORDER BY IFNULL(ups.updated_at, p.created_at) DESC";
 
+            // named parameter로 변경하여 가독성 높임
             List<Object[]> problemResults = entityManager.createNativeQuery(problemSql)
-                    .setParameter(1, internalUserId)
-                    .setParameter(2, internalUserId)
-                    .setParameter(3, internalUserId)
+                    .setParameter(1, internalUserId) // 기존 ?1, ?2, ?3 대신 하나의 파라미터로 처리
                     .getResultList();
 
             List<Map<String, Object>> userProblems = new ArrayList<>();
@@ -179,23 +203,8 @@ public class MyStudyController {
                 problem.put("vagueCount", ((Number) row[11]).intValue());
                 problem.put("forgottenCount", ((Number) row[12]).intValue());
 
-                // 카테고리 태그와 색상 코드 조회
-                // SQL 쿼리에 color_code 컬럼 추가
-                String tagsSql = "SELECT c.tag_name, c.color_code FROM categories c " +
-                        "JOIN problem_categories pc ON c.id = pc.category_id " +
-                        "WHERE pc.problem_id = ?1";
-                List<Object[]> tagsAndColors = entityManager.createNativeQuery(tagsSql)
-                        .setParameter(1, problemId)
-                        .getResultList();
-
-                List<Map<String, String>> categoriesWithColor = new ArrayList<>();
-                for (Object[] tagRow : tagsAndColors) {
-                    Map<String, String> categoryMap = new HashMap<>();
-                    categoryMap.put("tag_name", tagRow[0].toString());
-                    categoryMap.put("color_code", tagRow[1] != null ? tagRow[1].toString() : "#CCCCCC"); // null 처리 및 기본값 설정
-                    categoriesWithColor.add(categoryMap);
-                }
-                problem.put("categories", categoriesWithColor); // categories를 List<Map<String, String>>으로 변경
+                // 카테고리 태그와 색상 코드 조회 (헬퍼 메소드 사용)
+                problem.put("categories", getCategoriesForProblem(problemId));
 
                 userProblems.add(problem);
             }
@@ -204,7 +213,7 @@ public class MyStudyController {
 
         } catch (Exception e) {
             log.error("MyStudyController - getUserStudyProblemsDetail: 사용자 문제 학습 상세 목록 조회 중 오류 발생 (internalUserId: {}): {}", internalUserId, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // 읽기 전용 트랜잭션에서 롤백은 자동이지만, 명시적으로 표시해도 무방
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
         }
     }
