@@ -21,7 +21,7 @@ public class ProblemController {
     /** 문제 목록 조회 API
      * GET /api/problems
      */
-    @GetMapping("/api/problems")
+    @GetMapping("/api/problem")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
@@ -104,9 +104,9 @@ public class ProblemController {
     }
 
     /** 문제 상세 조회 API
-     * GET /api/problems/{id}
+     * GET /api/problem/{id}
      */
-    @GetMapping("/api/problems/{id}")
+    @GetMapping("/api/problem/{id}")
     public ResponseEntity<Map<String, Object>> getProblemDetail(
             @PathVariable Long id,
             @RequestParam(required = false) String currentUserId) {
@@ -218,7 +218,7 @@ public class ProblemController {
     /** 문제 생성 API
      * POST /api/problems
      */
-    @PostMapping("/api/problems")
+    @PostMapping("/api/problem")
     public ResponseEntity<Map<String, String>> createProblem(@RequestBody Map<String, Object> requestBody) {
         Map<String, String> response = new HashMap<>();
         try {
