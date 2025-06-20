@@ -180,29 +180,6 @@ export default {
       }
     };
 
-    // EditProfileModal에서 프로필 정보가 업데이트되었을 때 호출될 함수
-    const handleProfileUpdateFromModal = (updatedData) => {
-      // 닉네임과 이메일 정보 업데이트
-      if (updatedData.nickname) {
-        userNickname.value = updatedData.nickname;
-        nicknameUpdateMessage.value = '닉네임이 성공적으로 변경되었습니다.';
-        nicknameUpdateStatus.value = 'success';
-      }
-      if (updatedData.email) {
-        userEmail.value = updatedData.email; // 이메일 업데이트
-      }
-
-      showNicknameUpdateMessage.value = true;
-      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
-
-      // 모달 닫기
-      showEditProfileModal.value = false;
-
-      // 필요하다면 변경된 정보를 UI에 반영하기 위해 마이페이지 데이터 다시 불러오기
-      // fetchMypageData(); // 닉네임과 이메일만 변경된 경우라면 굳이 전체를 다시 불러올 필요는 없을 수 있음
-    };
-
-
     // --- (이하 기존 코드 유지) ---
     const handleDeleteAccount = () => {
       deleteTarget.value = 'account';
@@ -346,7 +323,6 @@ export default {
       confirmDeleteProblem,
       cancelDelete,
       showEditProfileModal,
-      handleProfileUpdateFromModal, // 모달 업데이트 핸들러
       goToProblem,
       editProblem,
       deleteProblem,
