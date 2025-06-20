@@ -49,7 +49,7 @@ export default {
   methods: {
     async fetchProblemDetails(id) {
       try {
-        const response = await axios.get(`/api/problems/${id}`, {
+        const response = await axios.get(`/api/problem/${id}`, {
           params: {
             currentUserId: this.$store.state.store_userid
           }

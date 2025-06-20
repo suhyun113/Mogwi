@@ -126,7 +126,7 @@ export default {
 
     const fetchProblems = async () => {
       try {
-        const response = await axios.get('/api/problems', {
+        const response = await axios.get('/api/problem', {
           params: {
             query: query.value,
             category: selectedCategory.value,

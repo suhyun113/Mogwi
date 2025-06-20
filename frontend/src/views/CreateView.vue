@@ -223,7 +223,7 @@ export default {
           }))
         };
 
-        const response = await axios.post('/api/problems', payload);
+        const response = await axios.post('/api/problem', payload);
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 생성되었습니다!');
