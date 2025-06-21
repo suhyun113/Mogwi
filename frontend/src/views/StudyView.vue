@@ -77,17 +77,18 @@ export default {
           problemId: problemId
         });
 
-        // 서버에서 받은 상태가 없을 수도 있으니 대비
         const receivedStatus = response.data.problemStatus || '';
 
         this.problemStatus = receivedStatus; // 화면용 상태 업데이트
         console.log('API 응답 데이터 (start-study problemStatus):', receivedStatus);
 
+        // RECEIVED_STATUS가 빈 문자열일 때만 모달 표시
         if (receivedStatus === '') {
           this.showStudyStartModal = true;
           console.log('problemStatus가 빈 문자열이므로 StudyStartModal 표시.');
         } else {
-          // 그 외의 모든 상태(new, ongoing, completed)는 바로 문제 풀이 페이지로 이동
+          // RECEIVED_STATUS가 'new', 'ongoing', 'completed' 등 다른 상태일 경우
+          // 즉, 이미 나의 학습에 담겨있거나 학습 중이던 문제일 경우 바로 풀이 페이지로 이동
           console.log(`problemStatus가 "${receivedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
           this.router.push(`/study/${problemId}/solve`);
         }
@@ -98,34 +99,23 @@ export default {
       }
     },
 
-    // StudyStartModal에서 '문제 구경하기' 클릭 시 (수정된 부분)
+    // StudyStartModal에서 '문제 구경하기' 클릭 시
     handleGoPreviewFromStudyModal() {
       this.showStudyStartModal = false; // 모달 닫기
-      console.log('StudyView: "문제 구경하기" 클릭. 모달을 닫고 MainView로 이동.');
+      console.log('StudyView: "문제 구경하기" 클릭. 모달을 닫고 MainView로 이동. (문제는 이미 new 상태로 저장됨)');
       this.router.push('/'); // MainView로 라우팅
+      // 문제의 DB 상태는 이미 'new'로 되어 있으므로 별도 API 호출 필요 없음
     },
 
     // StudyStartModal에서 '문제 바로 풀기' 클릭 시
+    // 이 버튼을 클릭해도 'new' 상태를 유지하고 싶다면 'set-ongoing' API 호출을 제거합니다.
     async handleGoStudyFromStudyModal(problemIdFromModal) {
-      this.showStudyStartModal = false;
-      try {
-        const response = await axios.post('/api/solve/set-ongoing', {
-          userId: this.currentUserId,
-          problemId: problemIdFromModal
-        });
-
-        if (response.status === 200) {
-          console.log(`StudyView: 문제 ${problemIdFromModal} 학습 상태를 'ongoing'으로 업데이트 완료.`);
-          this.problemStatus = 'ongoing';
-          this.router.push(`/study/${problemIdFromModal}/solve`);
-        } else {
-          console.error('StudyView: 문제 상태 업데이트 실패:', response.data);
-          alert('문제 학습을 시작하는 데 실패했습니다.');
-        }
-      } catch (error) {
-        console.error('StudyView: 문제 상태 업데이트 중 오류:', error);
-        alert('문제 학습을 시작하는 데 문제가 발생했습니다.');
-      }
+      this.showStudyStartModal = false; // 모달 닫기
+      console.log(`StudyView: '문제 바로 풀기' 클릭. 문제 ${problemIdFromModal} 풀이 페이지로 이동. (new 상태 유지)`);
+      // 요청에 따라 'set-ongoing' API 호출을 제거하고 바로 라우팅
+      this.router.push(`/study/${problemIdFromModal}/solve`);
+      // 만약 프론트엔드 상태도 'new'로 명시하고 싶다면:
+      this.problemStatus = 'new';
     },
 
     toggleLike() {
