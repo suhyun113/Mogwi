@@ -270,7 +270,7 @@ export default {
     },
     handleSolveClick() {
       if (this.isAuthenticated) {
-        this.$emit('solve', this.localProblem.id); // 문제 ID만 전달하도록 수정. 필요에 따라 객체 전체를 전달해도 됨.
+        this.$router.push(`/study/${this.localProblem.id}`); // 문제 ID만 전달하도록 수정. 필요에 따라 객체 전체를 전달해도 됨.
       } else {
         this.$emit('auth-required')
       }
