@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -56,110 +57,8 @@ public class ProblemController {
         return categories;
     }
 
-    /** 문제 목록 조회 API
-     * GET /api/problem
-     *
-     * @param query 검색어 (선택 사항)
-     * @param category 카테고리 태그 (선택 사항)
-     * @param currentUserId 현재 로그인된 사용자의 userid (문자열). 이 사용자의 좋아요/스크랩 여부 및 (onlyMine=true 시) 작성 문제를 확인하는 데 사용됩니다.
-     * @return 문제 목록 (List<Map<String, Object>>)
-     */
-    @GetMapping("/api/problem")
-    public ResponseEntity<List<Map<String, Object>>> getProblems(
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String currentUserId
-    ) {
-        try {
-            StringBuilder sql = new StringBuilder(
-                    "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.is_public, p.card_count, " +
-                            "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1), 0) AS likes, " +
-                            "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_scrapped = 1), 0) AS scraps, " +
-                            "IFNULL(ups.is_liked, 0) AS liked, " +
-                            "IFNULL(ups.is_scrapped, 0) AS scrapped, " +
-                            "c.tag_name AS category_name, " +
-                            "c.color_code AS category_color " +
-                            "FROM problems p " +
-                            "JOIN users u ON p.author_id = u.id " +
-                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserIdParam) " + // currentUserIdParam으로 변경
-                            "LEFT JOIN problem_categories pc ON p.id = pc.problem_id " +
-                            "LEFT JOIN categories c ON pc.category_id = c.id "
-            );
-
-            List<String> conditions = new ArrayList<>();
-            Map<String, Object> parameters = new HashMap<>();
-
-            // 검색어 조건
-            if (query != null && !query.isEmpty()) {
-                conditions.add("p.title LIKE :query");
-                parameters.put("query", "%" + query + "%");
-            }
-            // 카테고리 조건
-            if (category != null && !category.equals("#전체")) {
-                conditions.add("c.tag_name = :category");
-                parameters.put("category", category);
-            }
-
-            // 조건들을 WHERE 절에 추가
-            if (!conditions.isEmpty()) {
-                sql.append("WHERE ").append(String.join(" AND ", conditions));
-                sql.append(" AND p.is_public = 1");
-            } else {
-                sql.append("WHERE p.is_public = 1");
-            }
-
-            // GROUP BY 및 ORDER BY 절
-            sql.append(" GROUP BY p.id, p.title, u.username, u.userid, p.is_public, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
-            sql.append(" ORDER BY p.id DESC");
-
-            var queryObj = entityManager.createNativeQuery(sql.toString());
-
-            // 쿼리 파라미터 설정
-            if (currentUserId == null) currentUserId = ""; // currentUserId가 null이면 빈 문자열로 처리
-            queryObj.setParameter("currentUserIdParam", currentUserId); // 좋아요/스크랩 상태 조회용 파라미터
-
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                queryObj.setParameter(entry.getKey(), entry.getValue());
-            }
-
-            List<Object[]> results = queryObj.getResultList();
-            Map<Long, Map<String, Object>> problemMap = new LinkedHashMap<>();
-
-            for (Object[] row : results) {
-                Long problemId = ((Number) row[0]).longValue();
-
-                if (!problemMap.containsKey(problemId)) {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("id", problemId);
-                    item.put("title", row[1]);
-                    item.put("authorName", row[2]); // username
-                    item.put("authorId", row[3]); // userId
-                    item.put("isPublic","1".equals(row[4].toString()));
-                    item.put("cardCount", row[5]);
-                    item.put("likes", row[6]);
-                    item.put("scraps", row[7]);
-                    item.put("liked", ((Number) row[8]).intValue() == 1);
-                    item.put("scrapped", ((Number) row[9]).intValue() == 1);
-                    item.put("categories", new ArrayList<Map<String, String>>());
-                    problemMap.put(problemId, item);
-                }
-                if (row[10] != null) {
-                    Map<String, String> categoryMap = new HashMap<>();
-                    categoryMap.put("tag_name", row[10].toString());
-                    categoryMap.put("color_code", row[11] != null ? row[11].toString() : "#CCCCCC");
-                    ((List<Map<String, String>>) problemMap.get(problemId).get("categories")).add(categoryMap);
-                }
-            }
-
-            return ResponseEntity.ok(new ArrayList<>(problemMap.values()));
-        } catch (Exception e) {
-            log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
     /**
-     * 상세 문제 목록 조회 API (사용자 학습 기록 기반 + 필터링)
+     * 문제 목록 조회 API (사용자 학습 기록 기반 + 필터링)
      * GET /api/problem/detail
      *
      * @param currentUserId 현재 로그인한 사용자의 userid
@@ -319,7 +218,7 @@ public class ProblemController {
         }
     }
 
-    /** 단일 문제 상세 조회 API
+    /** 단일 문제 조회 API
      * GET /api/problem/{id}
      */
     @GetMapping("/api/problem/{id}")
@@ -633,50 +532,94 @@ public class ProblemController {
     /** 문제 삭제 API
      * DELETE /api/problem/{id}
      */
-    @DeleteMapping("/api/problem/{id}")
-    public ResponseEntity<Map<String, String>> deleteProblem(@PathVariable Long id) {
+    @DeleteMapping("/api/problem/{problemId}")
+    public ResponseEntity<Map<String, String>> deleteProblemStatus(
+            @PathVariable Long problemId,
+            @PathVariable String userId) {
+        log.warn("MyStudyController - deleteProblemStatus 호출됨: problemId={}, userId={}. !!! 전체 문제 데이터가 삭제됩니다 !!!", problemId, userId);
         Map<String, String> response = new HashMap<>();
+
+        if (userId == null || userId.trim().isEmpty() || problemId == null) {
+            log.warn("MyStudyController - deleteProblemStatus: 필수 입력값 누락. problemId={}, userId={}", problemId, userId);
+            response.put("status", "ERROR");
+            response.put("message", "필수 입력값(userId, problemId)이 누락되었습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // internalUserId is still needed for logging, but not strictly for deleting ALL statuses
+        Long internalUserId = null;
         try {
-            Long problemCount = ((Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM problems WHERE id = ?1")
-                    .setParameter(1, id)
-                    .getSingleResult()).longValue();
+            internalUserId = getInternalUserId(userId);
+        } catch (NoResultException e) {
+            log.warn("MyStudyController - deleteProblemStatus: 사용자 ID '{}'를 찾을 수 없음. 하지만 문제 전체 삭제는 진행됩니다.", userId);
+            // We might still proceed with problem deletion even if user is not found,
+            // as the intent here is global deletion tied to this endpoint.
+            // Consider if you want to allow this or always require a valid user.
+        } catch (Exception e) {
+            log.error("MyStudyController - deleteProblemStatus: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
+            // No rollback here yet, as we haven't started DB operations
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
 
-            if (problemCount == 0) {
-                response.put("status", "FAIL");
-                response.put("message", "삭제할 문제를 찾을 수 없습니다.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
+        try {
+            // Start Transaction (if not already handled by Spring's @Transactional)
+            // It's highly recommended to use @Transactional on the service layer method
+            // that orchestrates these deletes, rather than directly in the controller.
 
-            entityManager.createNativeQuery("DELETE FROM user_problem_status WHERE problem_id = ?1")
-                    .setParameter(1, id)
+            // 1. Delete ALL user_card_status entries for this problem (for ALL users)
+            String deleteGlobalCardStatusSql = "DELETE FROM user_card_status WHERE problem_id = ?1";
+            int deletedGlobalCardStatusCount = entityManager.createNativeQuery(deleteGlobalCardStatusSql)
+                    .setParameter(1, problemId)
                     .executeUpdate();
+            log.info("MyStudyController - deleted {} user_card_status entries for problemId={}", deletedGlobalCardStatusCount, problemId);
 
-            entityManager.createNativeQuery("DELETE FROM problem_categories WHERE problem_id = ?1")
-                    .setParameter(1, id)
+            // 2. Delete ALL user_problem_status entries for this problem (for ALL users)
+            String deleteGlobalProblemStatusSql = "DELETE FROM user_problem_status WHERE problem_id = ?1";
+            int deletedGlobalProblemStatusCount = entityManager.createNativeQuery(deleteGlobalProblemStatusSql)
+                    .setParameter(1, problemId)
                     .executeUpdate();
+            log.info("MyStudyController - deleted {} user_problem_status entries for problemId={}", deletedGlobalProblemStatusCount, problemId);
 
-            entityManager.createNativeQuery("DELETE FROM cards WHERE problem_id = ?1")
-                    .setParameter(1, id)
+            // 3. Delete cards associated with this problem
+            String deleteCardsSql = "DELETE FROM cards WHERE problem_id = ?1";
+            int deletedCardsCount = entityManager.createNativeQuery(deleteCardsSql)
+                    .setParameter(1, problemId)
                     .executeUpdate();
+            log.info("MyStudyController - deleted {} cards for problemId={}", deletedCardsCount, problemId);
 
-            int deletedRows = entityManager.createNativeQuery("DELETE FROM problems WHERE id = ?1")
-                    .setParameter(1, id)
+            // 4. Delete problem_categories entries related to this problem
+            //    (Assuming problem_categories is a join table or has problem_id directly)
+            String deleteProblemCategoriesSql = "DELETE FROM problem_categories WHERE problem_id = ?1";
+            int deletedCategoriesCount = entityManager.createNativeQuery(deleteProblemCategoriesSql)
+                    .setParameter(1, problemId)
                     .executeUpdate();
+            log.info("MyStudyController - deleted {} problem_categories entries for problemId={}", deletedCategoriesCount, problemId);
 
-            if (deletedRows > 0) {
+            // 5. Finally, delete the problem itself
+            String deleteProblemSql = "DELETE FROM problems WHERE id = ?1";
+            int deletedProblemCount = entityManager.createNativeQuery(deleteProblemSql)
+                    .setParameter(1, problemId)
+                    .executeUpdate();
+            log.info("MyStudyController - deleted {} problem from 'problems' table for problemId={}", deletedProblemCount, problemId);
+
+
+            if (deletedProblemCount > 0) {
                 response.put("status", "OK");
-                response.put("message", "문제가 성공적으로 삭제되었습니다.");
+                response.put("message", "문제 및 모든 관련 데이터가 시스템에서 성공적으로 삭제되었습니다.");
                 return ResponseEntity.ok(response);
             } else {
-                response.put("status", "FAIL");
-                response.put("message", "문제 삭제에 실패했습니다.");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                response.put("status", "INFO"); // Not an error, but problem was not found for deletion
+                response.put("message", "해당 문제(ID: " + problemId + ")를 찾을 수 없거나 이미 시스템에서 삭제되었습니다.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
-
         } catch (Exception e) {
-            log.error("문제 삭제 중 오류 발생: {}", e.getMessage(), e);
+            log.error("MyStudyController - deleteProblemStatus: 문제 및 관련 데이터 삭제 중 오류 발생 (problemId: {}): {}", problemId, e.getMessage(), e);
+            // This is critical, ensure rollback if using programmatic transaction management
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             response.put("status", "ERROR");
-            response.put("message", "문제 삭제 중 서버 오류가 발생했습니다: " + e.getMessage());
+            response.put("message", "서버 오류: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
