@@ -173,26 +173,23 @@ export default {
         }
 
         // 내가 좋아요 누른 문제만 조회
-        // 서버에서 liked 상태를 제대로 반환하도록 쿼리 파라미터와 백엔드 로직 확인 필요
         const likedResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyLiked=true`);
-        // 서버에서 받아온 데이터에 `likes`와 `scraps` 필드가 포함되어 있다고 가정합니다.
         likedProblems.value = likedResponse.data.map(problem => ({
           ...problem,
-          liked: true, // 좋아요한 목록이므로 항상 true
-          scrapped: problem.scrapped, // 스크랩 여부는 서버 데이터에 따름
-          likes: problem.likes || 0, // 서버 응답에 likes 필드가 있다고 가정
-          scraps: problem.scraps || 0 // 서버 응답에 scraps 필드가 있다고 가정
+          liked: problem.isLiked,
+          scrapped: problem.isScrapped,
+          likes: problem.totalLikes || 0,
+          scraps: problem.totalScraps || 0
         }));
-        
+
         // 내가 스크랩 누른 문제만 조회
         const scrapResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyScrapped=true`);
-        // 서버에서 받아온 데이터에 `likes`와 `scraps` 필드가 포함되어 있다고 가정합니다.
         scrapedProblems.value = scrapResponse.data.map(problem => ({
           ...problem,
-          scrapped: true, // 스크랩한 목록이므로 항상 true
-          liked: problem.liked, // 좋아요 여부는 서버 데이터에 따름
-          likes: problem.likes || 0, // 서버 응답에 likes 필드가 있다고 가정
-          scraps: problem.scraps || 0 // 서버 응답에 scraps 필드가 있다고 가정
+          liked: problem.isLiked,
+          scrapped: problem.isScrapped,
+          likes: problem.totalLikes || 0,
+          scraps: problem.totalScraps || 0
         }));
 
         const myProblemsResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyMine=true`);
