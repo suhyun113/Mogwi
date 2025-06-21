@@ -165,7 +165,7 @@ export default {
           userEmail.value = '알 수 없음';
         }
 
-        const likedScrapResponse = await axios.get(`/api/mypage/problems/liked-scraped/${currentUserId.value}`);
+        const likedScrapResponse = await axios.get(`/api/problems/liked-scraped/${currentUserId.value}`);
         likedProblems.value = likedScrapResponse.data.likedProblems;
         scrapedProblems.value = likedScrapResponse.data.scrapedProblems; // <-- **FIX: This line is now correct as `scrapedProblems` is defined.**
 
