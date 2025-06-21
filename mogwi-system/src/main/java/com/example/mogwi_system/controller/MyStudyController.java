@@ -313,23 +313,32 @@ public class MyStudyController {
         Map<String, String> response = new HashMap<>();
 
         try {
-            // user_card_status 삭제
+            // 외부 ID → 내부 ID 변환
+            Long internalUserId = getInternalUserId(userId);
+
+            // 삭제
             int deletedCardStatus = entityManager.createNativeQuery(
                             "DELETE FROM user_card_status WHERE problem_id = ?1 AND user_id = ?2")
                     .setParameter(1, problemId)
-                    .setParameter(2, userId)
+                    .setParameter(2, internalUserId)
                     .executeUpdate();
 
-            // user_problem_status 삭제
             int deletedProblemStatus = entityManager.createNativeQuery(
                             "DELETE FROM user_problem_status WHERE problem_id = ?1 AND user_id = ?2")
                     .setParameter(1, problemId)
-                    .setParameter(2, userId)
+                    .setParameter(2, internalUserId)
                     .executeUpdate();
+
+            log.info("Deleted card status rows: {}, problem status rows: {}", deletedCardStatus, deletedProblemStatus);
 
             response.put("status", "OK");
             response.put("message", "해당 사용자의 학습 상태가 성공적으로 삭제되었습니다.");
             return ResponseEntity.ok(response);
+
+        } catch (NoResultException e) {
+            response.put("status", "ERROR");
+            response.put("message", "사용자 ID를 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 
         } catch (Exception e) {
             log.error("사용자 학습 상태 삭제 중 오류 발생: {}", e.getMessage(), e);
@@ -338,5 +347,6 @@ public class MyStudyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
 
 }
