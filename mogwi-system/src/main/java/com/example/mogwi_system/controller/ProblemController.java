@@ -185,7 +185,7 @@ public class ProblemController {
 
         try {
             StringBuilder sql = new StringBuilder(
-                    "SELECT p.id AS problem_id, p.title, p.description, p.card_count, u.username AS author_nickname, " +
+                    "SELECT p.id AS problem_id, p.title, p.description, p.is_public, p.card_count, u.username AS author_nickname, " +
                             "COALESCE(ups.is_liked, 0) AS is_liked, COALESCE(ups.is_scrapped, 0) AS is_scrapped, " +
                             "IFNULL(ups.problem_status, 'new') AS study_status, " +
                             "(SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1) AS total_likes, " +
@@ -205,6 +205,7 @@ public class ProblemController {
             } else {
                 whereConditions.add("(ups.user_id = ?1 OR ucs.user_id = ?1)");
             }
+
             if (onlyLiked) {
                 whereConditions.add("ups.is_liked = 1");
             }
@@ -231,18 +232,19 @@ public class ProblemController {
                 problem.put("id", problemId);
                 problem.put("title", row[1]);
                 problem.put("description", row[2]);
-                problem.put("cardCount", ((Number) row[3]).intValue());
-                problem.put("authorId", row[4]);
-                problem.put("isLiked", ((Number) row[5]).intValue() == 1);
-                problem.put("isScrapped", ((Number) row[6]).intValue() == 1);
-                String studyStatus = row[7].toString();
+                problem.put("isPublic", ((Number) row[3]).intValue() == 1);
+                problem.put("cardCount", ((Number) row[4]).intValue());
+                problem.put("authorId", row[5]);
+                problem.put("isLiked", ((Number) row[6]).intValue() == 1);
+                problem.put("isScrapped", ((Number) row[7]).intValue() == 1);
+                String studyStatus = row[8].toString();
                 problem.put("studyStatus", studyStatus);
                 problem.put("isCompleted", "completed".equals(studyStatus));
-                problem.put("totalLikes", ((Number) row[8]).intValue());
-                problem.put("totalScraps", ((Number) row[9]).intValue());
-                problem.put("perfectCount", ((Number) row[10]).intValue());
-                problem.put("vagueCount", ((Number) row[11]).intValue());
-                problem.put("forgottenCount", ((Number) row[12]).intValue());
+                problem.put("totalLikes", ((Number) row[9]).intValue());
+                problem.put("totalScraps", ((Number) row[10]).intValue());
+                problem.put("perfectCount", ((Number) row[11]).intValue());
+                problem.put("vagueCount", ((Number) row[12]).intValue());
+                problem.put("forgottenCount", ((Number) row[13]).intValue());
                 problem.put("categories", getCategoriesForProblem(problemId));
 
                 userProblems.add(problem);
