@@ -121,9 +121,6 @@ export default {
         const response = await axios.get(`/api/problem/${id}`);
         const fetchedProblem = response.data;
 
-        // Ensure current user is the author if this is for private problems
-        // For public problems, any logged-in user might be allowed to suggest edits,
-        // but for this example, we assume only the author can edit.
         if (fetchedProblem.authorId !== currentUserId.value) {
             router.replace('/403'); // Or redirect to a permission denied page
             return;
