@@ -77,16 +77,21 @@ export default {
           problemId: problemId
         });
 
-        this.problemStatus = response.data.problemStatus;
-        console.log('API 응답 데이터 (start-study problemStatus):', this.problemStatus);
+        // 서버에서 받은 상태가 없을 수도 있으니 대비
+        const receivedStatus = response.data.problemStatus || '';
 
-        if (this.problemStatus === 'new') {
+        this.problemStatus = receivedStatus; // 화면용 상태 업데이트
+        console.log('API 응답 데이터 (start-study problemStatus):', receivedStatus);
+
+        if (receivedStatus === '') {
           this.showStudyStartModal = true;
-          console.log('problemStatus가 "new"이므로 StudyStartModal 표시.');
+          console.log('problemStatus가 빈 문자열이므로 StudyStartModal 표시.');
         } else {
-          console.log(`problemStatus가 "${this.problemStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
+          // 그 외의 모든 상태(new, ongoing, completed)는 바로 문제 풀이 페이지로 이동
+          console.log(`problemStatus가 "${receivedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
           this.router.push(`/study/${problemId}/solve`);
         }
+
       } catch (error) {
         console.error('문제 학습 시작 처리 중 예외 발생:', error);
         alert('문제 학습을 시작할 수 없습니다. 서버 오류 또는 네트워크 문제일 수 있습니다.');
