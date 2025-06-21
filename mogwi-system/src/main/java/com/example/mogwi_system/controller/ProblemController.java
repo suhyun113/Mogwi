@@ -259,7 +259,7 @@ public class ProblemController {
         }
     }
 
-    /** 문제 상세 조회 API
+    /** 단일 문제 상세 조회 API
      * GET /api/problem/{id}
      */
     @GetMapping("/api/problem/{id}")
@@ -294,12 +294,13 @@ public class ProblemController {
             response.put("id", ((Number) row[0]).longValue());
             response.put("title", row[1]);
             response.put("description", row[2]);
-            response.put("authorId", row[3]);
-            response.put("cardCount", row[4]);
-            response.put("likes", row[5]);
-            response.put("scraps", row[6]);
-            response.put("liked", ((Number) row[7]).intValue() == 1);
-            response.put("scrapped", ((Number) row[8]).intValue() == 1);
+            response.put("authorName", row[3]); // userName
+            response.put("authorId", row[4]); // userId
+            response.put("cardCount", row[5]);
+            response.put("likes", row[6]);
+            response.put("scraps", row[7]);
+            response.put("liked", ((Number) row[8]).intValue() == 1);
+            response.put("scrapped", ((Number) row[9]).intValue() == 1);
 
             List<?> categoryResults = entityManager.createNativeQuery(
                             "SELECT c.tag_name, c.color_code FROM problem_categories pc " +
