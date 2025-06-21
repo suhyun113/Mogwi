@@ -72,7 +72,7 @@ public class ProblemController {
     ) {
         try {
             StringBuilder sql = new StringBuilder(
-                    "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.card_count, " +
+                    "SELECT p.id, p.title, u.username AS author_name, u.userid AS author_id, p.is_public, p.card_count, " +
                             "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1), 0) AS likes, " +
                             "COALESCE((SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_scrapped = 1), 0) AS scraps, " +
                             "IFNULL(ups.is_liked, 0) AS liked, " +
@@ -103,10 +103,13 @@ public class ProblemController {
             // 조건들을 WHERE 절에 추가
             if (!conditions.isEmpty()) {
                 sql.append("WHERE ").append(String.join(" AND ", conditions));
+                sql.append(" AND p.is_public = 1");
+            } else {
+                sql.append("WHERE p.is_public = 1");
             }
 
             // GROUP BY 및 ORDER BY 절
-            sql.append(" GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
+            sql.append(" GROUP BY p.id, p.title, u.username, u.userid, p.is_public, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
             sql.append(" ORDER BY p.id DESC");
 
             var queryObj = entityManager.createNativeQuery(sql.toString());
@@ -131,18 +134,19 @@ public class ProblemController {
                     item.put("title", row[1]);
                     item.put("authorName", row[2]); // username
                     item.put("authorId", row[3]); // userId
-                    item.put("cardCount", row[4]);
-                    item.put("likes", row[5]);
-                    item.put("scraps", row[6]);
-                    item.put("liked", ((Number) row[7]).intValue() == 1);
-                    item.put("scrapped", ((Number) row[8]).intValue() == 1);
+                    item.put("isPublic","1".equals(row[4].toString()));
+                    item.put("cardCount", row[5]);
+                    item.put("likes", row[6]);
+                    item.put("scraps", row[7]);
+                    item.put("liked", ((Number) row[8]).intValue() == 1);
+                    item.put("scrapped", ((Number) row[9]).intValue() == 1);
                     item.put("categories", new ArrayList<Map<String, String>>());
                     problemMap.put(problemId, item);
                 }
-                if (row[9] != null) {
+                if (row[10] != null) {
                     Map<String, String> categoryMap = new HashMap<>();
-                    categoryMap.put("tag_name", row[9].toString());
-                    categoryMap.put("color_code", row[10] != null ? row[10].toString() : "#CCCCCC");
+                    categoryMap.put("tag_name", row[10].toString());
+                    categoryMap.put("color_code", row[11] != null ? row[11].toString() : "#CCCCCC");
                     ((List<Map<String, String>>) problemMap.get(problemId).get("categories")).add(categoryMap);
                 }
             }
