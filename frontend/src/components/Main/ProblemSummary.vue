@@ -19,7 +19,7 @@
           :key="categoryObj.tag_name"
           :style="{ backgroundColor: categoryObj.color_code }"
         >
-          {{ displayTagName(categoryObj.tag_name) }}
+          #{{ displayTagName(categoryObj.tag_name) }}
         </span>
       </div>
       <div class="btn-wrapper">
@@ -38,20 +38,20 @@
       <div class="meta-left">
         <div v-if="canLikeScrap" class="icon-wrapper" @click.stop="toggleLike">
           <img :src="localProblem.liked ? heartOn : heartOff" alt="like" class="icon" />
-          <span>{{ localProblem.likes }}</span>
+          <span>{{ localProblem.totalLikes }}</span>
         </div>
         <div v-else class="icon-wrapper disabled">
           <img :src="heartOff" alt="like" class="icon" />
-          <span>{{ localProblem.likes }}</span>
+          <span>{{ localProblem.totalLikes }}</span>
         </div>
 
         <div v-if="canLikeScrap" class="icon-wrapper" @click.stop="toggleScrap">
           <img :src="localProblem.scrapped ? scrapOn : scrapOff" alt="scrap" class="icon" />
-          <span>{{ localProblem.scraps }}</span>
+          <span>{{ localProblem.totalScraps }}</span>
         </div>
         <div v-else class="icon-wrapper disabled">
           <img :src="scrapOff" alt="scrap" class="icon" />
-          <span>{{ localProblem.scraps }}</span>
+          <span>{{ localProblem.totalScraps }}</span>
         </div>
       </div>
     </div>
