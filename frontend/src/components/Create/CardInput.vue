@@ -93,15 +93,17 @@ export default {
 
     const getFullImageUrl = (relativeUrl) => {
       if (!relativeUrl) return '';
-      if (relativeUrl.startsWith('http')) return relativeUrl;
-      return `http://localhost:8000${relativeUrl}`; // 실제 백엔드 주소에 따라 조정
+      // Check if it's already a full URL (http/https) or a Data URL (Base64)
+      if (relativeUrl.startsWith('http') || relativeUrl.startsWith('data:')) return relativeUrl;
+      // Otherwise, prepend the backend address
+      return `http://localhost:8000${relativeUrl}`; // Adjust to your actual backend address
     };
 
     const processFile = (file) => {
       if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          emit('update:image_url', e.target.result);
+          emit('update:image_url', e.target.result); // Emits a Base64 URL for immediate preview
           imageLoadError.value = false;
         };
         reader.onerror = () => {
@@ -109,18 +111,19 @@ export default {
           emit('update:image_url', null);
           emit('update:image_file', null);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // Read the file as a Data URL
 
-        emit('update:image_file', file);
+        emit('update:image_file', file); // Emit the actual File object for later upload
       } else if (file) {
         imageLoadError.value = true;
         alert('이미지 파일만 업로드할 수 있습니다.');
         emit('update:image_url', null);
         emit('update:image_file', null);
         if (fileInput.value) {
-          fileInput.value.value = '';
+          fileInput.value.value = ''; // Clear the file input
         }
       } else {
+        // No file provided or file cleared
         emit('update:image_url', null);
         emit('update:image_file', null);
         imageLoadError.value = false;
@@ -159,13 +162,13 @@ export default {
       emit('update:image_file', null);
       imageLoadError.value = false;
       if (fileInput.value) {
-        fileInput.value.value = '';
+        fileInput.value.value = ''; // Clear the file input
       }
     };
 
     watch(() => props.card.image_url, (newUrl) => {
       if (newUrl && imageLoadError.value) {
-        imageLoadError.value = false;
+        imageLoadError.value = false; // Reset error when a new image URL is set
       }
     });
 
