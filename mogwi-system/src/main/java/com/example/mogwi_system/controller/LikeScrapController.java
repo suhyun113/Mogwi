@@ -158,7 +158,7 @@ public class LikeScrapController {
             // 새 레코드 삽입
             entityManager.createNativeQuery(
                             "INSERT INTO user_problem_status (user_id, problem_id, is_liked, is_scrapped, problem_status, created_at, updated_at) " +
-                                    "VALUES (?1, ?2, 0, 0, 'new', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
+                                    "VALUES (?1, ?2, 0, 0, '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
                     .setParameter(1, userId)
                     .setParameter(2, problemId)
                     .executeUpdate();
