@@ -138,7 +138,6 @@ export default {
           params: { currentUserId: currentUserId.value }
         });
 
-        // ⭐⭐⭐ MODIFICATION START ⭐⭐⭐
         if (response.status === 204) { // Check for No Content status specifically
             console.log("No cards found for this problem (HTTP 204).");
             allProblemCards.value = []; // Set to empty array
@@ -156,10 +155,9 @@ export default {
             allProblemCards.value = [];
             shuffledProblemCards.value = [];
         }
-        // ⭐⭐⭐ MODIFICATION END ⭐⭐⭐
 
         // Also fetch problem title
-        const problemResponse = await axios.get(`/api/problems/${problemId}`, {
+        const problemResponse = await axios.get(`/api/problem/${problemId}`, {
           params: { currentUserId: currentUserId.value }
         });
         problemTitle.value = problemResponse.data.title;
@@ -310,13 +308,6 @@ export default {
         await initializeStudy();
       }
     });
-
-    // --- On Mounted (for initial fetch, but now mostly handled by immediate watcher) ---
-    // onMounted(async () => {
-    //   // This might not be strictly necessary with immediate: true on the watcher
-    //   // but can act as a fallback or for other one-time setups.
-    //   // await initializeStudy();
-    // });
 
     return {
       loading,
