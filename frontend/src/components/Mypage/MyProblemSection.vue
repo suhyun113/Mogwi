@@ -55,7 +55,7 @@
 
 <script>
 import { ref, computed } from 'vue';
-import ProblemListItem from './ProblemListItem.vue';
+import ProblemListItem from './ProblemItem.vue';
 
 export default {
   name: 'MyProblemSection',

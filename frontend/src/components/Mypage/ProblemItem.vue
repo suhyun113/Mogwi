@@ -1,6 +1,6 @@
 <template>
-  <div class="problem-card">
-    <div class="card-header">
+  <div class="problem-item">
+    <div class="item-header">
       <div class="left-info">
         <h3 class="title">{{ problem.title }}</h3>
         <p class="author">작성자: {{ problem.author_name }}</p>
@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="card-footer">
+    <div class="item-footer">
       <div class="icons">
         <i class="fas fa-heart like-icon"></i> {{ problem.likes }}
         <i class="fas fa-bookmark scrap-icon"></i> {{ problem.scraps }}
@@ -41,7 +41,7 @@ export default {
 </script>
 
 <style scoped>
-.problem-card {
+.problem-item {
   border: 1px solid #e5d9ff;
   border-radius: 12px;
   padding: 20px;
@@ -52,7 +52,7 @@ export default {
   gap: 15px;
 }
 
-.card-header {
+.item-header {
   display: flex;
   justify-content: space-between;
 }
@@ -100,7 +100,7 @@ export default {
   font-size: 0.9rem;
 }
 
-.card-footer {
+.item-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;

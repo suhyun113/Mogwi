@@ -53,7 +53,7 @@
 
 <script>
 import { ref } from 'vue';
-import ProblemListItem from './ProblemListItem.vue';
+import ProblemListItem from './ProblemItem.vue';
 
 export default {
   name: 'LikedScrapSection',
