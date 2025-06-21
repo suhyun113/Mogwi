@@ -3,7 +3,7 @@
         <div class="title-row">
             <div class="title-left">
                 <h3 class="problem-title">{{ localProblem.title }}</h3>
-                <span class="author">작성자: {{ localProblem.authorNickname }}</span>
+                <span class="author">작성자: {{ localProblem.authorName }}</span>
             </div>
             <div class="study-status">
                 <span :class="getStatusClass(localProblem.studyStatus)">
@@ -120,7 +120,7 @@ export default {
             localProblem: {
                 id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                 title: this.problem.title || '문제 제목 (로그인 필요)',
-                authorNickname: this.problem.authorNickname || '알 수 없음',
+                authorName: this.problem.authorName || '알 수 없음',
                 studyStatus: this.problem.studyStatus || '',
                 categories: this.problem.categories || [],
                 isLiked: this.problem.isLiked || false,
@@ -155,7 +155,7 @@ export default {
                 this.localProblem = {
                     id: newVal?.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                     title: newVal?.title || '문제 제목 (로그인 필요)',
-                    authorNickname: newVal?.authorNickname || '알 수 없음',
+                    authorName: newVal?.authorName || '알 수 없음',
                     studyStatus: newVal?.studyStatus || '',
                     categories: newVal?.categories || [],
                     isLiked: !!newVal?.isLiked,
@@ -178,7 +178,7 @@ export default {
                     this.localProblem = {
                         id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                         title: '문제 제목 (로그인 필요)',
-                        authorNickname: '알 수 없음',
+                        authorName: '알 수 없음',
                         studyStatus: '',
                         categories: [],
                         isLiked: false,
