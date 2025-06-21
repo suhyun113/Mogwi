@@ -85,7 +85,7 @@ export default {
         this.problemStatus = receivedStatus;
         console.log('API 응답 데이터 (start-study problemStatus):', receivedStatus);
 
-        if (receivedStatus === 'new') {
+        if (receivedStatus === '') {
           this.showStudyStartModal = true;
           console.log('problemStatus가 "new"이므로 StudyStartModal 표시.');
         } else {
