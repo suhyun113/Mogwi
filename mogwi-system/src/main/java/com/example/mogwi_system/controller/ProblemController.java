@@ -129,16 +129,17 @@ public class ProblemController {
                     Map<String, Object> item = new HashMap<>();
                     item.put("id", problemId);
                     item.put("title", row[1]);
-                    item.put("authorId", row[2]);
-                    item.put("cardCount", row[3]);
-                    item.put("likes", row[4]);
-                    item.put("scraps", row[5]);
-                    item.put("liked", ((Number) row[6]).intValue() == 1);
-                    item.put("scrapped", ((Number) row[7]).intValue() == 1);
+                    item.put("authorName", row[2]); // username
+                    item.put("authorId", row[3]); // userId
+                    item.put("cardCount", row[4]);
+                    item.put("likes", row[5]);
+                    item.put("scraps", row[6]);
+                    item.put("liked", ((Number) row[7]).intValue() == 1);
+                    item.put("scrapped", ((Number) row[8]).intValue() == 1);
                     item.put("categories", new ArrayList<Map<String, String>>());
                     problemMap.put(problemId, item);
                 }
-                if (row[8] != null) {
+                if (row[9] != null) {
                     Map<String, String> categoryMap = new HashMap<>();
                     categoryMap.put("tag_name", row[9].toString());
                     categoryMap.put("color_code", row[10] != null ? row[10].toString() : "#CCCCCC");
@@ -234,7 +235,7 @@ public class ProblemController {
                 problem.put("description", row[2]);
                 problem.put("isPublic", ((Number) row[3]).intValue() == 1);
                 problem.put("cardCount", ((Number) row[4]).intValue());
-                problem.put("authorId", row[5]);
+                problem.put("authorName", row[5]); // userName
                 problem.put("isLiked", ((Number) row[6]).intValue() == 1);
                 problem.put("isScrapped", ((Number) row[7]).intValue() == 1);
                 String studyStatus = row[8].toString();
