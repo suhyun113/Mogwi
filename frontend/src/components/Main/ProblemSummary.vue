@@ -104,7 +104,7 @@ export default {
       localProblem: {
         id: this.problem.id || null,
         title: this.problem.title || '제목 없음',
-        authorNickname: this.problem.authorNickname || '알 수 없음', // 백엔드 응답 authorNickname에 맞춤
+        authorName: this.problem.authorName || '알 수 없음', // 백엔드 응답 authorNickname에 맞춤
         authorId: this.problem.authorId || null,
         studyStatus: this.problem.studyStatus || 'new', // 학습 상태 추가
         categories: this.problem.categories || [],
@@ -137,7 +137,7 @@ export default {
         this.localProblem = {
           id: newVal.id || null,
           title: newVal.title || '제목 없음',
-          authorNickname: newVal.authorNickname || '알 수 없음',
+          authorName: newVal.authorName || '알 수 없음',
           authorId: newVal.authorId || null,
           studyStatus: newVal.studyStatus || 'new',
           categories: newVal.categories || [],
