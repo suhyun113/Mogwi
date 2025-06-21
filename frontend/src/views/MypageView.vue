@@ -229,16 +229,16 @@ export default {
         // 실제 사용자 삭제 API 호출
         await axios.delete(`/api/user/${currentUserId.value}`);
 
-        nicknameUpdateMessage.value = '회원 탈퇴가 성공적으로 처리되었습니다.';
-        nicknameUpdateStatus.value = 'success';
+        alert('회원 탈퇴가 성공적으로 처리되었습니다.');
 
+        // 로그아웃 처리 및 메인으로 이동
         store.dispatch('logout'); // 로그아웃 처리
-        router.push('/'); // 홈으로 이동
+        router.push('/'); // 메인으로 이동
 
-        showNicknameUpdateMessage.value = true;
-        setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
       } catch (err) {
         console.error('회원 탈퇴 실패:', err);
+
+        // ✅ 실패 메시지는 alert 대신 toast 또는 아래 방식 유지
         nicknameUpdateMessage.value = '회원 탈퇴 중 오류가 발생했습니다. 다시 시도해주세요.';
         nicknameUpdateStatus.value = 'error';
         showNicknameUpdateMessage.value = true;
