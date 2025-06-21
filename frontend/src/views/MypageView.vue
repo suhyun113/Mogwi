@@ -69,31 +69,18 @@
       {{ nicknameUpdateMessage }}
     </div>
 
-    <div v-if="showDeleteConfirmModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3 class="modal-title">
-            {{ deleteTarget === 'account' ? '회원 탈퇴 확인' : '문제 삭제 확인' }}
-        </h3>
-        <p class="modal-message">
-            {{ deleteTarget === 'account' ?
-                '정말로 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.' :
-                '정말로 이 문제를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' }}
-        </p>
-        <div class="modal-actions">
-          <button @click="deleteTarget === 'account' ? confirmDeleteAccount() : confirmDeleteProblem()" class="confirm-button">
-            {{ deleteTarget === 'account' ? '탈퇴하기' : '삭제하기' }}
-          </button>
-          <button @click="cancelDelete" class="cancel-button">취소</button>
-        </div>
-      </div>
-    </div>
-
     <EditProfileModal
       v-if="showEditProfileModal"
       :initialNickname="userNickname"
       :initialEmail="userEmail"
       :userId="currentUserId" @close="showEditProfileModal = false"
       @update-profile="handleProfileUpdateFromModal"
+    />
+
+    <DeleteAccountModal
+      v-if="showDeleteConfirmModal && deleteTarget === 'account'"
+      @confirm="confirmDeleteAccount"
+      @cancel="cancelDelete"
     />
   </div>
 </template>
@@ -112,6 +99,7 @@ import LikedScrapSection from '@/components/Mypage/LikedScrapSection.vue';
 import MyProblemSection from '@/components/Mypage/MyProblemSection.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
+import DeleteAccountModal from '@/components/Mypage/DeleteAccountModal.vue';
 import EditProfileModal from '@/components/Mypage/EditProfileModal.vue';
 
 export default {
@@ -122,6 +110,7 @@ export default {
     MyProblemSection,
     LoginModal,
     RegisterModal,
+    DeleteAccountModal,
     EditProfileModal,
   },
   setup() {
