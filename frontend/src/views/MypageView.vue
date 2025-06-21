@@ -216,6 +216,7 @@ export default {
     const confirmDeleteAccount = async () => {
       showDeleteConfirmModal.value = false;
       deleteTarget.value = null;
+
       if (!isLoggedIn.value) {
         nicknameUpdateMessage.value = '로그인 후 이용해주세요.';
         nicknameUpdateStatus.value = 'error';
@@ -223,13 +224,17 @@ export default {
         setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
         return;
       }
+
       try {
-        // Implement actual account deletion logic here
-        // await axios.delete(`/api/user/${currentUserId.value}`);
-        nicknameUpdateMessage.value = '회원 탈퇴가 성공적으로 처리되었습니다. (기능 미구현)';
+        // 실제 사용자 삭제 API 호출
+        await axios.delete(`/api/user/${currentUserId.value}`);
+
+        nicknameUpdateMessage.value = '회원 탈퇴가 성공적으로 처리되었습니다.';
         nicknameUpdateStatus.value = 'success';
-        store.dispatch('logout'); // Assuming you have a logout action
-        router.push('/'); // Redirect to home or login page
+
+        store.dispatch('logout'); // 로그아웃 처리
+        router.push('/'); // 홈으로 이동
+
         showNicknameUpdateMessage.value = true;
         setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
       } catch (err) {
