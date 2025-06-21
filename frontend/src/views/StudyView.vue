@@ -72,7 +72,7 @@ export default {
       if (this.isProcessing) return;  // 중복 실행 방지
       this.isProcessing = true;
 
-      console.log('학습 시작 버튼 클릭됨');
+      console.log('🌕학습 시작 버튼 클릭됨');
 
       try {
         const problemId = this.problem.id;
@@ -87,7 +87,7 @@ export default {
 
         if (receivedStatus === '') {
           this.showStudyStartModal = true;
-          console.log('problemStatus가 "new"이므로 StudyStartModal 표시.');
+          console.log('problemStatus가 ""이므로 StudyStartModal 표시.');
         } else {
           console.log(`problemStatus가 "${receivedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
           this.router.push(`/study/${problemId}/solve`);
