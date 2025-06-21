@@ -121,6 +121,7 @@ export default {
                 id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                 title: this.problem.title || '문제 제목 (로그인 필요)',
                 authorNickname: this.problem.authorNickname || '알 수 없음',
+                studyStatus: this.problem.studyStatus || '',
                 categories: this.problem.categories || [],
                 isLiked: this.problem.isLiked || false,
                 isScrapped: this.problem.isScrapped || false,
