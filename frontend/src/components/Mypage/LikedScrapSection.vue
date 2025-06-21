@@ -20,7 +20,7 @@
         <p v-if="likedProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 좋아요한 문제가 없습니다.
         </p>
-        <ProblemListItem
+        <ProblemItem
           v-for="problem in likedProblems"
           :key="problem.id"
           :problem="problem"
@@ -36,7 +36,7 @@
         <p v-if="scrapedProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 스크랩한 문제가 없습니다.
         </p>
-        <ProblemListItem
+        <ProblemItem
           v-for="problem in scrapedProblems"
           :key="problem.id"
           :problem="problem"
@@ -53,12 +53,12 @@
 
 <script>
 import { ref } from 'vue';
-import ProblemListItem from './ProblemItem.vue';
+import ProblemItem from './ProblemItem.vue';
 
 export default {
   name: 'LikedScrapSection',
   components: {
-    ProblemListItem,
+    ProblemItem,
   },
   props: {
     likedProblems: {

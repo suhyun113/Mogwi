@@ -20,7 +20,7 @@
         <p v-if="publicProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 공개한 문제가 없습니다.
         </p>
-        <ProblemListItem
+        <ProblemItem
           v-for="problem in publicProblems"
           :key="problem.id"
           :problem="problem"
@@ -37,7 +37,7 @@
         <p v-if="privateProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 비공개 문제가 없습니다.
         </p>
-        <ProblemListItem
+        <ProblemItem
           v-for="problem in privateProblems"
           :key="problem.id"
           :problem="problem"
@@ -55,12 +55,12 @@
 
 <script>
 import { ref, computed } from 'vue';
-import ProblemListItem from './ProblemItem.vue';
+import ProblemItem from './ProblemItem.vue';
 
 export default {
   name: 'MyProblemSection',
   components: {
-    ProblemListItem,
+    ProblemItem,
   },
   props: {
     myProblems: {
