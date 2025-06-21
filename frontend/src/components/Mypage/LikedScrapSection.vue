@@ -25,10 +25,13 @@
           :key="problem.id"
           :problem="problem"
           :isLiked="true"
-          :isScrapped="false"
+          :isScrapped="problem.scrapped"
           :showPublicTag="false"
-          @toggle-like="onToggleLike"
+          @update-like="onUpdateLike"
+          @update-scrap="onUpdateScrap"
           @go-to-problem="handleGoToProblem"
+          :isAuthenticated="isAuthenticated"
+          :currentUserId="currentUserId"
         />
       </div>
 
@@ -40,11 +43,14 @@
           v-for="problem in scrapedProblems"
           :key="problem.id"
           :problem="problem"
-          :isLiked="problem.isLiked"
+          :isLiked="problem.liked"
           :isScrapped="true"
           :showPublicTag="false"
-          @toggle-like="onToggleLike"
+          @update-like="onUpdateLike"
+          @update-scrap="onUpdateScrap"
           @go-to-problem="handleGoToProblem"
+          :isAuthenticated="isAuthenticated"
+          :currentUserId="currentUserId"
         />
       </div>
     </div>
@@ -69,16 +75,19 @@ export default {
       type: Array,
       default: () => [],
     },
+    isAuthenticated: Boolean,
+    currentUserId: [String, Number],
   },
-  emits: ['toggle-like', 'go-to-problem'], // Emit 'go-to-problem' event
+  emits: ['update-like', 'update-scrap', 'go-to-problem'],
   setup(props, { emit }) {
-    const activeTab = ref('liked'); // 'liked' or 'scraped'
+    const activeTab = ref('liked');
 
-    const onToggleLike = (problem) => {
-      // This event might need to be handled by the parent (MypageView)
-      // to re-fetch or update the liked/scraped lists if a like/unlike
-      // action happens within this section.
-      emit('toggle-like', problem);
+    const onUpdateLike = (problem) => {
+      emit('update-like', problem);
+    };
+
+    const onUpdateScrap = (problem) => {
+      emit('update-scrap', problem);
     };
 
     const handleGoToProblem = (problemId) => {
@@ -87,7 +96,8 @@ export default {
 
     return {
       activeTab,
-      onToggleLike,
+      onUpdateLike,
+      onUpdateScrap,
       handleGoToProblem,
     };
   },

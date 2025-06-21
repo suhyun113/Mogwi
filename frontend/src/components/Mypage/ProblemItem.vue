@@ -1,6 +1,5 @@
 <template>
   <div :class="itemClass" @click="handleItemClick">
-    <!-- 제목 및 작성자 -->
     <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
@@ -13,7 +12,6 @@
       </div>
     </div>
 
-    <!-- 태그 및 버튼 -->
     <div class="category-row">
       <div class="category-tags">
         <ProblemTag
@@ -43,33 +41,24 @@
       </div>
     </div>
 
-    <!-- 좋아요/스크랩/카드 -->
     <div class="meta">
       <div class="meta-left">
-        <div
-          v-if="isAuthenticated && localProblem.authorId !== currentUserId"
-          :class="['icon-wrapper', { disabled: isSelectionMode }]"
-          @click.stop="emitToggleLike"
-        >
-          <img :src="localProblem.isLiked ? heartOn : heartOff" alt="like" class="icon" />
-          <span>{{ localProblem.totalLikes }}</span>
+        <div v-if="canLikeScrap" class="icon-wrapper" @click.stop="toggleLike">
+          <img :src="localProblem.liked ? heartOn : heartOff" alt="like" class="icon" />
+          <span>{{ localProblem.likes }}</span>
         </div>
         <div v-else class="icon-wrapper disabled">
-          <img :src="localProblem.isLiked ? heartOn : heartOff" alt="like" class="icon" />
-          <span>{{ localProblem.totalLikes }}</span>
+          <img :src="heartOff" alt="like" class="icon" />
+          <span>{{ localProblem.likes }}</span>
         </div>
 
-        <div
-          v-if="isAuthenticated && localProblem.authorId !== currentUserId"
-          :class="['icon-wrapper', { disabled: isSelectionMode }]"
-          @click.stop="emitToggleScrap"
-        >
-          <img :src="localProblem.isScrapped ? scrapOn : scrapOff" alt="scrap" class="icon" />
-          <span>{{ localProblem.totalScraps }}</span>
+        <div v-if="canLikeScrap" class="icon-wrapper" @click.stop="toggleScrap">
+          <img :src="localProblem.scrapped ? scrapOn : scrapOff" alt="scrap" class="icon" />
+          <span>{{ localProblem.scraps }}</span>
         </div>
         <div v-else class="icon-wrapper disabled">
-          <img :src="localProblem.isScrapped ? scrapOn : scrapOff" alt="scrap" class="icon" />
-          <span>{{ localProblem.totalScraps }}</span>
+          <img :src="scrapOff" alt="scrap" class="icon" />
+          <span>{{ localProblem.scraps }}</span>
         </div>
       </div>
 
@@ -95,6 +84,7 @@ import scrapOff from '@/assets/icons/scrap_outline.png'
 import scrapOn from '@/assets/icons/scrap_filled.png'
 import cardIcon from '@/assets/icons/card.png'
 import ProblemTag from '@/components/MyStudy/ProblemTag.vue'
+import axios from 'axios';
 
 export default {
   name: 'ProblemListItem',
@@ -109,7 +99,7 @@ export default {
     isScrapped: Boolean,
     showPublicTag: Boolean,
   },
-  emits: ['auth-required', 'go-to-study', 'toggle-like', 'toggle-scrap', 'toggle-selection'],
+  emits: ['auth-required', 'go-to-study', 'toggle-selection', 'update-like', 'update-scrap'],
   data() {
     return {
       localProblem: { ...this.problem },
@@ -128,29 +118,35 @@ export default {
         'selected': this.isSelected,
       };
     },
+    canLikeScrap() {
+      return this.isAuthenticated && !this.isSelectionMode;
+    }
   },
   watch: {
     problem: {
       handler(newVal) {
         this.localProblem = {
           ...newVal,
-          isLiked: this.isLiked ?? !!newVal.isLiked,
-          isScrapped: this.isScrapped ?? !!newVal.isScrapped,
-          authorNickname:
-          newVal.authorNickname ||
-          newVal.author_name ||
-          newVal.username ||
-          '알 수 없음',
+          // props로 전달된 isLiked, isScrapped를 우선적으로 사용하고, 없으면 problem 객체의 값을 사용
+          liked: this.isLiked !== undefined ? this.isLiked : (newVal.liked ?? false),
+          scrapped: this.isScrapped !== undefined ? this.isScrapped : (newVal.scrapped ?? false),
+          authorName:
+            newVal.authorName ||
+            newVal.author_name ||
+            newVal.username ||
+            '알 수 없음',
         };
       },
       immediate: true,
       deep: true,
     },
+    // isLiked prop이 변경될 때 localProblem.liked 업데이트
     isLiked(newVal) {
-      this.localProblem.isLiked = newVal;
+      this.localProblem.liked = newVal;
     },
+    // isScrapped prop이 변경될 때 localProblem.scrapped 업데이트
     isScrapped(newVal) {
-      this.localProblem.isScrapped = newVal;
+      this.localProblem.scrapped = newVal;
     }
   },
   methods: {
@@ -175,27 +171,57 @@ export default {
         this.$emit('toggle-selection', this.localProblem.id);
       }
     },
-    emitToggleLike() {
-      if (!this.isAuthenticated) {
-        this.$emit('auth-required');
+    async toggleLike() {
+      if (!this.canLikeScrap) {
+        if (!this.isAuthenticated) {
+          this.$emit('auth-required');
+        }
         return;
       }
-      if (this.localProblem.authorId === this.currentUserId) {
-        alert("본인이 작성한 문제는 좋아요/스크랩할 수 없습니다.");
-        return;
+
+      const originalLiked = this.localProblem.liked;
+      const originalLikes = this.localProblem.likes;
+
+      this.localProblem.liked = !originalLiked;
+      this.localProblem.likes += this.localProblem.liked ? 1 : -1;
+
+      try {
+        await axios.post(`/api/like/${this.localProblem.id}`, {
+          userId: this.currentUserId
+        });
+        // 좋아요/스크랩 수 변화만 MypageView로 전달하여 전체 데이터를 다시 불러오게 함
+        this.$emit('update-like', { ...this.localProblem });
+      } catch (error) {
+        console.error('좋아요 반영 실패:', error);
+        this.localProblem.liked = originalLiked;
+        this.localProblem.likes = originalLikes;
       }
-      this.$emit('toggle-like', this.localProblem.id);
     },
-    emitToggleScrap() {
-      if (!this.isAuthenticated) {
-        this.$emit('auth-required');
+    async toggleScrap() {
+      if (!this.canLikeScrap) {
+        if (!this.isAuthenticated) {
+          this.$emit('auth-required');
+        }
         return;
       }
-      if (this.localProblem.authorId === this.currentUserId) {
-        alert("본인이 작성한 문제는 좋아요/스크랩할 수 없습니다.");
-        return;
+
+      const originalScrapped = this.localProblem.scrapped;
+      const originalScraps = this.localProblem.scraps;
+
+      this.localProblem.scrapped = !originalScrapped;
+      this.localProblem.scraps += this.localProblem.scrapped ? 1 : -1;
+
+      try {
+        await axios.post(`/api/scrap/${this.localProblem.id}`, {
+          userId: this.currentUserId
+        });
+        // 좋아요/스크랩 수 변화만 MypageView로 전달하여 전체 데이터를 다시 불러오게 함
+        this.$emit('update-scrap', { ...this.localProblem });
+      } catch (error) {
+        console.error('스크랩 반영 실패:', error);
+        this.localProblem.scrapped = originalScrapped;
+        this.localProblem.scraps = originalScraps;
       }
-      this.$emit('toggle-scrap', this.localProblem.id);
     },
     handleEditClick() {
       this.$router.push(`/edit/${this.localProblem.id}`);
@@ -207,256 +233,255 @@ export default {
 };
 </script>
 
-
 <style scoped>
-.problem-item { /* Changed from problem-list-item */
-    padding: 16px;
-    border: 1px solid #e0d0ff;
-    border-radius: 8px;
-    background: #ffffff;
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+.problem-item {
+  padding: 16px;
+  border: 1px solid #e0d0ff;
+  border-radius: 8px;
+  background: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.problem-item:hover:not(.selectable) { /* Changed from problem-list-item */
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+.problem-item:hover:not(.selectable) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
-.problem-item.selectable { /* Changed from problem-list-item */
-    cursor: pointer;
-    border-color: #a471ff;
+.problem-item.selectable {
+  cursor: pointer;
+  border-color: #a471ff;
 }
 
-.problem-item.selected { /* Changed from problem-list-item */
-    border: 2px solid #e03c3c;
-    box-shadow: 0 0 0 3px rgba(224, 60, 60, 0.3);
+.problem-item.selected {
+  border: 2px solid #e03c3c;
+  box-shadow: 0 0 0 3px rgba(224, 60, 60, 0.3);
 }
 
-.problem-item h3 { /* Changed from problem-list-item */
-    margin: 0;
-    font-size: 18px;
-    color: #5a2e87;
+.problem-item h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #5a2e87;
 }
 .title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-    gap: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .title-left {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 .problem-title {
-    font-size: 18px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    max-width: 100%;
-    flex-grow: 1;
+  font-size: 18px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+  flex-grow: 1;
 }
 .author {
-    font-size: 13px;
-    color: #888;
-    white-space: nowrap;
-    flex-shrink: 0;
+  font-size: 13px;
+  color: #888;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .study-status {
-    font-size: 13px;
-    font-weight: bold;
-    padding: 4px 8px;
-    border-radius: 5px;
-    white-space: nowrap;
-    flex-shrink: 0;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-new {
-    background-color: #e0e0e0;
-    color: #616161;
+  background-color: #e0e0e0;
+  color: #616161;
 }
 
 .status-ongoing {
-    background-color: #ffe082;
-    color: #c66900;
+  background-color: #ffe082;
+  color: #c66900;
 }
 
 .status-completed {
-    background-color: #a5d6a7;
-    color: #2e7d32;
+  background-color: #a5d6a7;
+  color: #2e7d32;
 }
 
 
 .category-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-    gap: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .category-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    flex-grow: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-grow: 1;
 }
 
 .meta {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: #666;
-    flex-wrap: wrap;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  flex-wrap: wrap;
 }
 .meta-left {
-    display: flex;
-    gap: 16px;
+  display: flex;
+  gap: 16px;
 }
 .icon-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 .icon-wrapper:hover:not(.disabled) {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 .icon-wrapper.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .icon {
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 }
 .card-icon {
-    width: 18px;
-    height: 18px;
+  width: 18px;
+  height: 18px;
 }
 .btn-wrapper {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .edit-btn, .solve-btn {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    white-space: nowrap;
-    font-size: 14px;
-    transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 14px;
+  transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
 }
 .edit-btn {
-    background-color: #fff4c1;
-    color: #343a40;
+  background-color: #fff4c1;
+  color: #343a40;
 }
 .edit-btn:hover:not(:disabled) {
-    background-color: #ffe066;
-    transform: translateY(-1px);
+  background-color: #ffe066;
+  transform: translateY(-1px);
 }
 .edit-btn:disabled, .solve-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #e0e0e0;
-    color: #a0a0a0;
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #e0e0e0;
+  color: #a0a0a0;
 }
 .solve-btn {
-    background-color: #a471ff;
-    color: white;
+  background-color: #a471ff;
+  color: white;
 }
 .solve-btn:hover:not(:disabled) {
-    background-color: #854fe6;
-    transform: translateY(-1px);
+  background-color: #854fe6;
+  transform: translateY(-1px);
 }
 
 .study-card-summary {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: bold;
-    white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  white-space: nowrap;
 }
 
 .perfect-count {
-    color: #4CAF50;
+  color: #4CAF50;
 }
 
 .vague-count {
-    color: #FFC107;
+  color: #FFC107;
 }
 
 .forgotten-count {
-    color: #F44336;
+  color: #F44336;
 }
 
 .meta-card-count {
-    font-size: 13px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    flex-shrink: 0;
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .meta-right-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 576px) {
-    .title-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    .problem-title {
-        max-width: 100%;
-    }
-    .study-status {
-        align-self: flex-end;
-        margin-top: 4px;
-    }
-    .category-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    .btn-wrapper {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    .edit-btn, .solve-btn {
-        flex-grow: 1;
-    }
-    .meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    .meta-right-group {
-        margin-left: 0;
-        width: 100%;
-        justify-content: flex-end;
-    }
-    .study-card-summary {
-        margin-left: 0;
-    }
+  .title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .problem-title {
+    max-width: 100%;
+  }
+  .study-status {
+    align-self: flex-end;
+    margin-top: 4px;
+  }
+  .category-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .btn-wrapper {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .edit-btn, .solve-btn {
+    flex-grow: 1;
+  }
+  .meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .meta-right-group {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .study-card-summary {
+    margin-left: 0;
+  }
 }
 </style>

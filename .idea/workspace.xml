@@ -5,6 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 메인 뷰 검색창 고정">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Mypage/LikedScrapSection.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Mypage/LikedScrapSection.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Mypage/ProblemItem.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Mypage/ProblemItem.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/MypageView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/MypageView.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -194,7 +198,7 @@
       <workItem from="1750071182952" duration="2032000" />
       <workItem from="1750136781809" duration="850000" />
       <workItem from="1750349630313" duration="1196000" />
-      <workItem from="1750413632992" duration="30849000" />
+      <workItem from="1750413632992" duration="33249000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />

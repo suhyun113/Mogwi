@@ -42,6 +42,10 @@
             :likedProblems="likedProblems"
             :scrapedProblems="scrapedProblems"
             @go-to-problem="goToProblem"
+            :isAuthenticated="isLoggedIn"
+            :currentUserId="currentUserId"
+            @update-like="fetchMypageData"
+            @update-scrap="fetchMypageData"
           />
         </section>
 
@@ -51,6 +55,8 @@
             @go-to-problem="goToProblem"
             @edit-problem="editProblem"
             @delete-problem="deleteProblem"
+            :isAuthenticated="isLoggedIn"
+            :currentUserId="currentUserId"
           />
         </section>
       </main>
@@ -167,15 +173,34 @@ export default {
         }
 
         // 내가 좋아요 누른 문제만 조회
+        // 서버에서 liked 상태를 제대로 반환하도록 쿼리 파라미터와 백엔드 로직 확인 필요
         const likedResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyLiked=true`);
-        likedProblems.value = likedResponse.data;
+        // 서버에서 받아온 데이터에 `likes`와 `scraps` 필드가 포함되어 있다고 가정합니다.
+        likedProblems.value = likedResponse.data.map(problem => ({
+          ...problem,
+          liked: true, // 좋아요한 목록이므로 항상 true
+          scrapped: problem.scrapped, // 스크랩 여부는 서버 데이터에 따름
+          likes: problem.likes || 0, // 서버 응답에 likes 필드가 있다고 가정
+          scraps: problem.scraps || 0 // 서버 응답에 scraps 필드가 있다고 가정
+        }));
         
         // 내가 스크랩 누른 문제만 조회
         const scrapResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyScrapped=true`);
-        scrapedProblems.value = scrapResponse.data;
+        // 서버에서 받아온 데이터에 `likes`와 `scraps` 필드가 포함되어 있다고 가정합니다.
+        scrapedProblems.value = scrapResponse.data.map(problem => ({
+          ...problem,
+          scrapped: true, // 스크랩한 목록이므로 항상 true
+          liked: problem.liked, // 좋아요 여부는 서버 데이터에 따름
+          likes: problem.likes || 0, // 서버 응답에 likes 필드가 있다고 가정
+          scraps: problem.scraps || 0 // 서버 응답에 scraps 필드가 있다고 가정
+        }));
 
         const myProblemsResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyMine=true`);
-        myProblems.value = myProblemsResponse.data;
+        myProblems.value = myProblemsResponse.data.map(problem => ({
+          ...problem,
+          likes: problem.likes || 0,
+          scraps: problem.scraps || 0
+        }));
 
       } catch (err) {
         console.error('마이페이지 데이터 불러오기 실패:', err);
@@ -348,6 +373,7 @@ export default {
       goToProblem,
       editProblem,
       deleteProblem,
+      fetchMypageData // LikedScrapSection에서 좋아요/스크랩 업데이트 시 데이터 다시 불러오도록 노출
     };
   },
 };
