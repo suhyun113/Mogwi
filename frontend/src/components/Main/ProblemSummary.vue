@@ -3,7 +3,7 @@
     <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
-        <span class="author">작성자: {{ localProblem.authorId }}</span>
+        <span class="author">작성자: {{ localProblem.authorName }}</span>
       </div>
       <div class="card-count">
         <img :src="cardIcon" alt="card icon" class="icon card-icon" />

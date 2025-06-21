@@ -4,7 +4,7 @@
     <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
-        <span class="author">작성자: {{ localProblem.authord }}</span>
+        <span class="author">작성자: {{ localProblem.authorName }}</span>
       </div>
       <div class="study-status">
         <span :class="getStatusClass(localProblem.studyStatus)">
