@@ -31,7 +31,7 @@
       <div
         class="image-upload-area"
         :class="{ 'has-image': card.image_url, 'drag-over': isDragging }"
-        @dragover.prevent="handleDragOver"
+        @click="triggerFileInput" @dragover.prevent="handleDragOver"
         @dragleave="handleDragLeave"
         @drop.prevent="handleDrop"
       >
@@ -40,13 +40,12 @@
           :id="`image-input-${card.id}`"
           @change="handleImageFileChange"
           accept="image/*"
-          ref="fileInput"
-          hidden
+          ref="fileInput" hidden
         />
         <div v-if="!card.image_url" class="upload-placeholder">
           <span class="icon-upload" aria-hidden="true">&#x2191;</span>
           <p>
-            <label :for="`image-input-${card.id}`" class="upload-label">
+            <label class="upload-label">
               클릭하여 파일 선택
             </label>
             또는 이미지를 여기에 드래그하세요.
@@ -56,7 +55,7 @@
           <img :src="getFullImageUrl(card.image_url)" alt="Image Preview" class="preview-img" @error="handleImageError"/>
           <p v-if="imageLoadError" class="image-error-msg">이미지를 불러올 수 없습니다. 파일 형식을 확인하거나 다른 이미지를 시도해주세요.</p>
           <div class="image-actions">
-            <button @click="clearImage" class="action-btn clear-image-btn" title="이미지 제거">
+            <button @click.stop="clearImage" class="action-btn clear-image-btn" title="이미지 제거">
               <img src="@/assets/icons/delete.png" alt="Delete" class="btn-icon" />
               <span>제거</span>
             </button>
@@ -89,7 +88,7 @@ export default {
   setup(props, { emit }) {
     const imageLoadError = ref(false);
     const isDragging = ref(false); // For drag and drop visual feedback
-    const fileInput = ref(null); // Reference to the hidden file input
+    const fileInput = ref(null); // template의 ref="fileInput"과 연결됨
 
     const getFullImageUrl = (relativeUrl) => {
       if (!relativeUrl) return '';
@@ -134,7 +133,7 @@ export default {
     };
 
     const handleImageFileChange = (event) => {
-      processFile(event.target.files[0]);
+      processFile(event.target.files?.[0]);
     };
 
     const handleDragOver = () => {
@@ -147,9 +146,9 @@ export default {
 
     const handleDrop = (event) => {
       isDragging.value = false;
-      const files = event.dataTransfer.files;
-      if (files.length > 0) {
-        processFile(files[0]);
+      const files = event.dataTransfer?.files;
+      if (files?.length > 0) {
+        processFile(files?.[0]);
       }
     };
 
@@ -166,6 +165,15 @@ export default {
       }
     };
 
+    // 이미지 업로드 영역을 클릭했을 때 hidden input을 클릭하는 함수
+    const triggerFileInput = () => {
+      // 이미지가 없을 때만 파일 선택 창을 띄웁니다.
+      // 이미지가 있으면, 해당 영역 클릭은 이미지 액션 버튼(제거, 변경)으로 처리됩니다.
+      if (!props.card.image_url && fileInput.value) {
+        fileInput.value.click();
+      }
+    };
+
     watch(() => props.card.image_url, (newUrl) => {
       if (newUrl && imageLoadError.value) {
         imageLoadError.value = false; // Reset error when a new image URL is set
@@ -175,21 +183,22 @@ export default {
     return {
       imageLoadError,
       isDragging,
-      fileInput,
+      fileInput, // template에서 참조할 수 있도록 반환
       handleImageFileChange,
       handleDragOver,
       handleDragLeave,
       handleDrop,
       handleImageError,
       clearImage,
-      getFullImageUrl
+      getFullImageUrl,
+      triggerFileInput // template에서 사용할 수 있도록 반환
     };
   },
 };
 </script>
 
 <style scoped>
-/* Existing styles */
+/* 기존 스타일은 변경 사항이 없습니다. */
 .card-input-container {
   background-color: #ffffff;
   border: 1px solid #dcdcdc;
@@ -283,34 +292,34 @@ export default {
   resize: vertical;
 }
 
-/* --- NEW/MODIFIED STYLES FOR IMAGE UPLOAD UI --- */
+/* --- 이미지 업로드 UI 관련 스타일 --- */
 
 .image-upload-area {
-  border: 2px dashed #a471ff; /* Primary color dashed border */
+  border: 2px dashed #a471ff;
   border-radius: 8px;
   background-color: #fcfcfc;
   padding: 25px;
   text-align: center;
-  cursor: pointer;
+  cursor: pointer; /* 마우스 커서를 포인터로 변경하여 클릭 가능함을 시각적으로 알림 */
   transition: border-color 0.3s, background-color 0.3s;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 120px; /* Minimum height for the drop area */
-  position: relative; /* For absolute positioning of actions */
+  min-height: 120px;
+  position: relative;
 }
 
 .image-upload-area:hover,
 .image-upload-area.drag-over {
-  border-color: #6a3e9c; /* Darker on hover/drag */
-  background-color: #f0eafc; /* Lighter background on hover/drag */
+  border-color: #6a3e9c;
+  background-color: #f0eafc;
 }
 
 .image-upload-area.has-image {
-  border: 1px solid #e0e0e0; /* Solid border when image is present */
-  padding: 10px; /* Less padding when image is present */
-  min-height: unset; /* Let image content define height */
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  min-height: unset;
 }
 
 .upload-placeholder {
@@ -320,23 +329,24 @@ export default {
 }
 
 .icon-upload {
-  font-size: 3rem; /* 아이콘 크기 키우기 */
-  color: #a471ff; /* 업로드 아이콘 색상 */
+  font-size: 3rem;
+  color: #a471ff;
   margin-bottom: 10px;
-  display: block; /* 블록 요소로 만들어 margin-bottom 적용 */
-  font-weight: 300; /* 얇은 폰트 웨이트로 가벼운 느낌 */
+  display: block;
+  font-weight: 300;
 }
 
 .upload-label {
-  color: #6a3e9c; /* Primary color for clickable text */
+  color: #6a3e9c;
   font-weight: 600;
-  cursor: pointer;
+  /* label 자체의 cursor는 필요 없습니다. 부모 div가 처리합니다. */
+  /* cursor: pointer; */
   text-decoration: underline;
   transition: color 0.2s;
 }
 
 .upload-label:hover {
-  color: #a471ff; /* Lighter primary color on hover */
+  color: #a471ff;
 }
 
 .image-preview-wrapper {
@@ -351,7 +361,7 @@ export default {
   max-width: 100%;
   height: auto;
   border-radius: 5px;
-  max-height: 200px; /* Limit preview height */
+  max-height: 200px;
   object-fit: contain;
   border: 1px solid #eee;
 }
@@ -366,13 +376,12 @@ export default {
   display: flex;
   gap: 10px;
   margin-top: 15px;
-  width: 40%; /* Further reduce container width from 60% to 40% */
+  width: 40%;
   justify-content: center;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Common style for action buttons */
 .action-btn {
   display: flex;
   align-items: center;
@@ -385,26 +394,25 @@ export default {
   border: none;
   color: #333;
   font-weight: 500;
-  gap: 8px; /* Set gap to 8px for spacing between icon and text */
+  gap: 8px;
   flex-grow: 1;
-  height: 36px; /* Fixed height for consistent button size */
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
-  max-width: 90px; /* Limit button width as previously requested */
+  height: 36px;
+  box-sizing: border-box;
+  max-width: 90px;
 }
 
 .action-btn .btn-icon {
-  width: 18px; /* Icon size */
+  width: 18px;
   height: 18px;
   vertical-align: middle;
 }
 
-/* Specific styles for clear and change buttons with softer colors */
 .clear-image-btn {
   background-color: #ffe0e0;
   color: #c0392b;
   border: 1px solid #ffc8c8;
-  height: 36px; /* Ensure height consistency */
-  gap: 5px; /* Reduce gap specifically for clear button */
+  height: 36px;
+  gap: 5px;
 }
 
 .clear-image-btn:hover {
@@ -417,7 +425,7 @@ export default {
   background-color: #e0e6ff;
   color: #4a5c9e;
   border: 1px solid #c8d3ff;
-  height: 36px; /* Ensure height consistency */
+  height: 36px;
 }
 
 .change-image-btn:hover {
@@ -426,7 +434,6 @@ export default {
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-/* Remove default file input appearance */
 .form-input-file {
   display: none;
 }
