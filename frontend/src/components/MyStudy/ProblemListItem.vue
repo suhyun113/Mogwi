@@ -121,7 +121,6 @@ export default {
                 id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                 title: this.problem.title || '문제 제목 (로그인 필요)',
                 authorNickname: this.problem.authorNickname || '알 수 없음',
-                studyStatus: this.problem.studyStatus || 'new',
                 categories: this.problem.categories || [],
                 isLiked: this.problem.isLiked || false,
                 isScrapped: this.problem.isScrapped || false,
@@ -156,7 +155,7 @@ export default {
                     id: newVal?.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                     title: newVal?.title || '문제 제목 (로그인 필요)',
                     authorNickname: newVal?.authorNickname || '알 수 없음',
-                    studyStatus: newVal?.studyStatus || 'new',
+                    studyStatus: newVal?.studyStatus || '',
                     categories: newVal?.categories || [],
                     isLiked: !!newVal?.isLiked,
                     isScrapped: !!newVal?.isScrapped,
@@ -179,7 +178,7 @@ export default {
                         id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                         title: '문제 제목 (로그인 필요)',
                         authorNickname: '알 수 없음',
-                        studyStatus: 'new',
+                        studyStatus: '',
                         categories: [],
                         isLiked: false,
                         isScrapped: false,
@@ -218,6 +217,8 @@ export default {
                     return '진행 중';
                 case 'completed':
                     return '완료';
+                case '':
+                    return '';
                 default:
                     return '';
             }
@@ -230,6 +231,8 @@ export default {
                     return 'status-ongoing';
                 case 'completed':
                     return 'status-completed';
+                case '':
+                    return 'status-none';
                 default:
                     return '';
             }
@@ -376,6 +379,9 @@ export default {
     color: #2e7d32;
 }
 
+.status-none {
+    padding: 0;
+}
 
 .category-row {
     display: flex;
