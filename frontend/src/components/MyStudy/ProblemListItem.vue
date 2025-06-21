@@ -284,7 +284,7 @@ export default {
                 return;
             }
             if (!this.isSelectionMode) { 
-                this.$router.push(`/study/${this.localProblem.id}/solve`);
+                this.$router.push(`/study/${this.localProblem.id}`);
             }
         }
     }
