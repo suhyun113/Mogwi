@@ -73,11 +73,11 @@ export default {
     const activeTab = ref('public'); // 'public' or 'private'
 
     const publicProblems = computed(() =>
-      props.myProblems.filter(problem => problem.is_public)
+      props.myProblems.filter(problem => problem.isPublic)
     );
 
     const privateProblems = computed(() =>
-      props.myProblems.filter(problem => !problem.is_public)
+      props.myProblems.filter(problem => !problem.isPublic)
     );
 
     const onToggleLike = (problem) => {
