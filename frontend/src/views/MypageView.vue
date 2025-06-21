@@ -89,7 +89,8 @@
       :userId="currentUserId" @close="showEditProfileModal = false"
       @update-profile="handleProfileUpdateFromModal"
     />
-  </div> </template>
+  </div>
+</template>
 
 <script>
 /* eslint-disable vue/valid-v-else */
@@ -105,7 +106,7 @@ import LikedScrapSection from '@/components/Mypage/LikedScrapSection.vue';
 import MyProblemSection from '@/components/Mypage/MyProblemSection.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
-import EditProfileModal from '@/components/Mypage/EditProfileModal.vue'; // EditProfileModal import 확인
+import EditProfileModal from '@/components/Mypage/EditProfileModal.vue';
 
 export default {
   name: 'MypageView',
@@ -115,7 +116,7 @@ export default {
     MyProblemSection,
     LoginModal,
     RegisterModal,
-    EditProfileModal, // EditProfileModal 등록
+    EditProfileModal,
   },
   setup() {
     const store = useStore();
@@ -128,9 +129,9 @@ export default {
     const error = ref(null);
 
     const userNickname = ref('');
-    const userEmail = ref(''); // 사용자 이메일을 저장할 ref 추가
+    const userEmail = ref('');
     const likedProblems = ref([]);
-    const scrapedProblems = ref([]); // <-- **FIX: Declare scrapedProblems here**
+    const scrapedProblems = ref([]);
     const myProblems = ref([]);
 
     const activeSection = ref('profile');
@@ -159,15 +160,19 @@ export default {
         const userResponse = await axios.get(`/api/user/${currentUserId.value}`);
         if (userResponse.data.status === 'OK' && userResponse.data.user) {
           userNickname.value = userResponse.data.user.username;
-          userEmail.value = userResponse.data.user.usermail; // 이메일 정보도 저장
+          userEmail.value = userResponse.data.user.usermail;
         } else {
           userNickname.value = '알 수 없음';
           userEmail.value = '알 수 없음';
         }
 
-        const likedScrapResponse = await axios.get(`/api/problems/liked-scraped/${currentUserId.value}`);
-        likedProblems.value = likedScrapResponse.data.likedProblems;
-        scrapedProblems.value = likedScrapResponse.data.scrapedProblems; // <-- **FIX: This line is now correct as `scrapedProblems` is defined.**
+        // 내가 좋아요 누른 문제만 조회
+        const likedResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyLiked=true`);
+        likedProblems.value = likedResponse.data;
+        
+        // 내가 스크랩 누른 문제만 조회
+        const scrapResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyScrapped=true`);
+        scrapedProblems.value = scrapResponse.data;
 
         const myProblemsResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyMine=true`);
         myProblems.value = myProblemsResponse.data;
@@ -180,7 +185,6 @@ export default {
       }
     };
 
-    // --- (이하 기존 코드 유지) ---
     const handleDeleteAccount = () => {
       deleteTarget.value = 'account';
       showDeleteConfirmModal.value = true;
@@ -207,8 +211,12 @@ export default {
         return;
       }
       try {
+        // Implement actual account deletion logic here
+        // await axios.delete(`/api/user/${currentUserId.value}`);
         nicknameUpdateMessage.value = '회원 탈퇴가 성공적으로 처리되었습니다. (기능 미구현)';
         nicknameUpdateStatus.value = 'success';
+        store.dispatch('logout'); // Assuming you have a logout action
+        router.push('/'); // Redirect to home or login page
         showNicknameUpdateMessage.value = true;
         setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
       } catch (err) {
@@ -273,6 +281,19 @@ export default {
       showRegisterModal.value = true;
     };
 
+    const handleProfileUpdateFromModal = async (updatedData) => {
+      // Assuming updatedData contains { nickname, email }
+      userNickname.value = updatedData.nickname;
+      userEmail.value = updatedData.email;
+      // Optionally show a success message
+      nicknameUpdateMessage.value = '프로필 정보가 성공적으로 업데이트되었습니다.';
+      nicknameUpdateStatus.value = 'success';
+      showNicknameUpdateMessage.value = true;
+      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
+      showEditProfileModal.value = false; // Close the modal
+    };
+
+
     onMounted(() => {
       fetchMypageData();
       document.body.classList.add('hide-vertical-scroll');
@@ -287,9 +308,9 @@ export default {
           fetchMypageData();
         } else {
           userNickname.value = '';
-          userEmail.value = ''; // 로그아웃 시 이메일도 초기화
+          userEmail.value = '';
           likedProblems.value = [];
-          scrapedProblems.value = []; // <-- **FIX: Ensure this is reset on logout.**
+          scrapedProblems.value = [];
           myProblems.value = [];
           loading.value = false;
           error.value = null;
@@ -303,9 +324,9 @@ export default {
       error,
       isLoggedIn,
       userNickname,
-      userEmail, // userEmail도 return에 추가
+      userEmail,
       likedProblems,
-      scrapedProblems, // <-- **FIX: scrapedProblems must be returned from setup.**
+      scrapedProblems,
       myProblems,
       activeSection,
       showLoginModal,
@@ -323,6 +344,7 @@ export default {
       confirmDeleteProblem,
       cancelDelete,
       showEditProfileModal,
+      handleProfileUpdateFromModal,
       goToProblem,
       editProblem,
       deleteProblem,

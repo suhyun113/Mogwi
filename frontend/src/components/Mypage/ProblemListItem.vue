@@ -1,159 +1,132 @@
 <template>
-  <div class="problem-list-item">
-    <div class="problem-info">
-      <span class="problem-title">{{ problem.title }}</span>
-      <span v-if="showPublicTag && problem.is_public !== undefined" :class="['problem-status', { 'public': problem.is_public, 'private': !problem.is_public }]">
-        {{ problem.is_public ? '공개' : '비공개' }}
-      </span>
-      <span v-if="problem.topic" class="problem-topic">{{ problem.topic }}</span>
+  <div class="problem-card">
+    <div class="card-header">
+      <div class="left-info">
+        <h3 class="title">{{ problem.title }}</h3>
+        <p class="author">작성자: {{ problem.author_name }}</p>
+        <span v-if="problem.topic" class="tag">#{{ problem.topic }}</span>
+      </div>
+      <div class="right-info">
+        <span class="status-label">진행 중</span>
+        <button class="solve-button" @click="goToProblem">문제 풀기</button>
+      </div>
     </div>
-    <div class="problem-actions">
-      <template v-if="showCounts">
-        <span class="count-item">
-          <img src="@/assets/icons/like_outline.png" alt="좋아요" />
-          <span class="count-text">{{ likeCount }}</span>
-        </span>
-        <span class="count-item">
-          <img src="@/assets/icons/scrap_filled.png" alt="스크랩" />
-          <span class="count-text">{{ scrapCount }}</span>
-        </span>
-      </template>
-      <button v-else class="like-btn" @click.stop="toggleLike">
-        <img v-if="isScrapped" :src="require('@/assets/icons/scrap_filled.png')" alt="스크랩" />
-        <img v-else :src="isLiked ? require('@/assets/icons/like_filled.png') : require('@/assets/icons/like_outline.png')" alt="좋아요" />
-      </button>
+
+    <div class="card-footer">
+      <div class="icons">
+        <i class="fas fa-heart like-icon"></i> {{ problem.likes }}
+        <i class="fas fa-bookmark scrap-icon"></i> {{ problem.scraps }}
+      </div>
+      <div class="progress">
+        <span class="green">{{ problem.solved }}</span> /
+        <span class="orange">{{ problem.review }}</span> /
+        <span class="red">{{ problem.unsolved }}</span>
+        <span class="card-count">{{ problem.card_count }}카드</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'ProblemListItem',
   props: {
-    problem: {
-      type: Object,
-      required: true,
-    },
-    isLiked: {
-      type: Boolean,
-      default: false,
-    },
-    isScrapped: {
-      type: Boolean,
-      default: false,
-    },
-    showPublicTag: {
-      type: Boolean,
-      default: true,
-    },
-    showCounts: {
-      type: Boolean,
-      default: false,
-    },
-    likeCount: {
-      type: Number,
-      default: 0,
-    },
-    scrapCount: {
-      type: Number,
-      default: 0,
-    },
+    problem: Object,
   },
-  emits: ['toggle-like'],
   methods: {
-    toggleLike() {
-      this.$emit('toggle-like', this.problem);
+    goToProblem() {
+      this.$emit("go-to-problem", this.problem.id);
     },
   },
 };
 </script>
 
 <style scoped>
-.problem-list-item {
+.problem-card {
+  border: 1px solid #e5d9ff;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 1px #f0eaff;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #5a2ca0;
+  margin: 0;
+}
+
+.author {
+  font-size: 0.9rem;
+  color: #777;
+  margin: 4px 0;
+}
+
+.tag {
+  display: inline-block;
+  background-color: #f0e6ff;
+  color: #7a4bb7;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.status-label {
+  background-color: #ffd965;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  color: #6a4c00;
+  font-size: 0.85rem;
+  margin-right: 10px;
+}
+
+.solve-button {
+  background-color: #b48fff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fff;
-  border: 1.5px solid #e3d0ff;
-  border-radius: 16px;
-  padding: 24px 28px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(138, 43, 226, 0.04);
-  transition: box-shadow 0.2s, transform 0.2s;
 }
-.problem-list-item:hover {
-  box-shadow: 0 4px 16px rgba(138, 43, 226, 0.10);
-  transform: translateY(-2px);
+
+.icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: #9b59b6;
+  font-weight: bold;
 }
-.problem-info {
+
+.progress {
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 3px;
 }
-.problem-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #4a1e77;
-  margin-right: 10px;
-}
-.problem-status {
-  display: inline-block;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: 12px;
-  padding: 4px 14px;
+
+.green { color: green; }
+.orange { color: orange; }
+.red { color: red; }
+
+.card-count {
   margin-left: 6px;
-}
-.problem-status.public {
-  background: #f3eaff;
-  color: #6a2dbd;
-}
-.problem-status.private {
-  background: #ffe6e6;
-  color: #d32f2f;
-}
-.problem-topic {
-  display: inline-block;
-  background: #e6f0ff;
-  color: #3b6bb2;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  padding: 4px 14px;
-  margin-left: 6px;
-}
-.problem-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.count-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 1rem;
-  color: #b7a3e3;
-}
-.count-item img {
-  width: 22px;
-  height: 22px;
-}
-.count-text {
-  min-width: 16px;
-  text-align: center;
-  font-size: 1rem;
-  color: #b7a3e3;
-}
-.like-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-.like-btn img {
-  width: 24px;
-  height: 24px;
+  color: #888;
 }
 </style>

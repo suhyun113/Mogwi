@@ -28,6 +28,7 @@
           :isScrapped="false"
           :showPublicTag="false"
           @toggle-like="onToggleLike"
+          @go-to-problem="handleGoToProblem"
         />
       </div>
 
@@ -43,6 +44,7 @@
           :isScrapped="true"
           :showPublicTag="false"
           @toggle-like="onToggleLike"
+          @go-to-problem="handleGoToProblem"
         />
       </div>
     </div>
@@ -68,17 +70,25 @@ export default {
       default: () => [],
     },
   },
-  emits: ['toggle-like'],
+  emits: ['toggle-like', 'go-to-problem'], // Emit 'go-to-problem' event
   setup(props, { emit }) {
     const activeTab = ref('liked'); // 'liked' or 'scraped'
 
     const onToggleLike = (problem) => {
+      // This event might need to be handled by the parent (MypageView)
+      // to re-fetch or update the liked/scraped lists if a like/unlike
+      // action happens within this section.
       emit('toggle-like', problem);
+    };
+
+    const handleGoToProblem = (problemId) => {
+      emit('go-to-problem', problemId);
     };
 
     return {
       activeTab,
       onToggleLike,
+      handleGoToProblem,
     };
   },
 };
