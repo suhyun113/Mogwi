@@ -124,7 +124,7 @@ export default {
                 overallTotalCards.value = summary.total || 0;
 
                 console.log(`Fetching detailed problems for userId: ${currentUserId.value}`);
-                const problemsResponse = await axios.get(`/api/mystudy/problems/detail/${currentUserId.value}`);
+                const problemsResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}`);
 
                 if (!problemsResponse.data || !Array.isArray(problemsResponse.data)) {
                     console.warn("API 응답 데이터가 유효한 배열이 아닙니다.", problemsResponse.data);
@@ -190,6 +190,19 @@ export default {
             } finally {
                 loading.value = false;
             }
+        };
+
+        const sortProblems = (problems) => {
+            // Assuming 'id' is a unique and stable identifier for each problem
+            // You could also use a 'createdAt' timestamp if available and reliable
+            return [...problems].sort((a, b) => {
+                // Ensure both a.id and b.id are comparable (e.g., numbers or strings)
+                if (typeof a.id === 'number' && typeof b.id === 'number') {
+                    return a.id - b.id;
+                }
+                // Fallback for strings or other types if 'id' isn't purely numeric
+                return String(a.id).localeCompare(String(b.id));
+            });
         };
 
         const goToStudy = (problemId) => {
@@ -264,6 +277,7 @@ export default {
             handleRegistrationSuccess,
             handleOpenRegister,
             handleOpenLogin,
+            sortProblems
         };
     }
 };
