@@ -195,8 +195,10 @@ export default {
         const myProblemsResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyMine=true`);
         myProblems.value = myProblemsResponse.data.map(problem => ({
           ...problem,
-          likes: problem.likes || 0,
-          scraps: problem.scraps || 0
+          liked: problem.isLiked,
+          scrapped: problem.isScrapped,
+          likes: problem.totalLikes || 0,
+          scraps: problem.totalScraps || 0
         }));
 
       } catch (err) {
