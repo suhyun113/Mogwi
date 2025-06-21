@@ -197,7 +197,6 @@ export default {
                 });
 
                 if (response.data.status === 'OK') {
-                // 👉 좋아요 상태와 수만 업데이트
                 target.isLiked = !target.isLiked;
                 target.totalLikes += target.isLiked ? 1 : -1;
                 } else {
@@ -212,17 +211,21 @@ export default {
 
         const handleToggleScrap = async (problemId) => {
             if (!checkLoginAndExecute()) return;
+
+            // 해당 문제를 현재 탭에서 찾음
+            const list = currentProblems.value;
+            const target = list.find(p => p.id === problemId);
+            if (!target) return;
+
             try {
-                const response = await axios.post(`/api/scrap/${problemId}/toggle-scrap`, {
+                const response = await axios.post(`/api/scrap/${problemId}`, {
                     userId: props.currentUserId,
-                    field: 'isScrapped',
                 });
                 if (response.data.status === 'OK') {
-                    console.log(`스크랩 토글 성공: ${response.data.newStatus}, 총 스크랩: ${response.data.totalScraps}`);
-                    emit('refresh-problems');
+                target.isScrapped = !target.isScrapped;
+                target.totalScraps += target.isScrapped ? 1 : -1;
                 } else {
-                    console.error('스크랩 토글 실패 (서버 응답):', response.data.message);
-                    alert('스크랩 상태 변경에 실패했습니다: ' + response.data.message);
+                alert('스크랩 상태 변경에 실패했습니다: ' + response.data.message);
                 }
             } catch (error) {
                 console.error('스크랩 토글 실패:', error);
