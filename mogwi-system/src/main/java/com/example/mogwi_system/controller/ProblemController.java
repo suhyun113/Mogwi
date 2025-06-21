@@ -32,7 +32,9 @@ public class ProblemController {
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String currentUserId,
-            @RequestParam(required = false, defaultValue = "false") boolean onlyMine
+            @RequestParam(required = false, defaultValue = "false") boolean onlyMine,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyLiked,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyScrapped
     ) {
         try {
             StringBuilder sql = new StringBuilder(
@@ -45,7 +47,8 @@ public class ProblemController {
                             "c.color_code AS category_color " +
                             "FROM problems p " +
                             "JOIN users u ON p.author_id = u.id " +
-                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserIdParam) " + // currentUserIdParam으로 변경
+                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id " +
+                            "AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserIdParam) " +
                             "LEFT JOIN problem_categories pc ON p.id = pc.problem_id " +
                             "LEFT JOIN categories c ON pc.category_id = c.id "
             );
@@ -53,41 +56,51 @@ public class ProblemController {
             List<String> conditions = new ArrayList<>();
             Map<String, Object> parameters = new HashMap<>();
 
-            // onlyMine이 true이면, 현재 사용자 ID로 필터링합니다.
-            // 이 경우 is_public 조건은 제거하고 내가 만든 모든 문제를 가져옵니다.
+            // onlyMine
             if (onlyMine && currentUserId != null && !currentUserId.isEmpty()) {
-                conditions.add("u.userid = :currentUserIdForAuthor"); // 작성자 ID로 필터링
+                conditions.add("u.userid = :currentUserIdForAuthor");
                 parameters.put("currentUserIdForAuthor", currentUserId);
             } else {
-                // onlyMine이 false이거나 currentUserId가 없으면 공개된 문제만 조회합니다.
+                // 공개 문제
                 conditions.add("p.is_public = true");
             }
 
-            // 검색어 조건
+            // onlyLiked
+            if (onlyLiked) {
+                conditions.add("ups.is_liked = 1");
+            }
+
+            // onlyScrapped
+            if (onlyScrapped) {
+                conditions.add("ups.is_scrapped = 1");
+            }
+
+            // query
             if (query != null && !query.isEmpty()) {
                 conditions.add("p.title LIKE :query");
                 parameters.put("query", "%" + query + "%");
             }
-            // 카테고리 조건
+
+            // category
             if (category != null && !category.equals("#전체")) {
                 conditions.add("c.tag_name = :category");
                 parameters.put("category", category);
             }
 
-            // 조건들을 WHERE 절에 추가
+            // WHERE
             if (!conditions.isEmpty()) {
-                sql.append("WHERE ").append(String.join(" AND ", conditions));
+                sql.append("WHERE ").append(String.join(" AND ", conditions)).append(" ");
             }
 
-            // GROUP BY 및 ORDER BY 절
-            sql.append(" GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
-            sql.append(" ORDER BY p.id DESC");
+            // GROUP BY + ORDER
+            sql.append("GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
+            sql.append("ORDER BY p.id DESC");
 
+            // 실행
             var queryObj = entityManager.createNativeQuery(sql.toString());
 
-            // 쿼리 파라미터 설정
-            if (currentUserId == null) currentUserId = ""; // currentUserId가 null이면 빈 문자열로 처리
-            queryObj.setParameter("currentUserIdParam", currentUserId); // 좋아요/스크랩 상태 조회용 파라미터
+            if (currentUserId == null) currentUserId = "";
+            queryObj.setParameter("currentUserIdParam", currentUserId);
 
             for (Map.Entry<String, Object> entry : parameters.entrySet()) {
                 queryObj.setParameter(entry.getKey(), entry.getValue());
@@ -113,6 +126,7 @@ public class ProblemController {
                     item.put("categories", new ArrayList<Map<String, String>>());
                     problemMap.put(problemId, item);
                 }
+
                 if (row[9] != null) {
                     Map<String, String> categoryMap = new HashMap<>();
                     categoryMap.put("tag_name", row[9].toString());
@@ -122,6 +136,7 @@ public class ProblemController {
             }
 
             return ResponseEntity.ok(new ArrayList<>(problemMap.values()));
+
         } catch (Exception e) {
             log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
