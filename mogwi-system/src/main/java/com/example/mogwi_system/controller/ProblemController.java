@@ -1,6 +1,7 @@
 package com.example.mogwi_system.controller;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -18,23 +19,56 @@ public class ProblemController {
     @PersistenceContext
     private EntityManager entityManager;
 
+    // Helper method: 외부 사용자 ID로 내부 사용자 ID를 조회
+    private Long getInternalUserId(String userId) throws NoResultException {
+        log.info("MyStudyController: 외부 사용자 ID '{}'에 대한 내부 ID 조회 시도", userId);
+        try {
+            Object result = entityManager.createNativeQuery("SELECT id FROM users WHERE userid = ?1")
+                    .setParameter(1, userId)
+                    .getSingleResult();
+            return ((Number) result).longValue();
+        } catch (NoResultException e) {
+            log.warn("MyStudyController: 외부 사용자 ID '{}'에 해당하는 내부 사용자를 찾을 수 없음", userId);
+            throw e;
+        } catch (Exception e) {
+            log.error("MyStudyController: 외부 사용자 ID '{}'에 대한 내부 사용자 ID 조회 중 오류 발생: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("내부 사용자 ID를 검색하는 데 실패했습니다.", e);
+        }
+    }
+
+    // Helper method: 문제의 카테고리 태그와 색상 코드 조회
+    private List<Map<String, String>> getCategoriesForProblem(Long problemId) {
+        List<Object[]> results = entityManager.createNativeQuery(
+                        "SELECT c.tag_name, c.color_code " +
+                                "FROM problem_categories pc " +
+                                "JOIN categories c ON pc.category_id = c.id " +
+                                "WHERE pc.problem_id = ?1")
+                .setParameter(1, problemId)
+                .getResultList();
+
+        List<Map<String, String>> categories = new ArrayList<>();
+        for (Object[] row : results) {
+            Map<String, String> category = new HashMap<>();
+            category.put("tag_name", row[0].toString());
+            category.put("color_code", row[1] != null ? row[1].toString() : "#CCCCCC");
+            categories.add(category);
+        }
+        return categories;
+    }
+
     /** 문제 목록 조회 API
      * GET /api/problem
      *
      * @param query 검색어 (선택 사항)
      * @param category 카테고리 태그 (선택 사항)
      * @param currentUserId 현재 로그인된 사용자의 userid (문자열). 이 사용자의 좋아요/스크랩 여부 및 (onlyMine=true 시) 작성 문제를 확인하는 데 사용됩니다.
-     * @param onlyMine true일 경우, currentUserId가 작성한 문제만 조회합니다. (마이페이지 '내가 만든 문제'에서 사용)
      * @return 문제 목록 (List<Map<String, Object>>)
      */
     @GetMapping("/api/problem")
     public ResponseEntity<List<Map<String, Object>>> getProblems(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String currentUserId,
-            @RequestParam(required = false, defaultValue = "false") boolean onlyMine,
-            @RequestParam(required = false, defaultValue = "false") boolean onlyLiked,
-            @RequestParam(required = false, defaultValue = "false") boolean onlyScrapped
+            @RequestParam(required = false) String currentUserId
     ) {
         try {
             StringBuilder sql = new StringBuilder(
@@ -47,8 +81,7 @@ public class ProblemController {
                             "c.color_code AS category_color " +
                             "FROM problems p " +
                             "JOIN users u ON p.author_id = u.id " +
-                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id " +
-                            "AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserIdParam) " +
+                            "LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = (SELECT id FROM users WHERE userid = :currentUserIdParam) " + // currentUserIdParam으로 변경
                             "LEFT JOIN problem_categories pc ON p.id = pc.problem_id " +
                             "LEFT JOIN categories c ON pc.category_id = c.id "
             );
@@ -56,51 +89,31 @@ public class ProblemController {
             List<String> conditions = new ArrayList<>();
             Map<String, Object> parameters = new HashMap<>();
 
-            // onlyMine
-            if (onlyMine && currentUserId != null && !currentUserId.isEmpty()) {
-                conditions.add("u.userid = :currentUserIdForAuthor");
-                parameters.put("currentUserIdForAuthor", currentUserId);
-            } else {
-                // 공개 문제
-                conditions.add("p.is_public = true");
-            }
-
-            // onlyLiked
-            if (onlyLiked) {
-                conditions.add("ups.is_liked = 1");
-            }
-
-            // onlyScrapped
-            if (onlyScrapped) {
-                conditions.add("ups.is_scrapped = 1");
-            }
-
-            // query
+            // 검색어 조건
             if (query != null && !query.isEmpty()) {
                 conditions.add("p.title LIKE :query");
                 parameters.put("query", "%" + query + "%");
             }
-
-            // category
+            // 카테고리 조건
             if (category != null && !category.equals("#전체")) {
                 conditions.add("c.tag_name = :category");
                 parameters.put("category", category);
             }
 
-            // WHERE
+            // 조건들을 WHERE 절에 추가
             if (!conditions.isEmpty()) {
-                sql.append("WHERE ").append(String.join(" AND ", conditions)).append(" ");
+                sql.append("WHERE ").append(String.join(" AND ", conditions));
             }
 
-            // GROUP BY + ORDER
-            sql.append("GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
-            sql.append("ORDER BY p.id DESC");
+            // GROUP BY 및 ORDER BY 절
+            sql.append(" GROUP BY p.id, p.title, u.username, u.userid, p.card_count, ups.is_liked, ups.is_scrapped, category_name, category_color ");
+            sql.append(" ORDER BY p.id DESC");
 
-            // 실행
             var queryObj = entityManager.createNativeQuery(sql.toString());
 
-            if (currentUserId == null) currentUserId = "";
-            queryObj.setParameter("currentUserIdParam", currentUserId);
+            // 쿼리 파라미터 설정
+            if (currentUserId == null) currentUserId = ""; // currentUserId가 null이면 빈 문자열로 처리
+            queryObj.setParameter("currentUserIdParam", currentUserId); // 좋아요/스크랩 상태 조회용 파라미터
 
             for (Map.Entry<String, Object> entry : parameters.entrySet()) {
                 queryObj.setParameter(entry.getKey(), entry.getValue());
@@ -116,18 +129,16 @@ public class ProblemController {
                     Map<String, Object> item = new HashMap<>();
                     item.put("id", problemId);
                     item.put("title", row[1]);
-                    item.put("author", row[2]);
-                    item.put("authorId", row[3]);
-                    item.put("cardCount", row[4]);
-                    item.put("likes", row[5]);
-                    item.put("scraps", row[6]);
-                    item.put("liked", ((Number) row[7]).intValue() == 1);
-                    item.put("scrapped", ((Number) row[8]).intValue() == 1);
+                    item.put("authorId", row[2]);
+                    item.put("cardCount", row[3]);
+                    item.put("likes", row[4]);
+                    item.put("scraps", row[5]);
+                    item.put("liked", ((Number) row[6]).intValue() == 1);
+                    item.put("scrapped", ((Number) row[7]).intValue() == 1);
                     item.put("categories", new ArrayList<Map<String, String>>());
                     problemMap.put(problemId, item);
                 }
-
-                if (row[9] != null) {
+                if (row[8] != null) {
                     Map<String, String> categoryMap = new HashMap<>();
                     categoryMap.put("tag_name", row[9].toString());
                     categoryMap.put("color_code", row[10] != null ? row[10].toString() : "#CCCCCC");
@@ -136,10 +147,112 @@ public class ProblemController {
             }
 
             return ResponseEntity.ok(new ArrayList<>(problemMap.values()));
-
         } catch (Exception e) {
             log.error("문제 목록 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    /**
+     * 상세 문제 목록 조회 API (사용자 학습 기록 기반 + 필터링)
+     * GET /api/problem/detail
+     *
+     * @param currentUserId 현재 로그인한 사용자의 userid
+     * @param onlyLiked true이면 사용자가 좋아요한 문제만 조회
+     * @param onlyScrapped true이면 사용자가 스크랩한 문제만 조회
+     * @param onlyMine true이면 사용자가 만든 문제만 조회
+     * @return 학습한 문제 목록 (상태, 좋아요, 스크랩, 카드 상태 포함)
+     */
+    @GetMapping("/api/problem/detail")
+    public ResponseEntity<List<Map<String, Object>>> getUserStudyProblemsDetail(
+            @RequestParam String currentUserId,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyLiked,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyScrapped,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyMine) {
+
+        log.info("getUserStudyProblemsDetail 호출: userId={}", currentUserId);
+        Long internalUserId;
+        try {
+            if (currentUserId == null || currentUserId.trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
+            }
+            internalUserId = getInternalUserId(currentUserId);
+        } catch (NoResultException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        }
+
+        try {
+            StringBuilder sql = new StringBuilder(
+                    "SELECT p.id AS problem_id, p.title, p.description, p.card_count, u.username AS author_nickname, " +
+                            "COALESCE(ups.is_liked, 0) AS is_liked, COALESCE(ups.is_scrapped, 0) AS is_scrapped, " +
+                            "IFNULL(ups.problem_status, 'new') AS study_status, " +
+                            "(SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1) AS total_likes, " +
+                            "(SELECT COUNT(*) FROM user_problem_status ups3 WHERE ups3.problem_id = p.id AND ups3.is_scrapped = 1) AS total_scraps, " +
+                            "COALESCE(SUM(CASE WHEN ucs.card_status = 'perfect' THEN 1 ELSE 0 END), 0) AS perfect_count, " +
+                            "COALESCE(SUM(CASE WHEN ucs.card_status = 'vague' THEN 1 ELSE 0 END), 0) AS vague_count, " +
+                            "COALESCE(SUM(CASE WHEN ucs.card_status = 'forgotten' THEN 1 ELSE 0 END), 0) AS forgotten_count " +
+                            "FROM problems p " +
+                            "JOIN users u ON p.author_id = u.id " +
+                            "LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ?1 " +
+                            "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?1 "
+            );
+
+            List<String> whereConditions = new ArrayList<>();
+            if (onlyMine) {
+                whereConditions.add("p.author_id = ?1");
+            } else {
+                whereConditions.add("(ups.user_id = ?1 OR ucs.user_id = ?1)");
+            }
+            if (onlyLiked) {
+                whereConditions.add("ups.is_liked = 1");
+            }
+            if (onlyScrapped) {
+                whereConditions.add("ups.is_scrapped = 1");
+            }
+
+            if (!whereConditions.isEmpty()) {
+                sql.append(" WHERE ").append(String.join(" AND ", whereConditions));
+            }
+
+            sql.append(" GROUP BY p.id, p.title, p.description, p.card_count, u.username, ups.is_liked, ups.is_scrapped, ups.problem_status ");
+            sql.append(" ORDER BY IFNULL(ups.updated_at, p.created_at) DESC");
+
+            List<Object[]> problemResults = entityManager.createNativeQuery(sql.toString())
+                    .setParameter(1, internalUserId)
+                    .getResultList();
+
+            List<Map<String, Object>> userProblems = new ArrayList<>();
+
+            for (Object[] row : problemResults) {
+                Map<String, Object> problem = new HashMap<>();
+                Long problemId = ((Number) row[0]).longValue();
+                problem.put("id", problemId);
+                problem.put("title", row[1]);
+                problem.put("description", row[2]);
+                problem.put("cardCount", ((Number) row[3]).intValue());
+                problem.put("authorId", row[4]);
+                problem.put("isLiked", ((Number) row[5]).intValue() == 1);
+                problem.put("isScrapped", ((Number) row[6]).intValue() == 1);
+                String studyStatus = row[7].toString();
+                problem.put("studyStatus", studyStatus);
+                problem.put("isCompleted", "completed".equals(studyStatus));
+                problem.put("totalLikes", ((Number) row[8]).intValue());
+                problem.put("totalScraps", ((Number) row[9]).intValue());
+                problem.put("perfectCount", ((Number) row[10]).intValue());
+                problem.put("vagueCount", ((Number) row[11]).intValue());
+                problem.put("forgottenCount", ((Number) row[12]).intValue());
+                problem.put("categories", getCategoriesForProblem(problemId));
+
+                userProblems.add(problem);
+            }
+
+            return ResponseEntity.ok(userProblems);
+
+        } catch (Exception e) {
+            log.error("사용자 문제 상세 조회 중 오류: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
         }
     }
 
@@ -178,13 +291,12 @@ public class ProblemController {
             response.put("id", ((Number) row[0]).longValue());
             response.put("title", row[1]);
             response.put("description", row[2]);
-            response.put("author", row[3]);
-            response.put("authorId", row[4]);
-            response.put("cardCount", row[5]);
-            response.put("likes", row[6]);
-            response.put("scraps", row[7]);
-            response.put("liked", ((Number) row[8]).intValue() == 1);
-            response.put("scrapped", ((Number) row[9]).intValue() == 1);
+            response.put("authorId", row[3]);
+            response.put("cardCount", row[4]);
+            response.put("likes", row[5]);
+            response.put("scraps", row[6]);
+            response.put("liked", ((Number) row[7]).intValue() == 1);
+            response.put("scrapped", ((Number) row[8]).intValue() == 1);
 
             List<?> categoryResults = entityManager.createNativeQuery(
                             "SELECT c.tag_name, c.color_code FROM problem_categories pc " +
