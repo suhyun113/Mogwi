@@ -273,7 +273,7 @@ export default {
             if (confirm(`선택된 문제 ${selectedProblems.value.length}개의 학습 현황을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
                 try {
                     const deletePromises = selectedProblems.value.map(problemId =>
-                        axios.delete(`/api/mystudy/problems/${problemId}/status/${props.currentUserId}`)
+                        axios.delete(`/api/problem/${problemId}`)
                     );
 
                     const results = await Promise.allSettled(deletePromises);
