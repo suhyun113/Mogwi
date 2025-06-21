@@ -206,7 +206,7 @@ public class ProblemController {
             StringBuilder sql = new StringBuilder(
                     "SELECT p.id AS problem_id, p.title, p.description, p.is_public, p.card_count, u.username AS author_nickname, u.userid AS author_id," +
                             "COALESCE(ups.is_liked, 0) AS is_liked, COALESCE(ups.is_scrapped, 0) AS is_scrapped, " +
-                            "IFNULL(ups.problem_status, 'new') AS study_status, " +
+                            "IFNULL(ups.problem_status, '') AS study_status, " +
                             "(SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1) AS total_likes, " +
                             "(SELECT COUNT(*) FROM user_problem_status ups3 WHERE ups3.problem_id = p.id AND ups3.is_scrapped = 1) AS total_scraps, " +
                             "COALESCE(SUM(CASE WHEN ucs.card_status = 'perfect' THEN 1 ELSE 0 END), 0) AS perfect_count, " +
