@@ -106,7 +106,7 @@ export default {
         title: this.problem.title || '제목 없음',
         authorName: this.problem.authorName || '알 수 없음', // 백엔드 응답 authorNickname에 맞춤
         authorId: this.problem.authorId || null,
-        studyStatus: this.problem.studyStatus || 'new', // 학습 상태 추가
+        studyStatus: this.problem.studyStatus || '', // 학습 상태 추가
         categories: this.problem.categories || [],
         isLiked: this.problem.isLiked || false, // 'liked' -> 'isLiked' 백엔드 응답과 일치
         isScrapped: this.problem.isScrapped || false, // 'scrapped' -> 'isScrapped' 백엔드 응답과 일치
@@ -139,7 +139,7 @@ export default {
           title: newVal.title || '제목 없음',
           authorName: newVal.authorName || '알 수 없음',
           authorId: newVal.authorId || null,
-          studyStatus: newVal.studyStatus || 'new',
+          studyStatus: newVal.studyStatus || '',
           categories: newVal.categories || [],
           isLiked: !!newVal.isLiked, // boolean으로 강제 형변환
           isScrapped: !!newVal.isScrapped, // boolean으로 강제 형변환
@@ -180,6 +180,8 @@ export default {
                 return '진행 중';
             case 'completed':
                 return '완료';
+            case '':
+              return '';
             default:
                 return '';
         }
@@ -193,6 +195,8 @@ export default {
                 return 'status-ongoing';
             case 'completed':
                 return 'status-completed';
+            case '':
+            return 'status-none';
             default:
                 return '';
         }
@@ -453,6 +457,10 @@ export default {
 .status-completed {
     background-color: #a5d6a7;
     color: #2e7d32;
+}
+
+.status-none {
+    padding: 0;
 }
 
 /* ProblemListItem에서 가져온 study-card-summary 관련 스타일 */
