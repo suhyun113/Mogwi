@@ -324,13 +324,13 @@ public class SolveController {
 
             String currentProblemStatus;
             if (existingProblemStatusResult.isEmpty()) {
-                // 레코드가 없으면 새로 생성 (problem_status는 'new', is_liked/is_scrapped는 0으로 기본값 설정)
+                // 레코드가 없으면 새로 생성 (problem_status는 '', is_liked/is_scrapped는 0으로 기본값 설정)
                 entityManager.createNativeQuery(
                                 "INSERT INTO user_problem_status (user_id, problem_id, problem_status, is_liked, is_scrapped, created_at, updated_at) VALUES (?1, ?2, 'new', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
                         .setParameter(1, internalUserId)
                         .setParameter(2, problemId)
                         .executeUpdate();
-                currentProblemStatus = "new";
+                currentProblemStatus = "";
                 log.info("새로운 user_problem_status 레코드 생성됨: userId={}, problemId={}, status='new'", internalUserId, problemId);
             } else {
                 // 레코드가 이미 존재하면 현재 상태 반환
