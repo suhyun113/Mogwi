@@ -289,63 +289,6 @@ public class SolveController {
      * @param data 사용자 ID (userId)와 문제 ID (problemId)를 포함하는 맵
      * @return 문제 학습 시작 결과 (problemStatus: 'new' 또는 기존 상태)
      */
-    /*@PostMapping("/solve/start-study")
-    public ResponseEntity<Map<String, Object>> initiateProblemStudy(@RequestBody Map<String, Object> data) {
-        String userId = (String) data.get("userId");
-        Long problemId = ((Number) data.get("problemId")).longValue();
-
-        log.info("initiateProblemStudy 호출됨: userId={}, problemId={}", userId, problemId);
-
-        if (userId == null || userId.trim().isEmpty() || problemId == null) {
-            log.warn("initiateProblemStudy: 유효하지 않은 입력값입니다. userId: {}, problemId: {}", userId, problemId);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("status", "ERROR", "message", "사용자 ID 또는 문제 ID가 누락되었습니다."));
-        }
-
-        Long internalUserId;
-        try {
-            internalUserId = getInternalUserId(userId);
-        } catch (NoResultException e) {
-            log.warn("initiateProblemStudy: 사용자 ID '{}'를 찾을 수 없음.", userId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자를 찾을 수 없습니다."));
-        } catch (Exception e) {
-            log.error("initiateProblemStudy: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
-        }
-
-        try {
-            List<String> existingProblemStatusResult = entityManager.createNativeQuery(
-                            "SELECT problem_status FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2", String.class)
-                    .setParameter(1, internalUserId)
-                    .setParameter(2, problemId)
-                    .getResultList();
-
-            String currentProblemStatus;
-            if (existingProblemStatusResult.isEmpty()) {
-                // 레코드가 없으면 새로 생성. DB에는 'new'로 저장하지만,
-                // 클라이언트에게는 모달을 띄우기 위한 신호인 빈 문자열을 반환합니다.
-                entityManager.createNativeQuery(
-                                "INSERT INTO user_problem_status (user_id, problem_id, problem_status, is_liked, is_scrapped, created_at, updated_at) VALUES (?1, ?2, 'new', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
-                        .setParameter(1, internalUserId)
-                        .setParameter(2, problemId)
-                        .executeUpdate();
-                currentProblemStatus = ""; // <-- 이전에 설정된 대로 빈 문자열 반환
-                log.info("새로운 user_problem_status 레코드 생성됨: userId={}, problemId={}, status='new' (클라이언트에게는 '' 반환)", internalUserId, problemId);
-            } else {
-                // 레코드가 이미 존재하면 기존 상태 반환 (이때는 'new', 'ongoing', 'completed' 중 하나일 것입니다)
-                currentProblemStatus = existingProblemStatusResult.get(0);
-                log.info("기존 user_problem_status 레코드 조회됨: userId={}, problemId={}, status='{}'", internalUserId, problemId, currentProblemStatus);
-            }
-
-            log.info("initiateProblemStudy 응답: problemStatus='{}'", currentProblemStatus);
-            return ResponseEntity.ok(Map.of("status", "OK", "problemStatus", currentProblemStatus));
-
-        } catch (Exception e) {
-            log.error("initiateProblemStudy: 문제 학습 시작 중 오류 발생 (problemId: {}, userId: {}): {}", problemId, userId, e.getMessage(), e);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
-        }
-    }*/
     @PostMapping("/solve/start-study")
     @Transactional
     public ResponseEntity<Map<String, Object>> initiateProblemStudy(@RequestBody Map<String, Object> data) {
@@ -379,13 +322,13 @@ public class SolveController {
                     .setParameter(2, problemId)
                     .getResultList();
 
-            String finalStatus = "new";
+            String finalStatus = "";
 
             if (result.isEmpty()) {
                 // 존재하지 않으면 새로 생성
                 entityManager.createNativeQuery(
                                 "INSERT INTO user_problem_status (user_id, problem_id, problem_status, is_liked, is_scrapped, created_at, updated_at) " +
-                                        "VALUES (?1, ?2, 'new', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
+                                        "VALUES (?1, ?2, '', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
                         .setParameter(1, internalUserId)
                         .setParameter(2, problemId)
                         .executeUpdate();
