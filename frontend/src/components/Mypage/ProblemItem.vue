@@ -97,6 +97,7 @@ export default {
     isSelected: Boolean,
     isLiked: Boolean,
     isScrapped: Boolean,
+    isEditable: Boolean,
     showPublicTag: Boolean,
   },
   emits: ['auth-required', 'go-to-study', 'toggle-selection', 'update-like', 'update-scrap'],
@@ -135,7 +136,10 @@ export default {
             newVal.author_name ||
             newVal.username ||
             '알 수 없음',
+          authorId: newVal.authorId || newVal.author_id || null
         };
+        // problem 객체 변경 시 콘솔 로그 출력
+        this.logEditButtonConditions();
       },
       immediate: true,
       deep: true,
@@ -147,9 +151,37 @@ export default {
     // isScrapped prop이 변경될 때 localProblem.scrapped 업데이트
     isScrapped(newVal) {
       this.localProblem.scrapped = newVal;
+    },
+    // isAuthenticated, currentUserId prop이 변경될 때마다 콘솔 로그 출력
+    isAuthenticated() {
+      this.logEditButtonConditions();
+    },
+    currentUserId() {
+      this.logEditButtonConditions();
     }
   },
+  mounted() {
+    // 컴포넌트가 마운트될 때 초기 값들을 콘솔에 출력
+    this.logEditButtonConditions();
+  },
   methods: {
+    // 조건들을 한 번에 출력하는 메서드
+    logEditButtonConditions() {
+      const isAuth = this.isAuthenticated;
+      const authorId = this.localProblem.authorId;
+      const currentId = this.currentUserId;
+      const conditionMet = isAuth && (authorId == currentId);
+
+      console.log('--- ProblemListItem: Edit Button Conditions ---');
+      console.log(`문제 제목: ${this.localProblem.title}`);
+      console.log(`isAuthenticated: ${isAuth}`);
+      console.log(`Problem Author ID: ${authorId} (Type: ${typeof authorId})`);
+      console.log(`Current User ID: ${currentId} (Type: ${typeof currentId})`);
+      console.log(`ID 일치 여부 (==): ${authorId == currentId}`); // 동등 비교
+      console.log(`ID 일치 여부 (===): ${authorId === currentId}`); // 엄격 비교 (타입까지)
+      console.log(`최종 조건 (isAuthenticated && authorId == currentUserId): ${conditionMet}`);
+      console.log('--------------------------------------------');
+    },
     formatTagName(name) {
       return name.startsWith('#') ? name : `#${name}`;
     },
@@ -157,10 +189,10 @@ export default {
       return tag.color_code || '#ccc';
     },
     getStatusText(status) {
-      return { new: '진행 전', ongoing: '진행 중', completed: '완료' }[status] || '';
+      return { new: '진행 전', ongoing: '진행 중', completed: '완료', '': '' }[status] || '';
     },
     getStatusClass(status) {
-      return { new: 'status-new', ongoing: 'status-ongoing', completed: 'status-completed' }[status] || '';
+      return { new: 'status-new', ongoing: 'status-ongoing', completed: 'status-completed', '': 'status-none' }[status] || '';
     },
     handleItemClick() {
       if (!this.isAuthenticated) {
@@ -227,13 +259,14 @@ export default {
       this.$router.push(`/edit/${this.localProblem.id}`);
     },
     handleSolveClick() {
-      this.$router.push(`/study/${this.localProblem.id}/solve`);
+      this.$router.push(`/study/${this.localProblem.id}`);
     }
   }
 };
 </script>
 
 <style scoped>
+/* 기존 스타일은 변경 사항 없음 */
 .problem-item {
   padding: 16px;
   border: 1px solid #e0d0ff;
@@ -316,6 +349,10 @@ export default {
 .status-completed {
   background-color: #a5d6a7;
   color: #2e7d32;
+}
+
+.status-none {
+  padding: 0;
 }
 
 
