@@ -167,14 +167,14 @@ export default {
         }
 
         // 내가 좋아요 누른 문제만 조회
-        const likedResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyLiked=true`);
+        const likedResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyLiked=true`);
         likedProblems.value = likedResponse.data;
         
         // 내가 스크랩 누른 문제만 조회
-        const scrapResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyScrapped=true`);
+        const scrapResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyScrapped=true`);
         scrapedProblems.value = scrapResponse.data;
 
-        const myProblemsResponse = await axios.get(`/api/problem?currentUserId=${currentUserId.value}&onlyMine=true`);
+        const myProblemsResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyMine=true`);
         myProblems.value = myProblemsResponse.data;
 
       } catch (err) {
