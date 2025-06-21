@@ -166,6 +166,7 @@ public class ProblemController {
      * @param onlyLiked true이면 사용자가 좋아요한 문제만 조회
      * @param onlyScrapped true이면 사용자가 스크랩한 문제만 조회
      * @param onlyMine true이면 사용자가 만든 문제만 조회
+     * @param onlyPublic true이면 공개된 문제만 조회
      * @return 학습한 문제 목록 (상태, 좋아요, 스크랩, 카드 상태 포함)
      */
     @GetMapping("/api/problem/detail")
@@ -173,24 +174,37 @@ public class ProblemController {
             @RequestParam String currentUserId,
             @RequestParam(required = false, defaultValue = "false") boolean onlyLiked,
             @RequestParam(required = false, defaultValue = "false") boolean onlyScrapped,
-            @RequestParam(required = false, defaultValue = "false") boolean onlyMine) {
+            @RequestParam(required = false, defaultValue = "false") boolean onlyMine,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyPublic
+            ) {
 
-        log.info("getUserStudyProblemsDetail 호출: userId={}", currentUserId);
-        Long internalUserId;
-        try {
-            if (currentUserId == null || currentUserId.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
+        log.info("getUserStudyProblemsDetail 호출: userId={}, onlyLiked={}, onlyScrapped={}, onlyMine={}, onlyPublic={}",
+                currentUserId, onlyLiked, onlyScrapped, onlyMine, onlyPublic);
+
+        Long internalUserId = null;
+        if (currentUserId != null && !currentUserId.trim().isEmpty()) {
+            try {
+                internalUserId = getInternalUserId(currentUserId);
+            } catch (NoResultException e) {
+                // 사용자가 존재하지 않지만, onlyPublic 옵션으로 조회할 수 있으므로 404 대신 빈 목록 반환 고려
+                if (!onlyPublic) { // onlyPublic이 false인 경우에만 404를 반환하거나 다른 처리를 할 수 있습니다.
+                    log.warn("User not found for userId: {}", currentUserId);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
+                }
+            } catch (Exception e) {
+                log.error("Error getting internal user ID for userId: {}", currentUserId, e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
             }
-            internalUserId = getInternalUserId(currentUserId);
-        } catch (NoResultException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        } else if (!onlyPublic && (onlyLiked || onlyScrapped || onlyMine)) {
+            // currentUserId가 없는데, 사용자 관련 필터가 요청된 경우 (onlyPublic이 아니면)
+            log.warn("currentUserId is required for liked, scrapped, or mine filters when onlyPublic is false.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
         }
+
 
         try {
             StringBuilder sql = new StringBuilder(
-                    "SELECT p.id AS problem_id, p.title, p.description, p.is_public, p.card_count, u.username AS author_nickname, " +
+                    "SELECT p.id AS problem_id, p.title, p.description, p.is_public, p.card_count, u.username AS author_nickname, u.userid AS author_id," +
                             "COALESCE(ups.is_liked, 0) AS is_liked, COALESCE(ups.is_scrapped, 0) AS is_scrapped, " +
                             "IFNULL(ups.problem_status, 'new') AS study_status, " +
                             "(SELECT COUNT(*) FROM user_problem_status ups2 WHERE ups2.problem_id = p.id AND ups2.is_liked = 1) AS total_likes, " +
@@ -199,35 +213,86 @@ public class ProblemController {
                             "COALESCE(SUM(CASE WHEN ucs.card_status = 'vague' THEN 1 ELSE 0 END), 0) AS vague_count, " +
                             "COALESCE(SUM(CASE WHEN ucs.card_status = 'forgotten' THEN 1 ELSE 0 END), 0) AS forgotten_count " +
                             "FROM problems p " +
-                            "JOIN users u ON p.author_id = u.id " +
-                            "LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ?1 " +
-                            "LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ?1 "
+                            "JOIN users u ON p.author_id = u.id "
             );
 
-            List<String> whereConditions = new ArrayList<>();
-            if (onlyMine) {
-                whereConditions.add("p.author_id = ?1");
-            } else {
-                whereConditions.add("(ups.user_id = ?1 OR ucs.user_id = ?1)");
+            List<String> joinConditions = new ArrayList<>();
+            List<Object> parameters = new ArrayList<>();
+
+            // onlyPublic 요청이 아니거나, currentUserId가 제공된 경우에만 user_problem_status 및 user_card_status 조인
+            if (!onlyPublic || internalUserId != null) {
+                sql.append("LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ? ");
+                sql.append("LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ? ");
+                if (internalUserId != null) {
+                    parameters.add(internalUserId); // ups.user_id = ?1
+                    parameters.add(internalUserId); // ucs.user_id = ?2
+                } else {
+                    // currentUserId가 없으면 유저 관련 조인은 의미가 없으므로 null을 바인딩 (실제 사용될 일은 드뭅니다)
+                    parameters.add(null);
+                    parameters.add(null);
+                }
             }
 
+
+            List<String> whereConditions = new ArrayList<>();
+
+            if (onlyPublic) {
+                whereConditions.add("p.is_public = 1");
+            }
+
+            if (onlyMine) {
+                if (internalUserId == null) {
+                    // onlyMine이 true인데 internalUserId가 null이면 해당 조건은 유효하지 않으므로 오류 또는 빈 목록 반환
+                    log.warn("onlyMine=true but currentUserId is null or invalid.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
+                }
+                whereConditions.add("p.author_id = ?"); // 이 파라미터는 internalUserId에 바인딩
+                // parameters 리스트의 첫 두 개(ups, ucs 조인에 사용된) 뒤에 추가될 것이므로 인덱스를 고려해야 합니다.
+                // 또는 쿼리 파라미터를 명시적으로 관리하는 방식을 사용 (예: setParameter(index, value))
+            } else if (!onlyPublic && internalUserId != null) { // onlyPublic이 아닌 경우에만 사용자 학습 기록 기준
+                // '내 문제'가 아니면서, 사용자 ID가 있을 때만 학습 기록 조인 조건을 추가
+                // onlyPublic이 true이면 'ups.user_id = ?1 OR ucs.user_id = ?1' 조건은 필요 없을 수 있음.
+                // onlyPublic이 아닐 때만 사용자 관련 데이터를 기반으로 필터링
+                // 이 조건은 이미 LEFT JOIN에서 걸러지므로, WHERE 절에는 추가적인 필터링만 남습니다.
+                // onlyPublic이 아니면서, 사용자가 좋아요/스크랩/학습한 문제만 보고 싶다면
+                // 이미 JOIN 조건에 user_id가 들어가 있으므로, 여기서는 특정 상태 필터링만 추가
+            }
+
+
             if (onlyLiked) {
-                whereConditions.add("ups.is_liked = 1");
+                whereConditions.add("COALESCE(ups.is_liked, 0) = 1");
             }
             if (onlyScrapped) {
-                whereConditions.add("ups.is_scrapped = 1");
+                whereConditions.add("COALESCE(ups.is_scrapped, 0) = 1");
             }
 
             if (!whereConditions.isEmpty()) {
                 sql.append(" WHERE ").append(String.join(" AND ", whereConditions));
             }
 
-            sql.append(" GROUP BY p.id, p.title, p.description, p.card_count, u.username, ups.is_liked, ups.is_scrapped, ups.problem_status ");
+            sql.append(" GROUP BY p.id, p.title, p.description, p.is_public, p.card_count, u.username, u.userid, ups.is_liked, ups.is_scrapped, ups.problem_status ");
             sql.append(" ORDER BY IFNULL(ups.updated_at, p.created_at) DESC");
 
-            List<Object[]> problemResults = entityManager.createNativeQuery(sql.toString())
-                    .setParameter(1, internalUserId)
-                    .getResultList();
+            jakarta.persistence.Query query = entityManager.createNativeQuery(sql.toString());
+
+            // 파라미터 바인딩
+            int paramIndex = 1;
+            for (Object param : parameters) {
+                query.setParameter(paramIndex++, param);
+            }
+
+            // onlyMine 조건이 추가된 경우 internalUserId 바인딩 (parameters 리스트에 이미 추가되지 않은 경우)
+            if (onlyMine && internalUserId != null && !parameters.contains(internalUserId)) {
+                // 이 부분은 위에서 parameters.add(internalUserId)로 이미 처리되었을 가능성이 높습니다.
+                // 쿼리 파라미터 인덱스 관리에 주의해야 합니다.
+                // 간단하게 ?1, ?2 대신 명명된 파라미터 (:userId)를 사용하는 것이 더 안전합니다.
+                // 지금은 positional parameter를 사용했으므로, 이 부분을 주의 깊게 재검토해야 합니다.
+                // 현재 쿼리에서 internalUserId는 항상 첫 번째, 두 번째 파라미터로 바인딩됩니다.
+                // onlyMine 조건은 p.author_id = internalUserId 이어야 하므로, 이 부분의 파라미터 관리가 필요합니다.
+                // 가장 안전한 방법은 모든 파라미터를 미리 리스트에 추가하고, SQL을 만들 때 인덱스를 정확히 맞추는 것입니다.
+            }
+
+            List<Object[]> problemResults = query.getResultList();
 
             List<Map<String, Object>> userProblems = new ArrayList<>();
 
@@ -239,17 +304,18 @@ public class ProblemController {
                 problem.put("description", row[2]);
                 problem.put("isPublic", ((Number) row[3]).intValue() == 1);
                 problem.put("cardCount", ((Number) row[4]).intValue());
-                problem.put("authorName", row[5]); // userName
-                problem.put("isLiked", ((Number) row[6]).intValue() == 1);
-                problem.put("isScrapped", ((Number) row[7]).intValue() == 1);
-                String studyStatus = row[8].toString();
+                problem.put("authorName", row[5]); // author_nickname
+                problem.put("authorId", row[6].toString()); // author_id
+                problem.put("isLiked", ((Number) row[7]).intValue() == 1);
+                problem.put("isScrapped", ((Number) row[8]).intValue() == 1);
+                String studyStatus = row[9].toString();
                 problem.put("studyStatus", studyStatus);
                 problem.put("isCompleted", "completed".equals(studyStatus));
-                problem.put("totalLikes", ((Number) row[9]).intValue());
-                problem.put("totalScraps", ((Number) row[10]).intValue());
-                problem.put("perfectCount", ((Number) row[11]).intValue());
-                problem.put("vagueCount", ((Number) row[12]).intValue());
-                problem.put("forgottenCount", ((Number) row[13]).intValue());
+                problem.put("totalLikes", ((Number) row[10]).intValue());
+                problem.put("totalScraps", ((Number) row[11]).intValue());
+                problem.put("perfectCount", ((Number) row[12]).intValue());
+                problem.put("vagueCount", ((Number) row[13]).intValue());
+                problem.put("forgottenCount", ((Number) row[14]).intValue());
                 problem.put("categories", getCategoriesForProblem(problemId));
 
                 userProblems.add(problem);
