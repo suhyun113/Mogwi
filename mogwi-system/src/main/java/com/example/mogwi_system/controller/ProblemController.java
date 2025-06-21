@@ -242,22 +242,12 @@ public class ProblemController {
 
             if (onlyMine) {
                 if (internalUserId == null) {
-                    // onlyMine이 true인데 internalUserId가 null이면 해당 조건은 유효하지 않으므로 오류 또는 빈 목록 반환
                     log.warn("onlyMine=true but currentUserId is null or invalid.");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
                 }
-                whereConditions.add("p.author_id = ?"); // 이 파라미터는 internalUserId에 바인딩
-                // parameters 리스트의 첫 두 개(ups, ucs 조인에 사용된) 뒤에 추가될 것이므로 인덱스를 고려해야 합니다.
-                // 또는 쿼리 파라미터를 명시적으로 관리하는 방식을 사용 (예: setParameter(index, value))
-            } else if (!onlyPublic && internalUserId != null) { // onlyPublic이 아닌 경우에만 사용자 학습 기록 기준
-                // '내 문제'가 아니면서, 사용자 ID가 있을 때만 학습 기록 조인 조건을 추가
-                // onlyPublic이 true이면 'ups.user_id = ?1 OR ucs.user_id = ?1' 조건은 필요 없을 수 있음.
-                // onlyPublic이 아닐 때만 사용자 관련 데이터를 기반으로 필터링
-                // 이 조건은 이미 LEFT JOIN에서 걸러지므로, WHERE 절에는 추가적인 필터링만 남습니다.
-                // onlyPublic이 아니면서, 사용자가 좋아요/스크랩/학습한 문제만 보고 싶다면
-                // 이미 JOIN 조건에 user_id가 들어가 있으므로, 여기서는 특정 상태 필터링만 추가
+                whereConditions.add("p.author_id = ?");
+                parameters.add(internalUserId);
             }
-
 
             if (onlyLiked) {
                 whereConditions.add("COALESCE(ups.is_liked, 0) = 1");
