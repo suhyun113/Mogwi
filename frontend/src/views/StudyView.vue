@@ -59,7 +59,7 @@ export default {
         if (this.problem && this.problem.userProblemStatus) {
             this.problemStatus = this.problem.userProblemStatus.problemStatus;
         } else {
-            this.problemStatus = 'new';
+            this.problemStatus = '';
         }
         console.log('초기 문제 상태:', this.problemStatus);
 
