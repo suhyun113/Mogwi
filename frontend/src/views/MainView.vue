@@ -133,7 +133,7 @@ export default {
             currentUserId: currentUserId.value
           }
         })
-        problems.value = response.data
+        problems.value = response.data.sort((a, b) => a.id - b.id);
       } catch (error) {
         console.error('문제 불러오기 실패:', error)
       }
