@@ -7,7 +7,7 @@
     <nav class="menu">
       <!-- router-link 사용 시 active 클래스 자동 적용 -->
       <router-link to="/mystudy">나의 학습</router-link>
-      <router-link to="/create">문제 만들기</router-link>
+      <router-link to="/create">문제 생성</router-link>
       <router-link to="/report">학습 리포트</router-link>
       <router-link to="/mypage">마이페이지</router-link>
     </nav>
