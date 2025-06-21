@@ -7,11 +7,13 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -187,4 +189,92 @@ public class UserController {
             return ResponseEntity.internalServerError().body(Map.of("status", "ERROR", "message", "프로필 업데이트 중 서버 오류가 발생했습니다."));
         }
     }
+
+    /**
+     * 사용자 정보 삭제 API
+     * Delete /api/user/{userId}
+     */
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Map<String, String>> deleteUserData(@PathVariable String userId) {
+        Map<String, String> response = new HashMap<>();
+
+        if (userId == null || userId.trim().isEmpty()) {
+            response.put("status", "ERROR");
+            response.put("message", "userId가 누락되었습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        try {
+            // 내부 사용자 id 조회 (users 테이블의 id)
+            String getInternalIdSql = "SELECT id FROM users WHERE userid = ?1";
+            Long internalUserId = ((Number) entityManager.createNativeQuery(getInternalIdSql)
+                    .setParameter(1, userId)
+                    .getSingleResult()).longValue();
+
+            // 이 사용자가 만든 problem id 목록 가져오기
+            String getProblemIdsSql = "SELECT id FROM problems WHERE author_id = ?1";
+            List<Long> problemIds = entityManager.createNativeQuery(getProblemIdsSql)
+                    .setParameter(1, internalUserId)
+                    .getResultList();
+
+            // 1. user_card_status 삭제
+            entityManager.createNativeQuery("DELETE FROM user_card_status WHERE user_id = ?1")
+                    .setParameter(1, internalUserId)
+                    .executeUpdate();
+
+            // 2. user_problem_status 삭제
+            entityManager.createNativeQuery("DELETE FROM user_problem_status WHERE user_id = ?1")
+                    .setParameter(1, internalUserId)
+                    .executeUpdate();
+
+            // 3. 이 사용자가 만든 문제들 관련 삭제
+            for (Long pid : problemIds) {
+                // 3-1. 문제에 연결된 카드 삭제
+                entityManager.createNativeQuery("DELETE FROM cards WHERE problem_id = ?1")
+                        .setParameter(1, pid)
+                        .executeUpdate();
+
+                // 3-2. 문제에 연결된 카테고리 삭제
+                entityManager.createNativeQuery("DELETE FROM problem_categories WHERE problem_id = ?1")
+                        .setParameter(1, pid)
+                        .executeUpdate();
+
+                // 3-3. 문제에 연결된 user_card_status 전부 삭제
+                entityManager.createNativeQuery("DELETE FROM user_card_status WHERE problem_id = ?1")
+                        .setParameter(1, pid)
+                        .executeUpdate();
+
+                // 3-4. 문제에 연결된 user_problem_status 전부 삭제
+                entityManager.createNativeQuery("DELETE FROM user_problem_status WHERE problem_id = ?1")
+                        .setParameter(1, pid)
+                        .executeUpdate();
+            }
+
+            // 4. 문제 자체 삭제
+            entityManager.createNativeQuery("DELETE FROM problems WHERE author_id = ?1")
+                    .setParameter(1, internalUserId)
+                    .executeUpdate();
+
+            // 5. 사용자 정보 삭제
+            entityManager.createNativeQuery("DELETE FROM users WHERE id = ?1")
+                    .setParameter(1, internalUserId)
+                    .executeUpdate();
+
+            response.put("status", "OK");
+            response.put("message", "사용자와 관련된 모든 데이터가 성공적으로 삭제되었습니다.");
+            return ResponseEntity.ok(response);
+
+        } catch (NoResultException e) {
+            response.put("status", "ERROR");
+            response.put("message", "해당 userId를 찾을 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+
+        } catch (Exception e) {
+            response.put("status", "ERROR");
+            response.put("message", "서버 오류: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
 }
