@@ -114,8 +114,8 @@ public class LikeScrapController {
                     problem.put("topic", null);
                 }
 
-                if (((Number) row[3]).intValue() == 1) likedProblems.add(problem);
-                if (((Number) row[4]).intValue() == 1) scrapedProblems.add(problem);
+                if (Boolean.TRUE.equals((Boolean) row[3])) likedProblems.add(problem);
+                if (Boolean.TRUE.equals((Boolean) row[4])) scrapedProblems.add(problem);
             }
 
             response.put("likedProblems", likedProblems);
