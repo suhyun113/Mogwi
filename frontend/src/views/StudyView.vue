@@ -69,26 +69,26 @@ export default {
     },
 
     async handleStudyStartClick() {
-      const problemId = this.problem.id;
+      if (this.isProcessing) return;  // 중복 실행 방지
+      this.isProcessing = true;
+
+      console.log('학습 시작 버튼 클릭됨');
 
       try {
+        const problemId = this.problem.id;
         const response = await axios.post('/api/solve/start-study', {
           userId: this.currentUserId,
           problemId: problemId
         });
 
         const receivedStatus = response.data.problemStatus || '';
-
-        this.problemStatus = receivedStatus; // 화면용 상태 업데이트
+        this.problemStatus = receivedStatus;
         console.log('API 응답 데이터 (start-study problemStatus):', receivedStatus);
 
-        // RECEIVED_STATUS가 빈 문자열일 때만 모달 표시
-        if (receivedStatus === '') {
+        if (receivedStatus === 'new') {
           this.showStudyStartModal = true;
-          console.log('problemStatus가 빈 문자열이므로 StudyStartModal 표시.');
+          console.log('problemStatus가 "new"이므로 StudyStartModal 표시.');
         } else {
-          // RECEIVED_STATUS가 'new', 'ongoing', 'completed' 등 다른 상태일 경우
-          // 즉, 이미 나의 학습에 담겨있거나 학습 중이던 문제일 경우 바로 풀이 페이지로 이동
           console.log(`problemStatus가 "${receivedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
           this.router.push(`/study/${problemId}/solve`);
         }
@@ -96,9 +96,10 @@ export default {
       } catch (error) {
         console.error('문제 학습 시작 처리 중 예외 발생:', error);
         alert('문제 학습을 시작할 수 없습니다. 서버 오류 또는 네트워크 문제일 수 있습니다.');
+      } finally {
+        this.isProcessing = false;
       }
     },
-
     // StudyStartModal에서 '문제 구경하기' 클릭 시
     handleGoPreviewFromStudyModal() {
       this.showStudyStartModal = false; // 모달 닫기
