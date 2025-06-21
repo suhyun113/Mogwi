@@ -283,8 +283,8 @@ export default {
                 this.$emit('auth-required');
                 return;
             }
-            if (!this.isSelectionMode) {
-                this.$emit('go-to-study', this.localProblem.id);
+            if (!this.isSelectionMode) { 
+                this.$router.push(`/study/${this.localProblem.id}/solve`);
             }
         }
     }
