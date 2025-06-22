@@ -32,7 +32,11 @@
         <AnswerInputSection
           v-model="userAnswer"
           :is-disabled="hasSubmitted"
+          :correct-answer="currentProblemCard.correct"
+          :show-answer="showAnswer"
+          :has-submitted="hasSubmitted"
           @submit-answer="submitAnswer"
+          @toggle-show-answer="toggleShowAnswer"
         />
 
         <div class="navigation-buttons">
@@ -207,7 +211,7 @@ export default {
       } else {
         isCorrectAnswer.value = false;
         currentProblemCard.value.cardStatus = 'forgotten'; // 항상 forgotten으로
-        showAnswer.value = true;
+        showAnswer.value = false; // 정답 제출 시에도 정답은 숨김
       }
       await saveCardStatus(); // Await saving status before moving on
     };
@@ -266,7 +270,7 @@ export default {
       userAnswer.value = '';
       hasSubmitted.value = false;
       isCorrectAnswer.value = false;
-      showAnswer.value = false;
+      showAnswer.value = false; // 카드 이동 시에도 항상 숨김
     };
 
     const calculateStudyResults = () => {
