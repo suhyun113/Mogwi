@@ -579,7 +579,7 @@ export default {
     justify-content: center;
     gap: 8px;
     margin-top: 0px;
-    margin-bottom: 20px; /* 페이지 번호 아래에 20px 여백 추가 */
+    margin-bottom: -30px; /* 페이지 번호 아래에 8px 여백으로 줄임 */
     align-items: center;
 }
 .pagination-btn {
