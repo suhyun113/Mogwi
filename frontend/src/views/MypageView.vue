@@ -395,7 +395,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 20px 20px 40px 20px;
   background-color: #f7f3ff; /* 연한 보라색 배경 */
   width: 100%;
   box-sizing: border-box;
@@ -448,6 +448,7 @@ html, body {
   margin-left: auto;
   margin-right: auto;
   height: 100%;
+  margin-top: 0;
 }
 
 @media (min-width: 1200px) {
@@ -455,6 +456,7 @@ html, body {
     justify-content: flex-start;
     margin-left: 0;
     margin-right: auto;
+    margin-top: 0;
   }
 }
 
@@ -462,11 +464,11 @@ html, body {
 .sidebar {
   flex: 0 0 300px;
   background-color: transparent;
-  padding: 30px 20px 40px 20px;
+  padding: 10px 20px 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 60px;
+  margin-top: 10px;
   margin-left: 60px;
   height: auto;
   position: sticky;
@@ -580,9 +582,9 @@ html, body {
   flex: 1;
   padding: 0 60px 60px 24px;
   background-color: transparent;
-  margin-top: 100px;
+  margin-top: 60px;
   /* 뷰포트 높이 기준으로 정확히 계산하여 넘치지 않도록 함 */
-  height: calc(100vh - 40px - 100px); /* mypage-view-wrapper의 상하 패딩 (40px) 및 main-content의 상단 마진 (100px) 고려 */
+  height: calc(100vh - 20px - 60px); /* mypage-view-wrapper의 상하 패딩 (20px) 및 main-content의 상단 마진 (60px) 고려 */
   /* overflow-y: auto 제거로 내부 스크롤도 제거 */
 }
 
@@ -783,6 +785,7 @@ html, body {
     flex-direction: column;
     max-width: 700px;
     height: auto; /* 모바일에서는 높이 자동 조절 */
+    margin-top: 0;
   }
 
   .sidebar {
@@ -790,7 +793,7 @@ html, body {
     width: 100%;
     /* border-right: none; */
     border-bottom: 1px solid #efdfff;
-    padding: 20px 20px 40px 20px;
+    padding: 10px 20px 40px 20px;
     margin-top: 0;
     margin-left: 0;
     height: auto;
@@ -827,7 +830,7 @@ html, body {
 
   .main-content {
     padding: 30px 20px;
-    margin-top: 0; /* 모바일에서 마진 제거 */
+    margin-top: 30px; /* 모바일에서 섹션을 조금 더 아래로 */
     height: auto; /* 모바일에서 높이 자동 조절 */
     overflow-y: visible; /* 모바일에서는 스크롤 숨기지 않음 */
   }
