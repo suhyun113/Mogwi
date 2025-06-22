@@ -1,5 +1,5 @@
 <template>
-  <div :class="itemClass" @click="handleItemClick">
+  <div :class="[itemClass, { selected: isSelected }]" @click="handleItemClick">
     <div class="title-row">
       <div class="title-left">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
@@ -100,7 +100,7 @@ export default {
     isEditable: Boolean,
     showPublicTag: Boolean,
   },
-  emits: ['auth-required', 'go-to-study', 'toggle-selection', 'update-like', 'update-scrap'],
+  emits: ['auth-required', 'go-to-study', 'toggle-selection', 'update-like', 'update-scrap', 'select-problem', 'delete-problem'],
   data() {
     return {
       localProblem: { ...this.problem },
@@ -195,6 +195,10 @@ export default {
       return { new: 'status-new', ongoing: 'status-ongoing', completed: 'status-completed', '': 'status-none' }[status] || '';
     },
     handleItemClick() {
+      if (this.isSelectionMode) {
+        this.$emit('select-problem', this.localProblem.id);
+        return;
+      }
       if (!this.isAuthenticated) {
         this.$emit('auth-required');
         return;
@@ -281,6 +285,7 @@ export default {
   margin-bottom: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
 }
 
 .problem-item:hover:not(.selectable) {
@@ -294,8 +299,8 @@ export default {
 }
 
 .problem-item.selected {
-  border: 2px solid #e03c3c;
-  box-shadow: 0 0 0 3px rgba(224, 60, 60, 0.3);
+  border: 2px solid #e2586a !important;
+  box-shadow: 0 0 0 3px rgba(226, 88, 106, 0.15);
 }
 
 .problem-item h3 {
