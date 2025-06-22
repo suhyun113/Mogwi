@@ -143,13 +143,10 @@ export default {
 
 <style scoped>
 .study-calendar {
-  width: 360px;
-  min-width: 360px;
-  max-width: 360px;
-  height: 420px;
-  min-height: 420px;
-  max-height: 420px;
-  padding: 0;
+  width: 480px;
+  min-width: 480px;
+  max-width: 480px;
+  padding: 0 0 12px 0;
   border: 2px solid #e0d0ff;
   border-radius: 12px;
   background-color: white;
@@ -189,9 +186,10 @@ export default {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, 60px);
+  grid-auto-rows: 60px;
   gap: 5px;
-  padding: 0 15px 15px;
+  padding: 0 15px 0;
 }
 
 .day-label {

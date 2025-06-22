@@ -546,6 +546,7 @@ export default {
   padding: 20px;
   box-sizing: border-box;
   margin-top: -20px;
+  padding-bottom: 0;
 }
 
 .daily-detail-wrapper {
@@ -612,7 +613,8 @@ export default {
   flex-direction: column;
   padding: 0;
   box-sizing: border-box;
-  height: 450px; /* 고정 높이 설정 */
+  height: 480px;
+  margin-bottom: 10px;
 }
 
 .chart-section {
