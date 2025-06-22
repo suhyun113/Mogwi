@@ -929,7 +929,7 @@ html, body {
 .content-wrapper {
   position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 500px; /* 로그인 프롬프트가 잘리지 않도록 최소 높이 설정 */
 }
 
 .content-wrapper.blurred > .content-section {
