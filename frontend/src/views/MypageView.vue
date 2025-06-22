@@ -870,7 +870,47 @@ html, body {
   }
 
   .main-content {
-    padding: 20px 15px;
+    padding: 0 10px !important;
+    width: 100% !important;
+    margin-top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+
+  .content-section {
+    padding: 0;
+    margin-bottom: 40px;
+    width: 100%;
+    background: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    height: 100%;
+    overflow-y: visible;
+  }
+
+  .user-profile-section,
+  .my-problems-section,
+  .liked-scrap-section {
+    padding: 20px 10px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    height: 100%;
+    overflow-y: visible;
+  }
+
+  .tab-content {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    height: 100%;
+  }
+  .problem-list {
+    overflow-y: auto;
+    max-height: 60vh;
+    padding-bottom: 10px;
   }
 
   .page-title {
