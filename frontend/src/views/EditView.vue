@@ -128,7 +128,6 @@ export default {
 
         problem.value.title = fetchedProblem.title;
         problem.value.description = fetchedProblem.description || '';
-        problem.value.is_public = fetchedProblem.isPublic ?? (fetchedProblem.is_public === 1);
         
         // Find category IDs by matching tag_name with the allCategories list
         const fetchedCategoryNames = (fetchedProblem.categories || []).map(c => c.tag_name);
@@ -315,6 +314,12 @@ export default {
     // On mount, get problem ID from route and fetch data
     onMounted(async () => {
       problemId.value = route.params.id;
+      
+      // Set is_public status from URL query parameter, this is the most reliable source.
+      if (route.query.isPublic !== undefined) {
+        problem.value.is_public = route.query.isPublic === 'true';
+      }
+
       if (problemId.value) {
         await fetchCategories();
         if (isLoggedIn.value) { // Only fetch problem data if logged in

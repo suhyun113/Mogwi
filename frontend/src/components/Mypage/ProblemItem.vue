@@ -256,7 +256,11 @@ export default {
       }
     },
     handleEditClick() {
-      this.$router.push(`/edit/${this.localProblem.id}`);
+      const problem = this.localProblem;
+      this.$router.push({
+        path: `/edit/${problem.id}`,
+        query: { isPublic: problem.isPublic }
+      });
     },
     handleSolveClick() {
       this.$router.push(`/study/${this.localProblem.id}`);
