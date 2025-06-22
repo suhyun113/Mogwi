@@ -267,13 +267,18 @@ export default {
           author_id: currentUserId.value, // Ensure author_id is sent for validation
           description: problem.value.description,
           is_public: problem.value.is_public ? 1 : 0,
-          categories: [...problem.value.categories], // Proxy → Array 변환!
-          cards: problem.value.cards.map(card => ({
-            id: card.id,
-            question: card.question,
-            answer: card.answer,
-            image_url: card.image_url || null
-          }))
+          categories: [...problem.value.categories],
+          cards: problem.value.cards.map(card => {
+            const cardObj = {
+              question: card.question,
+              answer: card.answer,
+              image_url: card.image_url || null
+            };
+            if (card.id !== undefined && card.id !== null) {
+              cardObj.id = card.id;
+            }
+            return cardObj;
+          })
         };
 
         console.log('문제 수정 요청 payload:', payload);
@@ -282,7 +287,7 @@ export default {
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 수정되었습니다!');
-          router.push(`/problem/${problemId.value}`); // Redirect to the problem detail page
+          router.push('/'); // 메인 화면으로 이동
         } else {
           submitError.value = response.data.message || '문제 수정에 실패했습니다.';
         }
