@@ -816,9 +816,10 @@ export default {
     padding-bottom: 80px;
   }
   .daily-detail-wrapper {
-    height: 480px;
-    min-height: 480px;
-    max-height: 480px;
+    height: 478px;
+    min-height: 400px;
+    max-height: 900px;
+    padding: 0;
   }
 }
 </style>
