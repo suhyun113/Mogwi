@@ -73,8 +73,10 @@
 
 <script>
 import { computed } from 'vue';
-import mogwiHeart from '@/assets/mogwi-heart.png';
+import mogwiBad from '@/assets/mogwi-bad.png';
 import mogwiSad from '@/assets/mogwi-sad.png';
+import mogwiLook from '@/assets/mogwi-look.png';
+import mogwiHeart from '@/assets/mogwi-heart.png';
 
 export default {
     name: 'OverallStudySummary',
@@ -115,14 +117,26 @@ export default {
             props.overallTotalCards > 0 ? ((props.overallForgottenCount / props.overallTotalCards) * 100).toFixed(1) : 0
         );
 
-        // 기준: 20개 이상이면 긍정, 미만이면 동기부여
-        const isGood = computed(() => props.overallTotalCards >= 20);
-        const mogwiImg = computed(() => isGood.value ? mogwiHeart : mogwiSad);
-        const speechText = computed(() =>
-            isGood.value
-                ? `총 <span class='highlight-count'>${props.overallTotalCards}개</span>나 학습했어요!<br> 멋져요!`
-                : `총 <span class='highlight-count'>${props.overallTotalCards}개</span>만 학습했어요...<br> 새 학습을 시작해봐요!`
-        );
+        const mogwiImg = computed(() => {
+            const total = props.overallTotalCards;
+            if (total === 0) return mogwiBad;
+            if (total < 10) return mogwiSad;
+            if (total < 20) return mogwiLook;
+            return mogwiHeart;
+        });
+
+        const speechText = computed(() => {
+            const total = props.overallTotalCards;
+            if (total === 0) {
+                return `총 <span class='highlight-count'>0개</span> 학습했어요<br>지금 시작해볼까요?`;
+            } else if (total < 10) {
+                return `총 <span class='highlight-count'>${total}개</span> 학습했어요<br>조금씩 시작해볼까요?`;
+            } else if (total < 20) {
+                return `총 <span class='highlight-count'>${total}개</span> 학습했어요<br>좋아요, 더 해볼까요?`;
+            } else {
+                return `총 <span class='highlight-count'>${total}개</span>나 학습했어요!<br>멋져요!`;
+            }
+        });
 
         return {
             overallPerfectPercentage,
