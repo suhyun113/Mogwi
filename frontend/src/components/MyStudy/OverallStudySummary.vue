@@ -122,20 +122,31 @@ export default {
 
 .overall-summary-title {
     color: #5a2e87;
-    font-size: 1.8rem;
-    font-weight: 600;
+    font-size: 1.35rem;
+    font-weight: 700;
     margin-bottom: 18px;
     margin-top: 0;
     padding-bottom: 0;
     text-align: left;
+    background: none;
+    filter: none;
+    position: static;
 }
-
-/* Add style for the username underline */
+.overall-summary-title::after {
+    display: none;
+}
 .username-underline {
     text-decoration: underline;
-    text-underline-offset: 4px; /* Adjust this value as needed for better spacing */
-    text-decoration-color: #a471ff; /* Optional: Change underline color */
-    text-decoration-thickness: 2px; /* Optional: Make underline thicker */
+    text-underline-offset: 3px;
+    text-decoration-color: #a471ff;
+    text-decoration-thickness: 2px;
+    font-weight: 800;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    text-fill-color: unset;
+    padding-right: 0;
 }
 
 .summary-tags {
