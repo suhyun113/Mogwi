@@ -403,6 +403,37 @@ html, body {
   color: #333;
   height: 100vh; /* 뷰포트 전체 높이를 차지 */
   overflow-y: hidden; /* **마이페이지 전체 세로 스크롤 제거** */
+  position: relative;
+}
+
+.mypage-view-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 2vw;
+  bottom: 6vh;
+  width: 50vw;
+  height: 50vw;
+  max-width: 700px;
+  max-height: 700px;
+  background-image: url('@/assets/mogwi-look.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: right bottom;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 컴포넌트들이 배경 위에 오도록 z-index 1 부여 */
+.mypage-layout,
+.logged-out-prompt,
+.alert-message,
+.LoginModal,
+.RegisterModal,
+.EditProfileModal,
+.DeleteAccountModal {
+  position: relative;
+  z-index: 1;
 }
 
 .mypage-layout {
