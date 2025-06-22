@@ -15,34 +15,27 @@
       </div>
     </section>
 
-    <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
-    <div v-else-if="error" class="error-message">{{ error }}</div>
-    <div v-else-if="!isLoggedIn" class="logged-out-prompt">
-      <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character-small" />
-      <p class="logged-out-message">
-        <i class="fas fa-lock"></i> 학습 리포트는 로그인 후 이용 가능합니다.
-      </p>
-      <button @click="showLoginModal = true" class="login-button">로그인</button>
+    <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
+    <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
+
+    <div class="tab-buttons">
+      <button
+        :class="{ 'tab-button': true, 'active': activeTab === 'daily' }"
+        @click="activeTab = 'daily'"
+      >
+        날짜별 학습 기록
+      </button>
+      <button
+        :class="{ 'tab-button': true, 'active': activeTab === 'weekly' }"
+        @click="activeTab = 'weekly'"
+      >
+        주간 학습량
+      </button>
     </div>
 
-    <div v-else>
-      <div class="tab-buttons">
-        <button
-          :class="{ 'tab-button': true, 'active': activeTab === 'daily' }"
-          @click="activeTab = 'daily'"
-        >
-          날짜별 학습 기록
-        </button>
-        <button
-          :class="{ 'tab-button': true, 'active': activeTab === 'weekly' }"
-          @click="activeTab = 'weekly'"
-        >
-          주간 학습량
-        </button>
-      </div>
-
-      <div class="report-container">
-        <section v-if="activeTab === 'daily'" class="report-section calendar-section">
+    <div class="report-content-wrapper">
+      <div class="report-container" :class="{ blurred: !isLoggedIn }">
+        <section v-show="activeTab === 'daily'" class="report-section calendar-section">
           <div class="calendar-and-detail-wrapper">
             <div class="daily-detail-wrapper">
               <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
@@ -57,9 +50,18 @@
           </div>
         </section>
 
-        <section v-if="activeTab === 'weekly'" class="report-section chart-section">
+        <section v-show="activeTab === 'weekly'" class="report-section chart-section">
           <WeeklyBarChart :chartData="weeklyChartData" />
         </section>
+      </div>
+
+      <div v-if="!isLoggedIn" class="content-login-prompt">
+          <img src="@/assets/mogwi-confused.png" alt="모귀 캐릭터" class="prompt-mogwi-character" />
+          <p class="prompt-message">로그인하시면<br>상세 리포트를 볼 수 있어요!</p>
+          <div class="prompt-actions">
+            <button @click="openLoginModal" class="action-button login-button">로그인</button>
+            <button @click="openRegisterModal" class="action-button register-button">회원가입</button>
+          </div>
       </div>
     </div>
 
@@ -299,6 +301,86 @@ export default {
   overflow: hidden;
 }
 
+/* Report Content Wrapper and Blur Logic */
+.report-content-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+.report-container.blurred {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.content-login-prompt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(247, 243, 255, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+}
+
+.prompt-mogwi-character {
+  width: 130px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.prompt-message {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a1e77;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.action-button {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+
+.login-button {
+  background-color: #8c5dff;
+  color: white;
+}
+.login-button:hover {
+  background-color: #794cff;
+}
+
+.register-button {
+  background-color: #ffffff;
+  color: #5a2e87;
+  border: 2px solid #a471ff;
+}
+.register-button:hover {
+  background-color: #f0e6ff;
+}
+
 /* Report Banner Styles */
 .report-banner-section {
   width: 100%;
@@ -427,15 +509,15 @@ export default {
 
 /* Report Container & Common Section Styles */
 .report-container {
-  padding: 10px 40px;
+  padding: 10px 0; /* 좌우 패딩은 wrapper에서 담당 */
   width: 100%;
-  max-width: 1100px;
   margin-top: -10px;
   display: flex;
   flex-direction: column;
   gap: 30px;
   overflow: hidden;
   height: 100%;
+  transition: filter 0.3s ease-in-out;
 }
 
 .loading-message, .error-message {
@@ -636,190 +718,5 @@ export default {
   padding: 20px;
   box-sizing: border-box;
   margin-bottom: 40px;
-}
-
-/* Logged out prompt styles */
-.logged-out-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  padding: 60px 40px;
-  width: 100%;
-  max-width: 600px;
-  margin-top: 80px;
-  border: 1px solid #e0d0ff;
-}
-
-.mogwi-character-small {
-  width: 150px;
-  height: auto;
-  margin-bottom: 30px;
-}
-
-.logged-out-message {
-  font-size: 1.6rem;
-  color: #4a1e77;
-  margin-bottom: 30px;
-  line-height: 1.6;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-weight: 600;
-}
-
-.logged-out-message .fas {
-  font-size: 2.2rem;
-  color: #8c5dff;
-}
-
-.login-button {
-  background-image: linear-gradient(to right, #8c5dff 0%, #a471ff 100%);
-  color: white;
-  border: none;
-  padding: 15px 35px;
-  border-radius: 10px;
-  font-size: 1.25rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(140, 93, 255, 0.4);
-}
-
-.login-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(140, 93, 255, 0.6);
-  background-position: right center;
-}
-
-/* Media Queries for Responsiveness */
-@media (max-width: 1200px) {
-  .report-container {
-    max-width: 900px;
-  }
-  .calendar-section, .chart-section {
-    max-width: 900px;
-  }
-  .calendar-and-detail-wrapper {
-    flex-direction: column; /* 작은 화면에서는 세로 배치 */
-    gap: 20px; /* 세로 배치 시 간격 */
-  }
-  .calendar-wrapper, .daily-detail-wrapper {
-    width: 100%;
-    min-width: unset;
-    padding: 20px; /* 모바일 패딩 조정 */
-  }
-  .daily-detail-wrapper {
-    width: 480px;
-    min-width: 320px;
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .mogwi-daily-detail-character,
-  .mogwi-daily-detail-character img {
-    width: 150px;
-  }
-}
-
-@media (max-width: 768px) {
-  .report-banner-section {
-    margin-bottom: 25px;
-  }
-  .report-container {
-    padding: 20px;
-    gap: 20px;
-    max-width: 100%;
-  }
-  .tab-buttons {
-    margin: 0 auto 20px auto;
-    padding: 0;
-    max-width: 280px;
-  }
-  .tab-button {
-    padding: 8px 10px;
-    font-size: 0.9rem;
-  }
-  .section-title {
-    font-size: 1.5rem;
-  }
-  .section-description {
-    font-size: 0.9rem;
-  }
-  .report-section {
-    padding: 20px;
-    gap: 15px;
-  }
-  .logged-out-prompt {
-    padding: 40px 20px;
-    margin-top: 50px;
-  }
-  .mogwi-character-small {
-    width: 100px;
-    margin-bottom: 15px;
-  }
-  .logged-out-message {
-    font-size: 1.3rem;
-    margin-bottom: 25px;
-    gap: 10px;
-  }
-  .logged-out-message .fas {
-    font-size: 1.8rem;
-  }
-  .login-button {
-    padding: 12px 25px;
-    font-size: 1.1rem;
-  }
-  .calendar-and-detail-wrapper {
-    gap: 20px;
-  }
-  .daily-detail-wrapper {
-    width: 100%;
-    min-width: 220px;
-    max-width: 100%;
-    height: 320px;
-    min-height: 220px;
-    max-height: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .section-title-daily-detail {
-    font-size: 1.2rem;
-  }
-  .mogwi-daily-detail-character,
-  .mogwi-daily-detail-character img {
-    width: 110px;
-  }
-  .calendar-and-detail-wrapper {
-    min-height: 400px;
-  }
-  .daily-detail-wrapper {
-    height: 400px;
-  }
-  .calendar-wrapper {
-    height: 400px;
-  }
-}
-
-@media (max-width: 480px) {
-  .section-title-daily-detail {
-    font-size: 1rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .calendar-section {
-    padding-bottom: 80px;
-  }
-  .daily-detail-wrapper {
-    height: 478px;
-    min-height: 400px;
-    max-height: 900px;
-    padding: 0;
-  }
 }
 </style>
