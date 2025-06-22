@@ -1,6 +1,7 @@
 # 모귀 - 기억을 모으는 귀신
 
-![image](https://github.com/user-attachments/assets/38824a3d-61e1-4611-bc02-8f2ef15e79a8)
+![image](https://github.com/user-attachments/assets/62b6fba5-633d-4197-8249-7b996872a066)
+
 
 
 
