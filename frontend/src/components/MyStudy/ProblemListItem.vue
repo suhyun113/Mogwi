@@ -3,7 +3,7 @@
         <div class="title-row">
             <div class="title-left">
                 <h3 class="problem-title">{{ localProblem.title }}</h3>
-                <span class="author">작성자: {{ localProblem.authorNickname }}</span>
+                <span class="author">작성자: {{ localProblem.authorName }}</span>
             </div>
             <div class="study-status">
                 <span :class="getStatusClass(localProblem.studyStatus)">
@@ -120,8 +120,8 @@ export default {
             localProblem: {
                 id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                 title: this.problem.title || '문제 제목 (로그인 필요)',
-                authorNickname: this.problem.authorNickname || '알 수 없음',
-                studyStatus: this.problem.studyStatus || 'new',
+                authorName: this.problem.authorName || '알 수 없음',
+                studyStatus: this.problem.studyStatus || '',
                 categories: this.problem.categories || [],
                 isLiked: this.problem.isLiked || false,
                 isScrapped: this.problem.isScrapped || false,
@@ -155,8 +155,8 @@ export default {
                 this.localProblem = {
                     id: newVal?.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                     title: newVal?.title || '문제 제목 (로그인 필요)',
-                    authorNickname: newVal?.authorNickname || '알 수 없음',
-                    studyStatus: newVal?.studyStatus || 'new',
+                    authorName: newVal?.authorName || '알 수 없음',
+                    studyStatus: newVal?.studyStatus || '',
                     categories: newVal?.categories || [],
                     isLiked: !!newVal?.isLiked,
                     isScrapped: !!newVal?.isScrapped,
@@ -178,8 +178,8 @@ export default {
                     this.localProblem = {
                         id: this.problem.id || `default-${Math.random().toString(36).substr(2, 9)}`,
                         title: '문제 제목 (로그인 필요)',
-                        authorNickname: '알 수 없음',
-                        studyStatus: 'new',
+                        authorName: '알 수 없음',
+                        studyStatus: '',
                         categories: [],
                         isLiked: false,
                         isScrapped: false,
@@ -218,6 +218,8 @@ export default {
                     return '진행 중';
                 case 'completed':
                     return '완료';
+                case '':
+                    return '';
                 default:
                     return '';
             }
@@ -230,6 +232,8 @@ export default {
                     return 'status-ongoing';
                 case 'completed':
                     return 'status-completed';
+                case '':
+                    return 'status-none';
                 default:
                     return '';
             }
@@ -283,8 +287,8 @@ export default {
                 this.$emit('auth-required');
                 return;
             }
-            if (!this.isSelectionMode) {
-                this.$emit('go-to-study', this.localProblem.id);
+            if (!this.isSelectionMode) { 
+                this.$router.push(`/study/${this.localProblem.id}`);
             }
         }
     }
@@ -301,13 +305,15 @@ export default {
     box-sizing: border-box;
     margin-bottom: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    /* Remove transition for hover effect */
+    /* transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; */
 }
 
-.problem-list-item:hover:not(.selectable) {
+/* Remove hover effect for normal state */
+/* .problem-list-item:hover:not(.selectable) {
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
+} */
 
 .problem-list-item.selectable {
     cursor: pointer;
@@ -317,6 +323,11 @@ export default {
 .problem-list-item.selected {
     border: 2px solid #e03c3c;
     box-shadow: 0 0 0 3px rgba(224, 60, 60, 0.3);
+}
+
+/* Prevent pointer cursor for normal (non-selectable) state */
+.problem-list-item {
+    cursor: default;
 }
 
 .problem-list-item h3 {
@@ -341,9 +352,7 @@ export default {
     font-size: 18px;
     font-weight: bold;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 70%;
+    max-width: 100%;
 }
 .author {
     font-size: 13px;
@@ -376,6 +385,9 @@ export default {
     color: #2e7d32;
 }
 
+.status-none {
+    padding: 0;
+}
 
 .category-row {
     display: flex;
@@ -448,7 +460,7 @@ export default {
 }
 .edit-btn:hover:not(:disabled) {
     background-color: #ffe066;
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); */
 }
 .edit-btn:disabled, .solve-btn:disabled {
     opacity: 0.6;
@@ -462,7 +474,7 @@ export default {
 }
 .solve-btn:hover:not(:disabled) {
     background-color: #854fe6;
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); */
 }
 
 .study-card-summary {

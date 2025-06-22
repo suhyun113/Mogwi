@@ -126,14 +126,20 @@ export default {
 
     const fetchProblems = async () => {
       try {
-        const response = await axios.get('/api/problems', {
-          params: {
-            query: query.value,
-            category: selectedCategory.value,
-            currentUserId: currentUserId.value
-          }
-        })
-        problems.value = response.data
+        // 로그인 여부에 따라 파라미터 분기
+        const params = {
+          onlyPublic: true,
+          query: query.value,
+        };
+        if (selectedCategory.value && selectedCategory.value !== '#전체') {
+          params.category = selectedCategory.value;
+        }
+        // 로그인 상태일 때만 currentUserId 파라미터를 추가
+        if (isAuthenticated.value && currentUserId.value) {
+          params.currentUserId = currentUserId.value;
+        }
+        const response = await axios.get('/api/problem/detail', { params });
+        problems.value = response.data.sort((a, b) => b.id - a.id);
       } catch (error) {
         console.error('문제 불러오기 실패:', error)
       }
@@ -169,23 +175,31 @@ export default {
       showLoginModal.value = true
     }
 
-    const handleUpdateLike = (problem) => {
-      const target = problems.value.find(p => p.id === problem.id)
-      if (target && target.authorId !== currentUserId.value) {
-        target.liked = !target.liked
-        target.likes += target.liked ? 1 : -1
-      } else if (!currentUserId.value) {
-        alert("로그인 후 이용할 수 있습니다.");
+    const handleUpdateLike = (updatedProblemData) => {
+      const target = problems.value.find(p => p.id === updatedProblemData.id);
+      if (target) {
+        // Ensure the current user is not the author and is authenticated
+        if (isAuthenticated.value && target.authorId !== currentUserId.value) {
+          // Update the correct properties based on the emitted data
+          target.isLiked = updatedProblemData.isLiked;
+          target.totalLikes = updatedProblemData.totalLikes;
+        } else if (!isAuthenticated.value) {
+          alert("로그인 후 이용할 수 있습니다.");
+        }
       }
     }
 
-    const handleUpdateScrap = (problem) => {
-      const target = problems.value.find(p => p.id === problem.id)
-      if (target && target.authorId !== currentUserId.value) {
-        target.scrapped = !target.scrapped
-        target.scraps += target.scrapped ? 1 : -1
-      } else if (!currentUserId.value) {
-        alert("로그인 후 이용할 수 있습니다.");
+    const handleUpdateScrap = (updatedProblemData) => {
+      const target = problems.value.find(p => p.id === updatedProblemData.id);
+      if (target) {
+        // Ensure the current user is not the author and is authenticated
+        if (isAuthenticated.value && target.authorId !== currentUserId.value) {
+          // Update the correct properties based on the emitted data
+          target.isScrapped = updatedProblemData.isScrapped;
+          target.totalScraps = updatedProblemData.totalScraps;
+        } else if (!isAuthenticated.value) {
+          alert("로그인 후 이용할 수 있습니다.");
+        }
       }
     }
 
@@ -259,7 +273,7 @@ export default {
   width: 100%;
   max-width: 900px; /* main-inner와 동일한 최대 너비 */
   text-align: center; /* 텍스트 가운데 정렬 */
-  margin-top: 60px; 
+  margin-top: 22px;
   color: #555; /* 부드러운 회색 톤 */
   font-size: 1.25rem; /* 적당히 눈에 띄는 크기 */
   font-weight: 500;
@@ -278,7 +292,7 @@ export default {
   z-index: 999;
   background-color: transparent;
   padding: 12px 0;
-  margin-top: 60px;
+  margin-top: 38px;
   margin-bottom: 10px;
   width: 100%;
   box-shadow: none;

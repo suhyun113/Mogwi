@@ -1,75 +1,82 @@
 <template>
+    <h2 class="overall-summary-title">
+        <template v-if="isLoggedIn">
+            <span class="username-underline">{{ username }}</span>님의 전체 학습 현황
+        </template>
+        <template v-else>
+            전체 학습 현황
+        </template>
+    </h2>
     <section class="overall-summary-section">
-        <h2 class="section-title">
-            <template v-if="isLoggedIn">
-                <span class="username-underline">{{ username }}</span>님의 전체 학습 현황
-            </template>
-            <template v-else>
-                전체 학습 현황
-            </template>
-        </h2>
-        <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-stats">
-            <div class="stat-item perfect">
-                <span class="label">완벽한 기억:</span>
-                <span class="value">{{ overallPerfectCount }}개</span>
+        <div class="summary-visual-row">
+            <div class="mogwi-bubble-group">
+                <img :src="mogwiImg" alt="모귀 캐릭터" class="mogwi-character-img" />
+                <div class="speech-bubble" v-html="speechText"></div>
             </div>
-            <div class="stat-item vague">
-                <span class="label">희미한 기억:</span>
-                <span class="value">{{ overallVagueCount }}개</span>
-            </div>
-            <div class="stat-item forgotten">
-                <span class="label">사라진 기억:</span>
-                <span class="value">{{ overallForgottenCount }}개</span>
-            </div>
-            <div class="stat-item total">
-                <span class="label">총 학습 카드:</span>
-                <span class="value">{{ overallTotalCards }}개</span>
+            <div class="summary-main-content">
+                <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-tags">
+                    <div class="summary-tag-group">
+                        <div class="summary-tag perfect"><span class="tag-label">완벽한 기억</span></div>
+                        <span class="tag-count perfect">{{ overallPerfectCount }}</span>
+                    </div>
+                    <div class="summary-tag-group">
+                        <div class="summary-tag vague"><span class="tag-label">희미한 기억</span></div>
+                        <span class="tag-count vague">{{ overallVagueCount }}</span>
+                    </div>
+                    <div class="summary-tag-group">
+                        <div class="summary-tag forgotten"><span class="tag-label">사라진 기억</span></div>
+                        <span class="tag-count forgotten">{{ overallForgottenCount }}</span>
+                    </div>
+                </div>
+                <div v-else-if="isLoggedIn && overallTotalCards === 0" class="no-study-data-message">
+                    <font-awesome-icon :icon="['fas', 'book-open']" class="no-data-icon" />
+                    <p>아직 학습한 문제가 없어요. 새로운 문제를 시작해보세요!</p>
+                </div>
+                <div v-else class="no-study-data-message">
+                    <font-awesome-icon :icon="['fas', 'user-lock']" class="no-data-icon" />
+                    <p>로그인하시면 학습 현황을 확인할 수 있습니다.</p>
+                </div>
+                <div class="progress-bar-container">
+                    <div
+                        v-if="overallPerfectPercentage > 0"
+                        class="progress-bar perfect"
+                        :style="{ width: overallPerfectPercentage + '%' }"
+                        title="완벽한 기억"
+                    ></div>
+                    <div
+                        v-if="overallVaguePercentage > 0"
+                        class="progress-bar vague"
+                        :style="{ width: overallVaguePercentage + '%' }"
+                        title="희미한 기억"
+                    ></div>
+                    <div
+                        v-if="overallForgottenPercentage > 0"
+                        class="progress-bar forgotten"
+                        :style="{ width: overallForgottenPercentage + '%' }"
+                        title="사라진 기억"
+                    ></div>
+                    <div v-if="overallTotalCards === 0 || !isLoggedIn" class="progress-bar no-data">
+                        {{ isLoggedIn ? '학습 데이터 없음' : '로그인 필요' }}
+                    </div>
+                </div>
+                <p class="progress-labels">
+                    <span v-if="overallPerfectPercentage > 0" class="label perfect">완벽 {{ overallPerfectPercentage }}%</span>
+                    <span v-if="overallVaguePercentage > 0" class="label vague">희미 {{ overallVaguePercentage }}%</span>
+                    <span v-if="overallForgottenPercentage > 0" class="label forgotten">사라짐 {{ overallForgottenPercentage }}%</span>
+                    <span v-else-if="overallTotalCards === 0 && isLoggedIn" class="label no-data-label">새로운 학습을 시작해보세요!</span>
+                    <span v-else-if="!isLoggedIn" class="label no-data-label">로그인 후 확인 가능합니다</span>
+                </p>
             </div>
         </div>
-        <div v-else-if="isLoggedIn && overallTotalCards === 0" class="no-study-data-message">
-            <font-awesome-icon :icon="['fas', 'book-open']" class="no-data-icon" />
-            <p>아직 학습한 문제가 없어요. 새로운 문제를 시작해보세요!</p>
-        </div>
-        <div v-else class="no-study-data-message">
-            <font-awesome-icon :icon="['fas', 'user-lock']" class="no-data-icon" />
-            <p>로그인하시면 학습 현황을 확인할 수 있습니다.</p>
-        </div>
-
-        <div class="progress-bar-container">
-            <div
-                v-if="overallPerfectPercentage > 0"
-                class="progress-bar perfect"
-                :style="{ width: overallPerfectPercentage + '%' }"
-                title="완벽한 기억"
-            ></div>
-            <div
-                v-if="overallVaguePercentage > 0"
-                class="progress-bar vague"
-                :style="{ width: overallVaguePercentage + '%' }"
-                title="희미한 기억"
-            ></div>
-            <div
-                v-if="overallForgottenPercentage > 0"
-                class="progress-bar forgotten"
-                :style="{ width: overallForgottenPercentage + '%' }"
-                title="사라진 기억"
-            ></div>
-            <div v-if="overallTotalCards === 0 || !isLoggedIn" class="progress-bar no-data">
-                {{ isLoggedIn ? '학습 데이터 없음' : '로그인 필요' }}
-            </div>
-        </div>
-        <p class="progress-labels">
-            <span v-if="overallPerfectPercentage > 0" class="label perfect">완벽 {{ overallPerfectPercentage }}%</span>
-            <span v-if="overallVaguePercentage > 0" class="label vague">희미 {{ overallVaguePercentage }}%</span>
-            <span v-if="overallForgottenPercentage > 0" class="label forgotten">사라짐 {{ overallForgottenPercentage }}%</span>
-            <span v-else-if="overallTotalCards === 0 && isLoggedIn" class="label no-data-label">새로운 학습을 시작해보세요!</span>
-            <span v-else-if="!isLoggedIn" class="label no-data-label">로그인 후 확인 가능합니다</span>
-        </p>
     </section>
 </template>
 
 <script>
 import { computed } from 'vue';
+import mogwiBad from '@/assets/mogwi-bad.png';
+import mogwiSad from '@/assets/mogwi-sad.png';
+import mogwiLook from '@/assets/mogwi-look.png';
+import mogwiHeart from '@/assets/mogwi-heart.png';
 
 export default {
     name: 'OverallStudySummary',
@@ -110,10 +117,33 @@ export default {
             props.overallTotalCards > 0 ? ((props.overallForgottenCount / props.overallTotalCards) * 100).toFixed(1) : 0
         );
 
+        const mogwiImg = computed(() => {
+            const total = props.overallTotalCards;
+            if (total === 0) return mogwiBad;
+            if (total < 10) return mogwiSad;
+            if (total < 20) return mogwiLook;
+            return mogwiHeart;
+        });
+
+        const speechText = computed(() => {
+            const total = props.overallTotalCards;
+            if (total === 0) {
+                return `총 <span class='highlight-count'>0개</span> 학습했어요<br>지금 시작해볼까요?`;
+            } else if (total < 10) {
+                return `총 <span class='highlight-count'>${total}개</span> 학습했어요<br>조금씩 시작해볼까요?`;
+            } else if (total < 20) {
+                return `총 <span class='highlight-count'>${total}개</span> 학습했어요<br>좋아요, 더 해볼까요?`;
+            } else {
+                return `총 <span class='highlight-count'>${total}개</span>나 학습했어요!<br>멋져요!`;
+            }
+        });
+
         return {
             overallPerfectPercentage,
             overallVaguePercentage,
             overallForgottenPercentage,
+            mogwiImg,
+            speechText,
         };
     }
 };
@@ -127,74 +157,114 @@ export default {
     border-radius: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    margin-bottom: 40px;
-    border: 1px solid #e0d0ff; /* Subtle border */
+    margin-top: 0;
+    margin-bottom: 32px;
+    border: 2.5px solid #e0d0ff; /* Thicker border */
 }
 
-.overall-summary-section h2.section-title {
+.overall-summary-title {
     color: #5a2e87;
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin-bottom: 25px;
-    padding-bottom: 10px;
-    text-align: left; /* Changed from center to left */
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    margin-top: 0;
+    padding-bottom: 0;
+    text-align: left;
+    background: none;
+    filter: none;
+    position: static;
 }
-
-/* Add style for the username underline */
+.overall-summary-title::after {
+    display: none;
+}
 .username-underline {
     text-decoration: underline;
-    text-underline-offset: 4px; /* Adjust this value as needed for better spacing */
-    text-decoration-color: #a471ff; /* Optional: Change underline color */
-    text-decoration-thickness: 2px; /* Optional: Make underline thicker */
+    text-underline-offset: 3px;
+    text-decoration-color: #a471ff;
+    text-decoration-thickness: 2px;
+    font-weight: 800;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    text-fill-color: unset;
+    padding-right: 0;
 }
 
-
-.summary-stats {
+.summary-tags {
     display: flex;
-    justify-content: space-around;
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 25px;
-    gap: 15px;
+    margin-bottom: 40px !important;
+    margin-top: 18px;
 }
 
-.stat-item {
+.summary-tag-group {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    padding: 10px 15px;
+    gap: 13px;
+}
+
+.summary-tag {
+    min-width: 80px;
+    padding: 9px 15px 7px 15px;
     border-radius: 10px;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    min-width: 120px;
+    font-size: 0.97rem;
+    font-weight: 700;
     text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    margin: 0;
+    letter-spacing: -0.5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+.summary-tag.perfect {
+    background: #e6f7ea;
+    color: #43a047;
+}
+.summary-tag.vague {
+    background: #fffde7;
+    color: #ffc107;
+}
+.summary-tag.forgotten {
+    background: #fff0f0;
+    color: #f44336;
+}
+.summary-tag.total {
+    background: #f3eaff;
+    color: #6a1b9a;
 }
 
-.stat-item .label {
-    font-size: 0.95rem;
-    color: #777;
-    margin-bottom: 5px;
-    font-weight: 500;
+.tag-label {
+    font-size: 0.97rem;
+    font-weight: 700;
 }
-
-.stat-item .value {
-    font-size: 1.5rem;
-    font-weight: bold;
+.tag-count {
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: -1px;
 }
-
-.stat-item.perfect .value { color: #28a745; }
-.stat-item.vague .value { color: #ffc107; }
-.stat-item.forgotten .value { color: #dc3545; }
-.stat-item.total .value { color: #5a2e87; }
-
+.tag-count.perfect { color: #43a047; }
+.tag-count.vague { color: #ffc107; }
+.tag-count.forgotten { color: #f44336; }
 
 .progress-bar-container {
-    width: 100%;
+    width: 88%;
+    margin-left: auto;
+    margin-right: auto;
     height: 30px;
     background-color: #e9ecef;
     border-radius: 15px;
     overflow: hidden;
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 0px;
+    margin-top: 34px !important;
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -224,6 +294,7 @@ export default {
     font-size: 0.9rem;
     color: #555;
     margin-top: 10px;
+    margin-bottom: -10px;
 }
 .progress-labels .label {
     font-weight: 600;
@@ -271,5 +342,116 @@ export default {
     font-weight: 500;
     margin-left: auto;
     margin-right: auto;
+}
+
+@media (max-width: 600px) {
+    .summary-tags {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .summary-tag {
+        min-width: 60px;
+        padding: 5px 6px;
+        font-size: 0.92rem;
+        border-radius: 10px;
+    }
+}
+
+.summary-visual-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 32px;
+}
+.mogwi-bubble-group {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    min-width: 110px;
+    margin-top: 10px;
+    margin-left: 18px;
+}
+.mogwi-character-img {
+    width: 90px;
+    height: auto;
+    margin-top: 8px;
+    margin-bottom: 0;
+    filter: drop-shadow(0 2px 8px rgba(164,113,255,0.10));
+}
+.speech-bubble {
+    position: relative;
+    background: #f3eaff;
+    color: #5a2e87;
+    border-radius: 18px;
+    padding: 10px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px 0 rgba(164,113,255,0.08);
+    margin-bottom: 12px;
+    margin-top: 0;
+    text-align: center;
+    max-width: 220px;
+    z-index: 1;
+}
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 100%;
+    width: 0;
+    height: 0;
+    border: 10px solid transparent;
+    border-top: 10px solid #f3eaff;
+    border-bottom: 0;
+}
+.summary-main-content {
+    flex: 1 1 0%;
+    min-width: 0;
+}
+@media (max-width: 700px) {
+    .summary-visual-row {
+        flex-direction: column;
+        gap: 18px;
+    }
+    .mogwi-bubble-group {
+        flex-direction: row;
+        align-items: flex-start;
+        min-width: 0;
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+    .mogwi-character-img {
+        width: 48px;
+        margin-bottom: 0;
+        margin-right: 10px;
+    }
+    .speech-bubble {
+        font-size: 0.95rem;
+        padding: 8px 12px;
+        max-width: 120px;
+    }
+    .speech-bubble::after {
+        left: 12px;
+        border-width: 7px;
+        border-top-width: 7px;
+    }
+}
+@media (max-width: 500px) {
+    .summary-visual-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .mogwi-bubble-group {
+        display: none;
+    }
+}
+.highlight-count {
+    color: #ff7e5f !important;
+    font-weight: 900;
+}
+:deep(.speech-bubble .highlight-count) {
+    color:rgb(127, 58, 245) !important;
+    font-weight: 900;
 }
 </style>

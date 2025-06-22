@@ -1,14 +1,14 @@
 <template>
+    <h2 class="problem-list-title">
+        <template v-if="isLoggedIn">
+            <span class="username-underline">{{ username }}</span>님의 학습 현황
+        </template>
+        <template v-else>
+            학습 현황
+        </template>
+    </h2>
     <div class="problem-list-section">
         <div class="section-header">
-            <h2 class="section-title">
-                <template v-if="isLoggedIn">
-                    <span class="username-underline">{{ username }}</span>님의 학습 현황
-                </template>
-                <template v-else>
-                    학습 현황
-                </template>
-            </h2>
             <div class="header-buttons">
                 <button
                     v-if="!isSelectionMode"
@@ -185,17 +185,22 @@ export default {
 
         const handleToggleLike = async (problemId) => {
             if (!checkLoginAndExecute()) return;
+
+            // 해당 문제를 현재 탭에서 찾음
+            const list = currentProblems.value;
+            const target = list.find(p => p.id === problemId);
+            if (!target) return;
+
             try {
-                const response = await axios.post(`/api/mystudy/problems/${problemId}/toggle-like`, {
-                    userId: props.currentUserId,
-                    field: 'isLiked',
+                const response = await axios.post(`/api/like/${problemId}`, {
+                userId: props.currentUserId
                 });
+
                 if (response.data.status === 'OK') {
-                    console.log(`좋아요 토글 성공: ${response.data.newStatus}, 총 좋아요: ${response.data.totalLikes}`);
-                    emit('refresh-problems');
+                target.isLiked = !target.isLiked;
+                target.totalLikes += target.isLiked ? 1 : -1;
                 } else {
-                    console.error('좋아요 토글 실패 (서버 응답):', response.data.message);
-                    alert('좋아요 상태 변경에 실패했습니다: ' + response.data.message);
+                alert('좋아요 상태 변경에 실패했습니다: ' + response.data.message);
                 }
             } catch (error) {
                 console.error('좋아요 토글 실패:', error);
@@ -203,19 +208,24 @@ export default {
             }
         };
 
+
         const handleToggleScrap = async (problemId) => {
             if (!checkLoginAndExecute()) return;
+
+            // 해당 문제를 현재 탭에서 찾음
+            const list = currentProblems.value;
+            const target = list.find(p => p.id === problemId);
+            if (!target) return;
+
             try {
-                const response = await axios.post(`/api/mystudy/problems/${problemId}/toggle-scrap`, {
+                const response = await axios.post(`/api/scrap/${problemId}`, {
                     userId: props.currentUserId,
-                    field: 'isScrapped',
                 });
                 if (response.data.status === 'OK') {
-                    console.log(`스크랩 토글 성공: ${response.data.newStatus}, 총 스크랩: ${response.data.totalScraps}`);
-                    emit('refresh-problems');
+                target.isScrapped = !target.isScrapped;
+                target.totalScraps += target.isScrapped ? 1 : -1;
                 } else {
-                    console.error('스크랩 토글 실패 (서버 응답):', response.data.message);
-                    alert('스크랩 상태 변경에 실패했습니다: ' + response.data.message);
+                alert('스크랩 상태 변경에 실패했습니다: ' + response.data.message);
                 }
             } catch (error) {
                 console.error('스크랩 토글 실패:', error);
@@ -263,7 +273,7 @@ export default {
             if (confirm(`선택된 문제 ${selectedProblems.value.length}개의 학습 현황을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
                 try {
                     const deletePromises = selectedProblems.value.map(problemId =>
-                        axios.delete(`/api/mystudy/problems/${problemId}/status/${props.currentUserId}`)
+                        axios.delete(`/api/mystudy/problem/${problemId}/user/${props.currentUserId}`)
                     );
 
                     const results = await Promise.allSettled(deletePromises);
@@ -358,37 +368,50 @@ export default {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 30px 30px 50px 30px; /* 하단 패딩 50px로 증가 */
+    padding: 20px 30px 50px 30px; /* 상단 패딩을 20px로 줄임 */
     margin-top: -20px;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
-    border: 1px solid #e0d0ff; /* Subtle border */
+    border: 2.5px solid #e0d0ff; /* Thicker border to match OverallStudySummary */
 }
 
 .section-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-bottom: 0;
+    margin-top: -10px;
 }
 
-.section-title {
+.problem-list-title {
     color: #5a2e87;
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin: 5;
-    text-align: left; /* Ensure left alignment */
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 40px;
+    margin-top: 0;
+    padding-bottom: 0;
+    text-align: left;
+    background: none;
+    filter: none;
+    position: static;
 }
-
-/* Add style for the username underline */
+.problem-list-title::after {
+    display: none;
+}
 .username-underline {
     text-decoration: underline;
-    text-underline-offset: 4px; /* Adjust this value as needed for better spacing */
-    text-decoration-color: #a471ff; /* Optional: Change underline color */
-    text-decoration-thickness: 2px; /* Optional: Make underline thicker */
+    text-underline-offset: 3px;
+    text-decoration-color: #a471ff;
+    text-decoration-thickness: 2px;
+    font-weight: 800;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    text-fill-color: unset;
+    padding-right: 0;
 }
-
 
 .header-buttons {
     display: flex;
@@ -492,7 +515,7 @@ export default {
 .problem-list-tabs {
     display: flex;
     justify-content: center;
-    margin: -10px 0 20px 0;
+    margin: 5px 0 20px 0;
     gap: 15px;
 }
 
@@ -566,7 +589,7 @@ export default {
     justify-content: center;
     gap: 8px;
     margin-top: 0px;
-    margin-bottom: 20px; /* 페이지 번호 아래에 20px 여백 추가 */
+    margin-bottom: -30px; /* 페이지 번호 아래에 8px 여백으로 줄임 */
     align-items: center;
 }
 .pagination-btn {

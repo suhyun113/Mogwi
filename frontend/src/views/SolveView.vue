@@ -32,7 +32,11 @@
         <AnswerInputSection
           v-model="userAnswer"
           :is-disabled="hasSubmitted"
+          :correct-answer="currentProblemCard.correct"
+          :show-answer="showAnswer"
+          :has-submitted="hasSubmitted"
           @submit-answer="submitAnswer"
+          @toggle-show-answer="toggleShowAnswer"
         />
 
         <div class="navigation-buttons">
@@ -138,7 +142,6 @@ export default {
           params: { currentUserId: currentUserId.value }
         });
 
-        // ⭐⭐⭐ MODIFICATION START ⭐⭐⭐
         if (response.status === 204) { // Check for No Content status specifically
             console.log("No cards found for this problem (HTTP 204).");
             allProblemCards.value = []; // Set to empty array
@@ -156,10 +159,9 @@ export default {
             allProblemCards.value = [];
             shuffledProblemCards.value = [];
         }
-        // ⭐⭐⭐ MODIFICATION END ⭐⭐⭐
 
         // Also fetch problem title
-        const problemResponse = await axios.get(`/api/problems/${problemId}`, {
+        const problemResponse = await axios.get(`/api/problem/${problemId}`, {
           params: { currentUserId: currentUserId.value }
         });
         problemTitle.value = problemResponse.data.title;
@@ -206,10 +208,11 @@ export default {
       if (submittedAnswer === correct) {
         isCorrectAnswer.value = true;
         currentProblemCard.value.cardStatus = 'perfect'; // 항상 perfect로
+        showAnswer.value = true; // 정답이면 바로 정답을 보여줌
       } else {
         isCorrectAnswer.value = false;
         currentProblemCard.value.cardStatus = 'forgotten'; // 항상 forgotten으로
-        showAnswer.value = true;
+        showAnswer.value = false; // 정답 제출 시에도 정답은 숨김
       }
       await saveCardStatus(); // Await saving status before moving on
     };
@@ -268,7 +271,7 @@ export default {
       userAnswer.value = '';
       hasSubmitted.value = false;
       isCorrectAnswer.value = false;
-      showAnswer.value = false;
+      showAnswer.value = false; // 카드 이동 시에도 항상 숨김
     };
 
     const calculateStudyResults = () => {
@@ -311,13 +314,6 @@ export default {
       }
     });
 
-    // --- On Mounted (for initial fetch, but now mostly handled by immediate watcher) ---
-    // onMounted(async () => {
-    //   // This might not be strictly necessary with immediate: true on the watcher
-    //   // but can act as a fallback or for other one-time setups.
-    //   // await initializeStudy();
-    // });
-
     return {
       loading,
       allProblemCards,
@@ -356,15 +352,12 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  background-color: #fdf8f4;
-  overflow: hidden; /* 스크롤바 생성 방지 */
-  padding: 20px; /* 전체 뷰에 패딩 유지 */
-  box-sizing: border-box; /* 패딩을 포함한 너비/높이 계산 */
+  background-color: #f7f3ff;
+  position: relative;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .loading, .no-problems {
@@ -468,6 +461,9 @@ export default {
 
 .nav-button.finish-button {
   background-color: #7a4cb8; /* 더 진한 보라색 */
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 1.2rem;
 }
 
 .nav-button.finish-button:hover {

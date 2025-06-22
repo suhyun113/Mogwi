@@ -49,7 +49,7 @@ export default {
   methods: {
     async fetchProblemDetails(id) {
       try {
-        const response = await axios.get(`/api/problems/${id}`, {
+        const response = await axios.get(`/api/problem/${id}`, {
           params: {
             currentUserId: this.$store.state.store_userid
           }
@@ -59,7 +59,7 @@ export default {
         if (this.problem && this.problem.userProblemStatus) {
             this.problemStatus = this.problem.userProblemStatus.problemStatus;
         } else {
-            this.problemStatus = 'new';
+            this.problemStatus = '';
         }
         console.log('초기 문제 상태:', this.problemStatus);
 
@@ -69,58 +69,61 @@ export default {
     },
 
     async handleStudyStartClick() {
-      const problemId = this.problem.id;
+      if (this.isProcessing) return;  // 중복 실행 방지
+      this.isProcessing = true;
+
+      console.log('🌕 학습 시작 버튼 클릭됨');
 
       try {
+        const problemId = this.problem.id;
         const response = await axios.post('/api/solve/start-study', {
           userId: this.currentUserId,
           problemId: problemId
         });
 
-        this.problemStatus = response.data.problemStatus;
-        console.log('API 응답 데이터 (start-study problemStatus):', this.problemStatus);
+        const receivedStatus = response.data.problemStatus;
 
-        if (this.problemStatus === 'new') {
+        // 응답 값이 정확히 문자열인지 확인하고 정규화
+        const normalizedStatus = typeof receivedStatus === 'string'
+          ? receivedStatus.trim()
+          : String(receivedStatus || '');
+
+        this.problemStatus = normalizedStatus;
+
+        console.log('🧪 start-study 응답:', receivedStatus, '| normalized:', normalizedStatus);
+
+        if (normalizedStatus === '') {
           this.showStudyStartModal = true;
-          console.log('problemStatus가 "new"이므로 StudyStartModal 표시.');
+          console.log('✅ problemStatus가 ""이므로 StudyStartModal 표시됨.');
         } else {
-          console.log(`problemStatus가 "${this.problemStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
+          console.log(`➡️ problemStatus가 "${normalizedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
           this.router.push(`/study/${problemId}/solve`);
         }
+
       } catch (error) {
-        console.error('문제 학습 시작 처리 중 예외 발생:', error);
+        console.error('❌ 문제 학습 시작 처리 중 예외 발생:', error);
         alert('문제 학습을 시작할 수 없습니다. 서버 오류 또는 네트워크 문제일 수 있습니다.');
+      } finally {
+        this.isProcessing = false;
       }
     },
-
-    // StudyStartModal에서 '문제 구경하기' 클릭 시 (수정된 부분)
+    // StudyStartModal에서 '문제 구경하기' 클릭 시
     handleGoPreviewFromStudyModal() {
       this.showStudyStartModal = false; // 모달 닫기
-      console.log('StudyView: "문제 구경하기" 클릭. 모달을 닫고 MainView로 이동.');
+      console.log('StudyView: "문제 구경하기" 클릭. 모달을 닫고 MainView로 이동. (문제는 이미 new 상태로 저장됨)');
       this.router.push('/'); // MainView로 라우팅
+      // 문제의 DB 상태는 이미 'new'로 되어 있으므로 별도 API 호출 필요 없음
     },
 
     // StudyStartModal에서 '문제 바로 풀기' 클릭 시
+    // 이 버튼을 클릭해도 'new' 상태를 유지하고 싶다면 'set-ongoing' API 호출을 제거합니다.
     async handleGoStudyFromStudyModal(problemIdFromModal) {
-      this.showStudyStartModal = false;
-      try {
-        const response = await axios.post('/api/solve/set-ongoing', {
-          userId: this.currentUserId,
-          problemId: problemIdFromModal
-        });
-
-        if (response.status === 200) {
-          console.log(`StudyView: 문제 ${problemIdFromModal} 학습 상태를 'ongoing'으로 업데이트 완료.`);
-          this.problemStatus = 'ongoing';
-          this.router.push(`/study/${problemIdFromModal}/solve`);
-        } else {
-          console.error('StudyView: 문제 상태 업데이트 실패:', response.data);
-          alert('문제 학습을 시작하는 데 실패했습니다.');
-        }
-      } catch (error) {
-        console.error('StudyView: 문제 상태 업데이트 중 오류:', error);
-        alert('문제 학습을 시작하는 데 문제가 발생했습니다.');
-      }
+      this.showStudyStartModal = false; // 모달 닫기
+      console.log(`StudyView: '문제 바로 풀기' 클릭. 문제 ${problemIdFromModal} 풀이 페이지로 이동. (new 상태 유지)`);
+      // 요청에 따라 'set-ongoing' API 호출을 제거하고 바로 라우팅
+      this.router.push(`/study/${problemIdFromModal}/solve`);
+      // 만약 프론트엔드 상태도 'new'로 명시하고 싶다면:
+      this.problemStatus = 'new';
     },
 
     toggleLike() {
@@ -168,18 +171,14 @@ export default {
 </script>
 
 <style scoped>
-/* (스타일은 변경 없음) */
 .study-view {
   display: flex;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  background-color: #fdf8f4;
-  overflow: hidden;
+  background-color: #f7f3ff;
+  position: relative;
 }
 .loading {
   color: #9ca3af;

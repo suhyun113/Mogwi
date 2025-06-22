@@ -43,12 +43,12 @@
           v-for="category in allCategories"
           :key="category.id"
           @click="toggleTag(category.id)"
-          :class="['tag-button', { 'selected': selectedTags.includes(category.id) }]"
-          :disabled="selectedTags.length >= 3 && !selectedTags.includes(category.id)"
+          :class="['tag-button', { 'selected': localSelectedTags.includes(category.id) }]"
+          :disabled="localSelectedTags.length >= 3 && !localSelectedTags.includes(category.id)"
           :style="{
-            backgroundColor: selectedTags.includes(category.id) ? getColor(category.tag_name) : '#e0e0e0',
-            borderColor: selectedTags.includes(category.id) ? getColor(category.tag_name) : '#e0e0e0',
-            color: selectedTags.includes(category.id) ? 'white' : '#555'
+            backgroundColor: localSelectedTags.includes(category.id) ? getColor(category) : '#e0e0e0',
+            borderColor: localSelectedTags.includes(category.id) ? getColor(category) : '#e0e0e0',
+            color: localSelectedTags.includes(category.id) ? 'white' : '#555'
           }"
         >
           {{ formatTagName(category.tag_name) }}
@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 export default {
   // props 정의
@@ -92,20 +92,23 @@ export default {
   setup(props, { emit }) {
     const tagError = ref('');
 
+    const localSelectedTags = computed(() => {
+      if (!Array.isArray(props.selectedTags)) return [];
+      return props.selectedTags.map(Number);
+    });
+
     // Helper function to format tag names for display (ensuring single #)
     const formatTagName = (tagName) => {
       const cleanedTagName = tagName.startsWith('#') ? tagName.substring(1) : tagName;
       return `#${cleanedTagName}`;
     };
 
-    const getColor = (tag) => {
-      // Find the category object that matches this tag name
-      const category = props.allCategories.find(cat => cat.tag_name === tag);
+    const getColor = (category) => {
       return category?.color_code || '#ccc';
     };
 
     const toggleTag = (tagId) => {
-      const currentTags = [...props.selectedTags];
+      const currentTags = [...localSelectedTags.value];
       const index = currentTags.indexOf(tagId);
 
       if (index > -1) {
@@ -137,6 +140,7 @@ export default {
       toggleTag,
       getColor,
       formatTagName,
+      localSelectedTags,
     };
   },
 };

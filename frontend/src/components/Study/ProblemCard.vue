@@ -5,7 +5,7 @@
       <span>{{ problem.cardCount }}개</span>
     </div>
     <div class="title">{{ problem.title }}</div>
-    <div class="author">작성자: {{ problem.author }}</div>
+    <div class="author">작성자: {{ problem.authorName }}</div>
     
     <div class="tags">
       <span v-for="tag in problemCategories" :key="tag.id || tag.tag_name" class="tag" :style="{ backgroundColor: getTagColor(tag) }">

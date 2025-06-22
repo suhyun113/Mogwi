@@ -15,34 +15,27 @@
       </div>
     </section>
 
-    <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
-    <div v-else-if="error" class="error-message">{{ error }}</div>
-    <div v-else-if="!isLoggedIn" class="logged-out-prompt">
-      <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character-small" />
-      <p class="logged-out-message">
-        <i class="fas fa-lock"></i> 학습 리포트는 로그인 후 이용 가능합니다.
-      </p>
-      <button @click="showLoginModal = true" class="login-button">로그인</button>
+    <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
+    <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
+
+    <div class="tab-buttons">
+      <button
+        :class="{ 'tab-button': true, 'active': activeTab === 'daily' }"
+        @click="activeTab = 'daily'"
+      >
+        날짜별 학습 기록
+      </button>
+      <button
+        :class="{ 'tab-button': true, 'active': activeTab === 'weekly' }"
+        @click="activeTab = 'weekly'"
+      >
+        주간 학습량
+      </button>
     </div>
 
-    <div v-else>
-      <div class="tab-buttons">
-        <button
-          :class="{ 'tab-button': true, 'active': activeTab === 'daily' }"
-          @click="activeTab = 'daily'"
-        >
-          날짜별 학습 기록
-        </button>
-        <button
-          :class="{ 'tab-button': true, 'active': activeTab === 'weekly' }"
-          @click="activeTab = 'weekly'"
-        >
-          주간 학습량
-        </button>
-      </div>
-
-      <div class="report-container">
-        <section v-if="activeTab === 'daily'" class="report-section calendar-section">
+    <div class="report-content-wrapper">
+      <div class="report-container" :class="{ blurred: !isLoggedIn }">
+        <section v-show="activeTab === 'daily'" class="report-section calendar-section">
           <div class="calendar-and-detail-wrapper">
             <div class="daily-detail-wrapper">
               <h2 class="section-title-daily-detail">날짜별 학습 기록</h2>
@@ -57,9 +50,18 @@
           </div>
         </section>
 
-        <section v-if="activeTab === 'weekly'" class="report-section chart-section">
+        <section v-show="activeTab === 'weekly'" class="report-section chart-section">
           <WeeklyBarChart :chartData="weeklyChartData" />
         </section>
+      </div>
+
+      <div v-if="!isLoggedIn" class="content-login-prompt">
+          <img src="@/assets/mogwi-confused.png" alt="모귀 캐릭터" class="prompt-mogwi-character" />
+          <p class="prompt-message">로그인하시면<br>상세 리포트를 볼 수 있어요!</p>
+          <div class="prompt-actions">
+            <button @click="openLoginModal" class="action-button login-button">로그인</button>
+            <button @click="openRegisterModal" class="action-button register-button">회원가입</button>
+          </div>
       </div>
     </div>
 
@@ -79,7 +81,7 @@ import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
 
 import mogwiLook from '@/assets/mogwi-look.png';
-import mogwiSleep from '@/assets/mogwi-sleep.png';
+import mogwiSleep from '@/assets/mogwi-sad.png';
 
 export default {
   name: 'ReportView',
@@ -290,17 +292,93 @@ export default {
   flex-direction: column;
   align-items: center;
   padding-top: 0;
-  background-color: #fdf8f4;
+  background-color: #f7f3ff;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
+  position: relative;
   overflow: hidden;
-  position: fixed;
+}
+
+/* Report Content Wrapper and Blur Logic */
+.report-content-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+.report-container.blurred {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.content-login-prompt {
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(247, 243, 255, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+}
+
+.prompt-mogwi-character {
+  width: 130px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.prompt-message {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a1e77;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.action-button {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+
+.login-button {
+  background-color: #8c5dff;
+  color: white;
+}
+.login-button:hover {
+  background-color: #794cff;
+}
+
+.register-button {
+  background-color: #ffffff;
+  color: #5a2e87;
+  border: 2px solid #a471ff;
+}
+.register-button:hover {
+  background-color: #f0e6ff;
 }
 
 /* Report Banner Styles */
@@ -379,6 +457,27 @@ export default {
   .banner-mogwi-character {
     width: 180px;
   }
+
+  .calendar-and-detail-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding-top: 0;
+  }
+
+  .daily-detail-wrapper {
+    height: auto;
+    min-height: unset;
+    max-height: unset;
+    width: 100%;
+    max-width: 550px;
+    min-width: unset;
+    flex: none;
+  }
+
+  .calendar-wrapper {
+    height: auto;
+  }
 }
 
 @media (max-width: 768px) {
@@ -407,6 +506,10 @@ export default {
   .banner-mogwi-character {
     width: 150px;
   }
+  .mogwi-daily-detail-character,
+  .mogwi-daily-detail-character img {
+    width: 110px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -427,15 +530,15 @@ export default {
 
 /* Report Container & Common Section Styles */
 .report-container {
-  padding: 10px 40px;
+  padding: 10px 0; /* 좌우 패딩은 wrapper에서 담당 */
   width: 100%;
-  max-width: 1100px;
   margin-top: -10px;
   display: flex;
   flex-direction: column;
   gap: 30px;
   overflow: hidden;
   height: 100%;
+  transition: filter 0.3s ease-in-out;
 }
 
 .loading-message, .error-message {
@@ -451,7 +554,7 @@ export default {
   justify-content: center;
   width: 100%;
   max-width: 350px;
-  margin: 0px auto 15px auto;
+  margin: 18px auto 18px auto;
   border-radius: 30px;
   background-color: transparent;
   padding: 0;
@@ -528,6 +631,7 @@ export default {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding-bottom: 100px;
 }
 
 .calendar-and-detail-wrapper {
@@ -559,8 +663,13 @@ export default {
   color: white;
   box-sizing: border-box;
   text-align: center;
-  height: 450px; /* 고정 높이 설정 */
   border-radius: 8px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 480px;
+  min-height: 480px;
+  max-height: 480px;
 }
 
 .section-title-daily-detail {
@@ -574,19 +683,19 @@ export default {
 
 .mogwi-daily-detail-character {
   width: 120px;
-  height: 160px; /* 컨테이너 크기 고정 */
+  height: 160px;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
   margin-bottom: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* 이미지가 컨테이너를 벗어나지 않도록 */
+  overflow: hidden;
 }
 
 .mogwi-daily-detail-character img {
-  width: 120px; /* 내부 이미지 크기 증가 */
+  width: 120px;
   height: auto;
-  object-fit: contain; /* 이미지 비율 유지 */
+  object-fit: contain;
 }
 
 /* DailyStudyDetail 컴포넌트 내부의 스타일을 조절해야 할 수 있습니다.
@@ -612,7 +721,8 @@ export default {
   flex-direction: column;
   padding: 0;
   box-sizing: border-box;
-  height: 450px; /* 고정 높이 설정 */
+  height: 480px;
+  margin-bottom: 10px;
 }
 
 .chart-section {
@@ -628,164 +738,6 @@ export default {
   border-radius: 12px;
   padding: 20px;
   box-sizing: border-box;
-}
-
-/* Logged out prompt styles */
-.logged-out-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  padding: 60px 40px;
-  width: 100%;
-  max-width: 600px;
-  margin-top: 80px;
-  border: 1px solid #e0d0ff;
-}
-
-.mogwi-character-small {
-  width: 150px;
-  height: auto;
-  margin-bottom: 30px;
-}
-
-.logged-out-message {
-  font-size: 1.6rem;
-  color: #4a1e77;
-  margin-bottom: 30px;
-  line-height: 1.6;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-weight: 600;
-}
-
-.logged-out-message .fas {
-  font-size: 2.2rem;
-  color: #8c5dff;
-}
-
-.login-button {
-  background-image: linear-gradient(to right, #8c5dff 0%, #a471ff 100%);
-  color: white;
-  border: none;
-  padding: 15px 35px;
-  border-radius: 10px;
-  font-size: 1.25rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(140, 93, 255, 0.4);
-}
-
-.login-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(140, 93, 255, 0.6);
-  background-position: right center;
-}
-
-/* Media Queries for Responsiveness */
-@media (max-width: 1200px) {
-  .report-container {
-    max-width: 900px;
-  }
-  .calendar-section, .chart-section {
-    max-width: 900px;
-  }
-  .calendar-and-detail-wrapper {
-    flex-direction: column; /* 작은 화면에서는 세로 배치 */
-    gap: 20px; /* 세로 배치 시 간격 */
-  }
-  .calendar-wrapper, .daily-detail-wrapper {
-    width: 100%;
-    min-width: unset;
-    padding: 20px; /* 모바일 패딩 조정 */
-  }
-  /* 모바일에서 DailyStudyDetail 섹션의 높이 고정 해제 */
-  .daily-detail-wrapper {
-    min-height: unset;
-  }
-}
-
-@media (max-width: 768px) {
-  .report-banner-section {
-    margin-bottom: 25px;
-  }
-  .report-container {
-    padding: 20px;
-    gap: 20px;
-    max-width: 100%;
-  }
-  .tab-buttons {
-    margin: 0 auto 20px auto;
-    padding: 0;
-    max-width: 280px;
-  }
-  .tab-button {
-    padding: 8px 10px;
-    font-size: 0.9rem;
-  }
-  .section-title {
-    font-size: 1.5rem;
-  }
-  .section-description {
-    font-size: 0.9rem;
-  }
-  .report-section {
-    padding: 20px;
-    gap: 15px;
-  }
-  .logged-out-prompt {
-    padding: 40px 20px;
-    margin-top: 50px;
-  }
-  .mogwi-character-small {
-    width: 100px;
-    margin-bottom: 15px;
-  }
-  .logged-out-message {
-    font-size: 1.3rem;
-    margin-bottom: 25px;
-    gap: 10px;
-  }
-  .logged-out-message .fas {
-    font-size: 1.8rem;
-  }
-  .login-button {
-    padding: 12px 25px;
-    font-size: 1.1rem;
-  }
-  .calendar-and-detail-wrapper {
-    gap: 20px;
-  }
-  .daily-detail-wrapper {
-    padding: 20px; /* 모바일에서 다시 패딩 적용 */
-    min-height: 400px; /* 모바일에서의 최소 높이 조정 */
-  }
-  .section-title-daily-detail {
-    font-size: 1.2rem;
-  }
-  .mogwi-daily-detail-character {
-    width: 80px;
-  }
-  .calendar-and-detail-wrapper {
-    min-height: 400px;
-  }
-  .daily-detail-wrapper {
-    height: 400px;
-  }
-  .calendar-wrapper {
-    height: 400px;
-  }
-}
-
-@media (max-width: 480px) {
-  .section-title-daily-detail {
-    font-size: 1rem;
-  }
+  margin-bottom: 40px;
 }
 </style>

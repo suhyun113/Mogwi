@@ -180,7 +180,7 @@ const onRegister = async () => {
   }
 
   try {
-    const res = await axios.post('/api/register', {
+    const res = await axios.post('/api/auth/register', {
       userid: userid.value,
       userpass: userpass.value,
       username: username.value,
@@ -197,8 +197,25 @@ const onRegister = async () => {
       errorMessage.value = '회원가입 실패'
     }
   } catch (e) {
-    console.error(e)
-    errorMessage.value = '서버 오류가 발생했습니다.'
+    console.error('회원가입 요청 오류:', e); // 더 자세한 오류 로깅
+    // 백엔드에서 400 BAD_REQUEST와 같은 HTTP 오류 코드를 보냈을 때 처리 ⭐
+    if (e.response) {
+      // 서버가 응답을 했고, 응답 상태 코드가 2xx 범위를 벗어날 때
+      if (e.response.data && e.response.data.message) {
+        // 백엔드에서 정의한 'message' 필드를 사용
+        errorMessage.value = e.response.data.message;
+      } else if (e.response.status === 400) {
+        errorMessage.value = '입력값이 올바르지 않습니다. 다시 확인해주세요.';
+      } else {
+        errorMessage.value = `서버 응답 오류: ${e.response.status}`;
+      }
+    } else if (e.request) {
+      // 요청이 전송되었지만, 응답을 받지 못했을 때 (네트워크 오류 등)
+      errorMessage.value = '서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.';
+    } else {
+      // 요청을 설정하는 중에 발생한 오류
+      errorMessage.value = '회원가입 요청 중 알 수 없는 오류가 발생했습니다.';
+    }
   }
 }
 </script>

@@ -1,9 +1,15 @@
 <template>
-  <button class="start-button" @click="$emit('click')">시작</button>
+  <button class="start-button" @click="handleClick">시작</button>
 </template>
 
 <script>
-export default {}
+export default {
+  methods: {
+    handleClick() {
+      this.$emit('click');
+    }
+  }
+}
 </script>
 
 <style scoped>

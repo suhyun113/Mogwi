@@ -287,9 +287,10 @@ public class SolveController {
      * POST /api/solve/start-study
      *
      * @param data 사용자 ID (userId)와 문제 ID (problemId)를 포함하는 맵
-     * @return 문제 학습 시작 결과 (problemStatus: 'new' 또는 기존 상태)
+     * @return 문제 학습 시작 결과 (problemStatus: "" 또는 기존 상태)
      */
     @PostMapping("/solve/start-study")
+    @Transactional
     public ResponseEntity<Map<String, Object>> initiateProblemStudy(@RequestBody Map<String, Object> data) {
         String userId = (String) data.get("userId");
         Long problemId = ((Number) data.get("problemId")).longValue();
@@ -297,55 +298,63 @@ public class SolveController {
         log.info("initiateProblemStudy 호출됨: userId={}, problemId={}", userId, problemId);
 
         if (userId == null || userId.trim().isEmpty() || problemId == null) {
-            log.warn("initiateProblemStudy: 유효하지 않은 입력값입니다. userId: {}, problemId: {}", userId, problemId);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("status", "ERROR", "message", "사용자 ID 또는 문제 ID가 누락되었습니다."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", "ERROR", "message", "사용자 ID 또는 문제 ID가 누락되었습니다."));
         }
 
         Long internalUserId;
         try {
             internalUserId = getInternalUserId(userId);
         } catch (NoResultException e) {
-            log.warn("initiateProblemStudy: 사용자 ID '{}'를 찾을 수 없음.", userId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("status", "ERROR", "message", "사용자를 찾을 수 없습니다."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "ERROR", "message", "해당 userId에 해당하는 유저가 존재하지 않습니다."));
         } catch (Exception e) {
-            log.error("initiateProblemStudy: 사용자 ID 조회 중 예상치 못한 오류 (userId: {}): {}", userId, e.getMessage(), e);
+            log.error("서버 내부 오류 발생: 사용자 ID 조회 실패 - {}", e.getMessage(), e);
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", "서버 오류로 사용자 조회에 실패했습니다."));
         }
 
         try {
-            // user_problem_status에서 해당 사용자와 문제에 대한 레코드가 있는지 확인
-            // 단일 컬럼(problem_status)을 선택하므로 String.class를 명시하여 List<String>으로 받도록 변경
-            List<String> existingProblemStatusResult = entityManager.createNativeQuery(
-                            "SELECT problem_status FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2", String.class) // <--- 이 부분 수정
+            List<String> result = entityManager.createNativeQuery(
+                            "SELECT problem_status FROM user_problem_status WHERE user_id = ?1 AND problem_id = ?2", String.class)
                     .setParameter(1, internalUserId)
                     .setParameter(2, problemId)
                     .getResultList();
 
-            String currentProblemStatus;
-            if (existingProblemStatusResult.isEmpty()) {
-                // 레코드가 없으면 새로 생성 (problem_status는 'new', is_liked/is_scrapped는 0으로 기본값 설정)
+            String finalStatus;
+
+            if (result.isEmpty()) {
+                // 상태가 없으면 'new'로 저장하되, 응답은 ""로 (모달 표시 목적)
                 entityManager.createNativeQuery(
-                                "INSERT INTO user_problem_status (user_id, problem_id, problem_status, is_liked, is_scrapped, created_at, updated_at) VALUES (?1, ?2, 'new', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
+                                "INSERT INTO user_problem_status (user_id, problem_id, problem_status, is_liked, is_scrapped, created_at, updated_at) " +
+                                        "VALUES (?1, ?2, 'new', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
                         .setParameter(1, internalUserId)
                         .setParameter(2, problemId)
                         .executeUpdate();
-                currentProblemStatus = "new";
-                log.info("새로운 user_problem_status 레코드 생성됨: userId={}, problemId={}, status='new'", internalUserId, problemId);
+
+                log.info("신규 user_problem_status 레코드 삽입 완료");
+                finalStatus = ""; // ✅ 프론트가 모달 뜨게
             } else {
-                // 레코드가 이미 존재하면 현재 상태 반환
-                // 이미 List<String>으로 받으므로 직접 첫 번째 요소 사용
-                currentProblemStatus = existingProblemStatusResult.get(0); // <--- 이 부분 수정
-                log.info("기존 user_problem_status 레코드 조회됨: userId={}, problemId={}, status='{}'", internalUserId, problemId, currentProblemStatus);
+                // 이미 있으면 상태만 'new'로 덮어쓰기
+                entityManager.createNativeQuery(
+                                "UPDATE user_problem_status SET problem_status = 'new', updated_at = CURRENT_TIMESTAMP WHERE user_id = ?1 AND problem_id = ?2")
+                        .setParameter(1, internalUserId)
+                        .setParameter(2, problemId)
+                        .executeUpdate();
+
+                log.info("기존 레코드 상태를 'new'로 업데이트 완료");
+                finalStatus = "new"; // ✅ 프론트는 바로 페이지 이동
             }
 
-            log.info("initiateProblemStudy 응답: problemStatus='{}'", currentProblemStatus);
-            return ResponseEntity.ok(Map.of("status", "OK", "problemStatus", currentProblemStatus));
+            return ResponseEntity.ok(Map.of("status", "OK", "problemStatus", finalStatus));
 
         } catch (Exception e) {
-            log.error("initiateProblemStudy: 문제 학습 시작 중 오류 발생 (problemId: {}, userId: {}): {}", problemId, userId, e.getMessage(), e);
+            log.error("initiateProblemStudy: 학습 상태 처리 중 오류 발생 - {}", e.getMessage(), e);
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
         }
     }
+
 }

@@ -62,16 +62,16 @@ export default {
   width: 100%;
   height: 100%;
   flex-grow: 1;
-  gap: 10px;
-  padding-top: 15px; /* 10px에서 15px로 증가 */
+  gap: 4px;
+  padding-top: 15px;
 }
 
 .selected-date-display {
   font-size: 1.3rem;
   font-weight: 600;
   color: white;
-  margin-bottom: 5px;
-  margin-top: 10px; /* 0에서 10px로 변경하여 더 아래로 내림 */
+  margin-bottom: 0;
+  margin-top: 10px;
 }
 
 .study-summary-tags {
@@ -92,11 +92,10 @@ export default {
 }
 
 .tag {
-  font-size: 0.9rem; /* 폰트 크기를 1rem에서 0.9rem으로 줄임 */
-  font-weight: 500;
-  padding: 6px 12px; /* 패딩을 8px 15px에서 6px 12px로 줄임 */
-  border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem;
+  font-weight: 550;
+  padding: 8px 16px;
+  border-radius: 10px;
   margin-top: 15px;
 }
 
@@ -116,9 +115,14 @@ export default {
 }
 
 .count {
-  font-size: 1.1rem; /* 폰트 크기를 1.2rem에서 1.1rem으로 줄임 */
+  font-size: 1.15rem;
   font-weight: 700;
   color: white;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  top: 8px;
 }
 
 .count.perfect-count-color {
@@ -137,5 +141,17 @@ export default {
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
   margin-top: 5px; /* 상단 마진 추가 */
+}
+
+@media (min-width: 1200px) {
+  .study-summary-tags {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .study-summary-tags {
+    margin-bottom: 18px;
+  }
 }
 </style>

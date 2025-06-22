@@ -3,49 +3,59 @@
     <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
     <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
 
-    <div v-else-if="!isLoggedIn" class="logout-prompt">
-      <p class="logout-message">
-        <i class="fas fa-lock"></i> 문제 생성은 로그인 후 이용 가능합니다.
-      </p>
-      <button @click="showLoginModal = true" class="login-button">로그인</button>
-    </div>
-    <div v-else class="create-container">
-      <ProblemForm
-        v-model:title="problem.title"
-        v-model:isPublic="problem.is_public"
-        v-model:selectedTags="problem.selectedTags"
-        v-model:description="problem.description"
-        :allCategories="allCategories"
-      />
+    <div class="content-wrapper" :class="{ blurred: !isLoggedIn }">
+      <div class="create-container">
+        <ProblemForm
+          v-model:title="problem.title"
+          v-model:isPublic="problem.is_public"
+          v-model:selectedTags="problem.selectedTags"
+          v-model:description="problem.description"
+          :allCategories="allCategories"
+          :disabled="!isLoggedIn"
+        />
 
-      <div class="card-section">
-        <h2 class="section-title">학습 카드 추가</h2>
-        <p class="section-description">질문과 정답을 입력하고, 필요하다면 이미지를 첨부해보세요.</p>
-        <div v-for="(card, index) in problem.cards" :key="card.id" class="card-item-wrapper">
-          <CardInput
-            :card="card"
-            :index="index"
-            @update:question="value => updateCardField(index, 'question', value)"
-            @update:answer="value => updateCardField(index, 'answer', value)"
-            @update:image_url="value => updateCardField(index, 'image_url', value)"
-            @update:image_file="file => handleImageFile(index, file)"
-            @remove-card="removeCard(index)"
-          />
+        <div class="card-section">
+          <h2 class="section-title">학습 카드 추가</h2>
+          <p class="section-description">질문과 정답을 입력하고, 필요하다면 이미지를 첨부해보세요.</p>
+          <div v-for="(card, index) in problem.cards" :key="card.id" class="card-item-wrapper">
+            <CardInput
+              :card="card"
+              :index="index"
+              @update:question="value => updateCardField(index, 'question', value)"
+              @update:answer="value => updateCardField(index, 'answer', value)"
+              @update:image_url="value => updateCardField(index, 'image_url', value)"
+              @update:image_file="file => handleImageFile(index, file)"
+              @remove-card="removeCard(index)"
+              :disabled="!isLoggedIn"
+            />
+          </div>
+          <button @click="addCard" class="add-card-btn" :disabled="!isLoggedIn">
+            <span class="icon">+</span> 카드 추가
+          </button>
         </div>
-        <button @click="addCard" class="add-card-btn">
-          <span class="icon">+</span> 카드 추가
-        </button>
-      </div>
 
-      <div class="actions">
-        <p v-if="submitError" class="error-msg">{{ submitError }}</p>
-        <button
-          @click="createProblem"
-          :disabled="!isFormValid || isUploadingImages"
-          class="create-problem-btn"
-        >
-          {{ isUploadingImages ? '이미지 업로드 중...' : '문제 생성하기' }}
-        </button>
+        <div class="actions">
+          <p v-if="submitError" class="error-msg">{{ submitError }}</p>
+          <button
+            @click="createProblem"
+            :disabled="!isFormValid || isUploadingImages"
+            class="create-problem-btn"
+          >
+            {{ isUploadingImages ? '이미지 업로드 중...' : '문제 생성하기' }}
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="!isLoggedIn" class="login-overlay">
+      <div class="overlay-content">
+        <img src="@/assets/mogwi-look.png" alt="모귀 캐릭터" class="overlay-mogwi" />
+        <h2 class="overlay-title">문제 생성을 위해 로그인이 필요해요!</h2>
+        <p class="overlay-description">로그인하고 나만의 문제집을 만들어 공유해보세요.</p>
+        <div class="overlay-actions">
+          <button @click="openLoginModal" class="action-button login-button">로그인</button>
+          <button @click="openRegisterModal" class="action-button register-button">회원가입</button>
+        </div>
       </div>
     </div>
 
@@ -61,15 +71,15 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import ProblemForm from '@/components/Create/ProblemForm.vue';
 import CardInput from '@/components/Create/CardInput.vue';
-import LoginModal from '@/components/Login/LoginModal.vue'; // Assume your LoginModal is here
-import RegisterModal from '@/components/Register/RegisterModal.vue'; // Assume your RegisterModal is here
+import LoginModal from '@/components/Login/LoginModal.vue';
+import RegisterModal from '@/components/Register/RegisterModal.vue';
 
 export default {
   components: {
     ProblemForm,
     CardInput,
     LoginModal,
-    RegisterModal // Register the RegisterModal component
+    RegisterModal
   },
   setup() {
     const store = useStore();
@@ -93,7 +103,6 @@ export default {
       cards: [{ id: 1, question: '', answer: '', image_url: '', image_file: null }]
     });
 
-    // Modal state
     const showLoginModal = ref(false);
     const showRegisterModal = ref(false);
 
@@ -223,11 +232,11 @@ export default {
           }))
         };
 
-        const response = await axios.post('/api/problems', payload);
+        const response = await axios.post('/api/problem', payload);
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 생성되었습니다!');
-          router.push('mystudy');
+          router.push('/');
         } else {
           submitError.value = response.data.message || '문제 생성에 실패했습니다.';
         }
@@ -243,14 +252,12 @@ export default {
       }
     };
 
-    // No longer redirects, just opens the modal
-    // This function will be called by the new "로그인" button in the template
     const openLoginModal = () => {
       showLoginModal.value = true;
     };
 
     const openRegisterModal = () => {
-      showLoginModal.value = false; // Close login modal first
+      showLoginModal.value = false;
       showRegisterModal.value = true;
     };
 
@@ -269,7 +276,7 @@ export default {
       } else {
         // If the user logs in while on this page (e.g., via the modal), refresh categories.
         fetchCategories();
-        showLoginModal.value = false; // Close modal if login was successful
+        showLoginModal.value = false;
       }
     }, { immediate: true });
 
@@ -287,8 +294,8 @@ export default {
       handleImageFile,
       createProblem,
       isLoggedIn,
-      showLoginModal, // Expose modal state
-      openLoginModal, // Expose function to open modal (called by the template button)
+      showLoginModal,
+      openLoginModal,
       showRegisterModal,
       openRegisterModal,
       closeRegisterModal
@@ -298,82 +305,99 @@ export default {
 </script>
 
 <style scoped>
-/* Your existing styles remain, add these new styles */
+/* Overlay and Blur Styles */
+.content-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: filter 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.content-wrapper.blurred {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+  transform: scale(1.01);
+}
 
-.logout-prompt {
+.login-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.overlay-content {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  border-radius: 10px;
+  padding: 25px 35px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  padding: 60px 30px;
-  width: 100%;
-  max-width: 500px;
-  margin: 80px auto;
-  border: 1px solid #eee;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.9);
 }
 
-.logout-message {
-  font-size: 1.5rem;
+.overlay-mogwi {
+  width: 120px;
+  margin-bottom: 20px;
+}
+
+.overlay-title {
+  font-size: 1.4rem;
+  font-weight: 700;
   color: #4a1e77;
-  margin-bottom: 30px;
+  margin-bottom: 12px;
+}
+
+.overlay-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 25px;
+  max-width: 400px;
   line-height: 1.6;
+}
+
+.overlay-actions {
   display: flex;
-  align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
-.logout-message .fas {
-  font-size: 2rem;
-  color: #8c5dff;
-}
-
-/* Renamed from .login-button to clarify it's for opening the modal, not submitting a form */
-.login-button {
-  background-image: linear-gradient(to right, #8c5dff 0%, #a471ff 100%);
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 10px;
-  font-size: 1.2rem;
-  font-weight: bold;
+.action-button {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(140, 93, 255, 0.4);
+  transition: background-color 0.2s ease;
+  border: none;
+  min-width: 120px;
 }
-
+.login-button {
+  background-color: #8c5dff;
+  color: white;
+}
 .login-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(140, 93, 255, 0.6);
-  background-position: right center;
+  background-color: #794cff;
+}
+.register-button {
+  background-color: #ffffff;
+  color: #5a2e87;
+  border: 2px solid #a471ff;
+}
+.register-button:hover {
+  background-color: #f0e6ff;
 }
 
-/* Ensure the main container doesn't show when logged out */
-.create-view > .create-container {
-    display: v-bind("isLoggedIn ? 'block' : 'none'"); /* Hide form when logged out */
-}
-
-/* Adjust media queries for the new UI */
-@media (max-width: 768px) {
-  .logout-prompt {
-    padding: 40px 20px;
-    margin: 50px auto;
-  }
-  .logout-message {
-    font-size: 1.2rem;
-    gap: 10px;
-  }
-  .logout-message .fas {
-    font-size: 1.7rem;
-  }
-  .login-button {
-    padding: 12px 25px;
-    font-size: 1rem;
-  }
-}
+/* Remove old logout prompt styles */
 
 /* The rest of your existing styles below */
 .create-view {
@@ -381,23 +405,25 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
-  background-color: #fdf8f4;
+  background-color: #f7f3ff;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
 .create-container {
   background: white;
-  border-radius: 0;
+  border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   padding: 40px;
   width: 100%;
   max-width: 800px;
   margin-bottom: 20px;
   margin-top: 20px;
-  border: 1px solid #eee;
+  border: 1.5px solid #e0d0ff;
 }
 
 .loading-message, .error-message {

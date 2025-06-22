@@ -6,39 +6,26 @@
         <button class="close-btn" @click="closeModal">×</button>
       </div>
       <form @submit.prevent="saveProfile">
-        <!-- 프로필 이미지 영역 제거 -->
-        <!-- <div class="profile-image-container">
-          <img src="@/assets/icons/default-profile.png" alt="프로필 이미지" class="profile-image" />
-          <div class="camera-icon">
-            <i class="fas fa-camera"></i>
-          </div>
-        </div> -->
-
-        <!-- 이메일 입력 필드 -->
         <div class="input-group">
           <label for="email" class="input-label">이메일</label>
           <input type="email" id="email" v-model="form.email" placeholder="이메일 주소" disabled class="disabled-input"/>
         </div>
 
-        <!-- 현재 비밀번호 입력 필드 -->
         <div class="input-group">
           <label for="current-password" class="input-label">현재 비밀번호</label>
           <input type="password" id="current-password" v-model="form.currentPassword" placeholder="현재 비밀번호 입력" />
         </div>
 
-        <!-- 새 비밀번호 입력 필드 -->
         <div class="input-group">
           <label for="new-password" class="input-label">새 비밀번호 (변경 시)</label>
           <input type="password" id="new-password" v-model="form.newPassword" placeholder="새 비밀번호 (변경 시 입력)" />
         </div>
 
-        <!-- 새 비밀번호 확인 필드 -->
         <div class="input-group">
           <label for="confirm-new-password" class="input-label">새 비밀번호 확인</label>
           <input type="password" id="confirm-new-password" v-model="form.confirmNewPassword" placeholder="새 비밀번호 확인" />
         </div>
 
-        <!-- 닉네임/이름 입력 필드 -->
         <div class="input-group">
           <label for="nickname" class="input-label required-label">이름</label>
           <input type="text" id="nickname" v-model="form.nickname" placeholder="닉네임" />
@@ -55,7 +42,8 @@
 </template>
 
 <script>
-import { ref, reactive, watch } from 'vue';
+import { reactive, ref, watch, onMounted } from 'vue';
+import axios from 'axios';
 
 export default {
   name: 'EditProfileModal',
@@ -67,6 +55,10 @@ export default {
     initialEmail: {
       type: String,
       default: '',
+    },
+    userId: { // userId prop은 여전히 필요합니다.
+      type: String,
+      required: true,
     },
   },
   emits: ['close', 'update-profile'],
@@ -81,30 +73,70 @@ export default {
 
     const errorMessage = ref('');
 
-    // props.initialEmail 또는 initialNickname이 변경될 때마다 폼 데이터 업데이트
     watch(() => props.initialEmail, (newEmail) => {
       form.email = newEmail;
-    });
+    }, { immediate: true });
     watch(() => props.initialNickname, (newNickname) => {
       form.nickname = newNickname;
+    }, { immediate: true });
+
+    // userId를 사용하여 사용자 정보를 불러오는 함수 (GET /api/user/{userId})
+    const fetchUserProfile = async () => {
+      if (!props.userId) { // userId가 없으면 조회하지 않음
+          errorMessage.value = '사용자 ID 정보가 없어 사용자 정보를 불러올 수 없습니다.';
+          return;
+      }
+      try {
+        // GET /api/user/{userId} 엔드포인트 호출
+        const response = await axios.get(`/api/user/${props.userId}`);
+        if (response.data.status === 'OK' && response.data.user) {
+          form.email = response.data.user.usermail; // 'usermail' 키로 이메일 받음
+          form.nickname = response.data.user.username; // 'username' 키로 닉네임 받음
+          // 비밀번호 필드는 초기화
+          form.currentPassword = '';
+          form.newPassword = '';
+          form.confirmNewPassword = '';
+        } else {
+          errorMessage.value = response.data.message || '사용자 정보를 불러오는데 실패했습니다.';
+        }
+      } catch (error) {
+        console.error('사용자 정보 불러오기 오류:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+            errorMessage.value = error.response.data.message;
+        } else {
+            errorMessage.value = '사용자 정보를 불러오는 중 서버 오류가 발생했습니다.';
+        }
+      }
+    };
+
+    onMounted(() => {
+      fetchUserProfile(); // 모달이 마운트될 때 사용자 정보 조회
     });
 
     const closeModal = () => {
       emit('close');
     };
 
-    const saveProfile = () => {
+    const saveProfile = async () => {
       errorMessage.value = '';
 
-      // 닉네임 필수 검사
+      // 닉네임 유효성 검사 (백엔드와 동일하게 필수 입력)
       if (!form.nickname.trim()) {
         errorMessage.value = '닉네임은 필수 입력입니다.';
         return;
       }
 
-      // 새 비밀번호 입력 시 확인 로직
-      if (form.newPassword) {
-        if (form.newPassword.length < 6) { // 최소 길이
+      const isPasswordChangeAttempt =
+        form.newPassword.trim() !== '' ||
+        form.currentPassword.trim() !== '' ||
+        form.confirmNewPassword.trim() !== '';
+
+      if (isPasswordChangeAttempt) {
+        if (!form.newPassword.trim()) {
+            errorMessage.value = '새 비밀번호를 변경하려면 새 비밀번호 필드를 입력해야 합니다.';
+            return;
+        }
+        if (form.newPassword.length < 6) {
             errorMessage.value = '새 비밀번호는 최소 6자 이상이어야 합니다.';
             return;
         }
@@ -112,36 +144,65 @@ export default {
           errorMessage.value = '새 비밀번호와 비밀번호 확인이 일치하지 않습니다.';
           return;
         }
-        if (!form.currentPassword) {
+        if (!form.currentPassword.trim()) {
           errorMessage.value = '비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다.';
           return;
         }
-      } else if (form.currentPassword || form.confirmNewPassword) {
-          // 새 비밀번호가 없는데 현재 비밀번호나 확인이 채워져 있으면 오류
-          errorMessage.value = '새 비밀번호를 입력하지 않으려면, 현재 비밀번호 및 확인 필드를 비워두세요.';
-          return;
+      } else {
+        // 새 비밀번호를 입력하지 않을 때 현재 비밀번호나 확인 필드가 채워져 있다면 오류
+        if (form.currentPassword.trim() !== '' || form.confirmNewPassword.trim() !== '') {
+            errorMessage.value = '새 비밀번호를 입력하지 않으려면, 현재 비밀번호 및 확인 필드를 비워두세요.';
+            return;
+        }
       }
 
-      // TODO: 실제 API 호출 로직 구현
-      // axios.put(`/api/user/profile`, form)
-      //   .then(response => {
-      //     if (response.data.status === 'success') {
-      //       emit('update-profile', { nickname: form.nickname, email: form.email }); // 부모 컴포넌트에 업데이트 알림
-      //       closeModal();
-      //     } else {
-      //       errorMessage.value = response.data.message || '프로필 업데이트 실패.';
-      //     }
-      //   })
-      //   .catch(error => {
-      //     console.error('프로필 업데이트 오류:', error);
-      //     errorMessage.value = '서버 오류가 발생했습니다. 다시 시도해주세요.';
-      //   });
+      try {
+        const payload = {
+          username: form.nickname, // 닉네임은 항상 전송
+        };
 
-      // 임시 성공 처리 (실제 API 호출 대체)
-      console.log('Profile update data:', form);
-      // 실제 업데이트 로직 대신 임시 성공 메시지
-      emit('update-profile', { nickname: form.nickname, email: form.email }); // 부모에게 업데이트 알림
-      closeModal();
+        if (form.newPassword.trim() !== '') { // 새 비밀번호가 있을 때만 현재 비밀번호와 새 비밀번호를 payload에 추가
+            payload.currentPassword = form.currentPassword;
+            payload.newPassword = form.newPassword;
+        }
+
+        // PUT /api/user/{userId}/profile 엔드포인트 호출
+        const response = await axios.put(`/api/user/${props.userId}/profile`, payload);
+
+        if (response.data.status === 'OK' || response.data.status === 'NO_CHANGE') {
+          // 백엔드에서 받은 메시지를 직접 alert (닉네임 변경, 비밀번호 변경, 둘 다 변경 등)
+          alert(response.data.message);
+          // 프로필 업데이트 성공 시 부모 컴포넌트에 알림 및 모달 닫기
+          emit('update-profile', { nickname: form.nickname, email: form.email });
+          closeModal();
+        } else {
+            // 'INVALID', 'NOT_FOUND', 'ERROR' 등 다른 상태는 errorMessage로 표시
+            errorMessage.value = response.data.message || '프로필 업데이트 실패.';
+        }
+
+      } catch (error) {
+        console.error('프로필 업데이트 오류:', error);
+        if (error.response) {
+          // HTTP 상태 코드가 400, 404, 500이거나 data.message가 있는 경우
+          if (error.response.data && error.response.data.message) {
+            errorMessage.value = error.response.data.message;
+          } else if (error.response.status === 400) {
+            errorMessage.value = '잘못된 요청입니다. 입력값을 확인해주세요.';
+          } else if (error.response.status === 404) {
+             errorMessage.value = '사용자 정보를 찾을 수 없습니다.';
+          } else if (error.response.status === 500) {
+            errorMessage.value = '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          } else {
+            errorMessage.value = `오류 발생: ${error.response.status} ${error.response.statusText}`;
+          }
+        } else if (error.request) {
+          // 요청이 전송되었지만 응답을 받지 못한 경우 (네트워크 문제)
+          errorMessage.value = '서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.';
+        } else {
+          // 요청 설정 중 오류가 발생한 경우
+          errorMessage.value = '요청을 보내는 중에 오류가 발생했습니다.';
+        }
+      }
     };
 
     return {

@@ -1,15 +1,9 @@
 <template>
-  <div class="mypage-view">
-    <div v-if="loading" class="loading-message">사용자 정보를 불러오는 중입니다...</div>
+  <div class="mypage-view-wrapper">
+    <div v-if="loading && isLoggedIn" class="loading-message">사용자 정보를 불러오는 중입니다...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
-    <div v-else-if="!isLoggedIn" class="logged-out-prompt">
-      <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character-small" />
-      <p class="logged-out-message">
-        <i class="fas fa-lock"></i> 마이페이지는 로그인 후 이용 가능합니다.
-      </p>
-      <button @click="showLoginModal = true" class="login-button">로그인</button>
-    </div>
-    <div v-else class="mypage-layout">
+    
+    <div class="mypage-layout">
       <aside class="sidebar">
         <h2 class="sidebar-title" style="display: none;">MY PAGE</h2>
         <nav class="sidebar-nav">
@@ -22,7 +16,7 @@
           <a href="#" :class="{ 'nav-item': true, 'active': activeSection === 'my-problems' }" @click.prevent="activeSection = 'my-problems'">
             <i class="fas fa-folder-open"></i> 내가 만든 문제
           </a>
-          <a href="#" class="nav-item nav-item-danger" @click.prevent="handleDeleteAccount">
+          <a v-if="isLoggedIn" href="#" class="nav-item nav-item-danger" @click.prevent="handleDeleteAccount">
             <i class="fas fa-user-times"></i> 회원 탈퇴
           </a>
         </nav>
@@ -32,26 +26,45 @@
         <section v-if="activeSection === 'profile'" class="content-section">
           <UserProfile
             :nickname="userNickname"
+            :userEmail="userEmail"
+            :isLoggedIn="isLoggedIn"
             @edit-info="showEditProfileModal = true"
           />
         </section>
 
-        <section v-else-if="activeSection === 'liked-scrapped'" class="content-section">
-          <LikedScrapSection
-            :likedProblems="likedProblems"
-            :scrapedProblems="scrapedProblems"
-            @go-to-problem="goToProblem"
-          />
-        </section>
+        <div v-else class="content-wrapper" :class="{ blurred: !isLoggedIn }">
+          <section v-if="activeSection === 'liked-scrapped'" class="content-section">
+            <LikedScrapSection
+              :likedProblems="likedProblems"
+              :scrapedProblems="scrapedProblems"
+              @go-to-problem="goToProblem"
+              :isAuthenticated="isLoggedIn"
+              :currentUserId="currentUserId"
+              @update-like="fetchMypageData"
+              @update-scrap="fetchMypageData"
+            />
+          </section>
 
-        <section v-else-if="activeSection === 'my-problems'" class="content-section">
-          <MyProblemSection
-            :myProblems="myProblems"
-            @go-to-problem="goToProblem"
-            @edit-problem="editProblem"
-            @delete-problem="deleteProblem"
-          />
-        </section>
+          <section v-else-if="activeSection === 'my-problems'" class="content-section">
+            <MyProblemSection
+              :myProblems="myProblems"
+              @go-to-problem="goToProblem"
+              @edit-problem="editProblem"
+              @delete-problem="fetchMypageData"
+              :isAuthenticated="isLoggedIn"
+              :currentUserId="currentUserId"
+            />
+          </section>
+
+          <div v-if="!isLoggedIn" class="content-login-prompt">
+            <img src="@/assets/mogwi-confused.png" alt="모귀 캐릭터" class="prompt-mogwi-character" />
+            <p class="prompt-message">로그인하시면<br>이용할 수 있는 기능이에요!</p>
+            <div class="prompt-actions">
+              <button @click="openLoginModal" class="action-button login-button">로그인</button>
+              <button @click="openRegisterModal" class="action-button register-button">회원가입</button>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
 
@@ -62,38 +75,29 @@
       {{ nicknameUpdateMessage }}
     </div>
 
-    <div v-if="showDeleteConfirmModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3 class="modal-title">
-            {{ deleteTarget === 'account' ? '회원 탈퇴 확인' : '문제 삭제 확인' }}
-        </h3>
-        <p class="modal-message">
-            {{ deleteTarget === 'account' ?
-                '정말로 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.' :
-                '정말로 이 문제를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' }}
-        </p>
-        <div class="modal-actions">
-          <button @click="deleteTarget === 'account' ? confirmDeleteAccount() : confirmDeleteProblem()" class="confirm-button">
-            {{ deleteTarget === 'account' ? '탈퇴하기' : '삭제하기' }}
-          </button>
-          <button @click="cancelDelete" class="cancel-button">취소</button>
-        </div>
-      </div>
-    </div>
-
     <EditProfileModal
       v-if="showEditProfileModal"
       :initialNickname="userNickname"
-      @close="showEditProfileModal = false"
+      :initialEmail="userEmail"
+      :userId="currentUserId" @close="showEditProfileModal = false"
+      @update-profile="handleProfileUpdateFromModal"
+    />
+
+    <DeleteAccountModal
+      v-if="showDeleteConfirmModal && deleteTarget === 'account'"
+      @confirm="confirmDeleteAccount"
+      @cancel="cancelDelete"
     />
   </div>
 </template>
 
 <script>
-// (Your existing script tag content goes here, no changes needed from the previous fix)
+/* eslint-disable vue/valid-v-else */
+/* eslint-disable vue/no-unused-components */
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 // 필요한 컴포넌트들을 import 합니다.
 import UserProfile from '@/components/Mypage/UserProfile.vue';
@@ -101,6 +105,7 @@ import LikedScrapSection from '@/components/Mypage/LikedScrapSection.vue';
 import MyProblemSection from '@/components/Mypage/MyProblemSection.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
+import DeleteAccountModal from '@/components/Mypage/DeleteAccountModal.vue';
 import EditProfileModal from '@/components/Mypage/EditProfileModal.vue';
 
 export default {
@@ -111,10 +116,13 @@ export default {
     MyProblemSection,
     LoginModal,
     RegisterModal,
+    DeleteAccountModal,
     EditProfileModal,
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
+
     const isLoggedIn = computed(() => !!store.state.store_userid);
     const currentUserId = computed(() => store.state.store_userid);
 
@@ -122,8 +130,9 @@ export default {
     const error = ref(null);
 
     const userNickname = ref('');
+    const userEmail = ref('');
     const likedProblems = ref([]);
-    const scrapedProblems = ref([]); // FIX: Ensure this is declared as a ref
+    const scrapedProblems = ref([]);
     const myProblems = ref([]);
 
     const activeSection = ref('profile');
@@ -132,8 +141,8 @@ export default {
     const showRegisterModal = ref(false);
     const showDeleteConfirmModal = ref(false);
     const showEditProfileModal = ref(false);
-    const deleteTarget = ref(null); // 'account' or 'problem'
-    const problemIdToDelete = ref(null); // 삭제할 문제의 ID
+    const deleteTarget = ref(null);
+    const problemIdToDelete = ref(null);
 
     const showNicknameUpdateMessage = ref(false);
     const nicknameUpdateMessage = ref('');
@@ -150,14 +159,42 @@ export default {
 
       try {
         const userResponse = await axios.get(`/api/user/${currentUserId.value}`);
-        userNickname.value = userResponse.data.nickname;
+        if (userResponse.data.status === 'OK' && userResponse.data.user) {
+          userNickname.value = userResponse.data.user.username;
+          userEmail.value = userResponse.data.user.usermail;
+        } else {
+          userNickname.value = '알 수 없음';
+          userEmail.value = '알 수 없음';
+        }
 
-        const likedScrapResponse = await axios.get(`/api/mypage/problems/liked-scraped/${currentUserId.value}`);
-        likedProblems.value = likedScrapResponse.data.likedProblems;
-        scrapedProblems.value = likedScrapResponse.data.scrapedProblems;
+        // 내가 좋아요 누른 문제만 조회
+        const likedResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyLiked=true`);
+        likedProblems.value = likedResponse.data.map(problem => ({
+          ...problem,
+          liked: problem.isLiked,
+          scrapped: problem.isScrapped,
+          likes: problem.totalLikes || 0,
+          scraps: problem.totalScraps || 0
+        }));
 
-        const myProblemsResponse = await axios.get(`/api/mypage/problems/my-created/${currentUserId.value}`);
-        myProblems.value = myProblemsResponse.data.myProblems;
+        // 내가 스크랩 누른 문제만 조회
+        const scrapResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyScrapped=true`);
+        scrapedProblems.value = scrapResponse.data.map(problem => ({
+          ...problem,
+          liked: problem.isLiked,
+          scrapped: problem.isScrapped,
+          likes: problem.totalLikes || 0,
+          scraps: problem.totalScraps || 0
+        }));
+
+        const myProblemsResponse = await axios.get(`/api/problem/detail?currentUserId=${currentUserId.value}&onlyMine=true`);
+        myProblems.value = myProblemsResponse.data.map(problem => ({
+          ...problem,
+          liked: problem.isLiked,
+          scrapped: problem.isScrapped,
+          likes: problem.totalLikes || 0,
+          scraps: problem.totalScraps || 0
+        }));
 
       } catch (err) {
         console.error('마이페이지 데이터 불러오기 실패:', err);
@@ -167,27 +204,25 @@ export default {
       }
     };
 
-    // 회원 탈퇴 확인 모달 띄우기
     const handleDeleteAccount = () => {
-      deleteTarget.value = 'account'; // 대상 설정
+      deleteTarget.value = 'account';
       showDeleteConfirmModal.value = true;
     };
 
-    // 삭제 취소 (공통)
     const cancelDelete = () => {
       showDeleteConfirmModal.value = false;
       deleteTarget.value = null;
-      problemIdToDelete.value = null; // 초기화
+      problemIdToDelete.value = null;
       nicknameUpdateMessage.value = '삭제 작업이 취소되었습니다.';
-      nicknameUpdateStatus.value = 'info'; // 정보성 메시지
+      nicknameUpdateStatus.value = 'info';
       showNicknameUpdateMessage.value = true;
       setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
     };
 
-    // 회원 탈퇴 실행
     const confirmDeleteAccount = async () => {
-      showDeleteConfirmModal.value = false; // 모달 닫기
-      deleteTarget.value = null; // 대상 초기화
+      showDeleteConfirmModal.value = false;
+      deleteTarget.value = null;
+
       if (!isLoggedIn.value) {
         nicknameUpdateMessage.value = '로그인 후 이용해주세요.';
         nicknameUpdateStatus.value = 'error';
@@ -195,18 +230,20 @@ export default {
         setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
         return;
       }
+
       try {
-        // 실제 회원 탈퇴 API 호출 (예시)
-        // await axios.delete(`/api/user/${currentUserId.value}/delete-account`);
-        // store.dispatch('logout'); // Vuex 스토어에서 로그아웃 처리
-        nicknameUpdateMessage.value = '회원 탈퇴가 성공적으로 처리되었습니다. (기능 미구현)';
-        nicknameUpdateStatus.value = 'success';
-        showNicknameUpdateMessage.value = true;
-        setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
-        // 페이지 새로고침 또는 로그인 페이지로 리디렉션
-        // window.location.reload(); // 또는 router.push('/login');
+        // 실제 사용자 삭제 API 호출
+        await axios.delete(`/api/user/${currentUserId.value}`);
+
+        alert('회원 탈퇴가 성공적으로 처리되었습니다.');
+
+        // 로그아웃 처리 및 메인으로 이동
+        store.dispatch('logout'); // 로그아웃 처리
+        router.push('/'); // 메인으로 이동
+
       } catch (err) {
         console.error('회원 탈퇴 실패:', err);
+
         nicknameUpdateMessage.value = '회원 탈퇴 중 오류가 발생했습니다. 다시 시도해주세요.';
         nicknameUpdateStatus.value = 'error';
         showNicknameUpdateMessage.value = true;
@@ -214,10 +251,9 @@ export default {
       }
     };
 
-    // 문제 삭제 실행
     const confirmDeleteProblem = async () => {
-      showDeleteConfirmModal.value = false; // 모달 닫기
-      deleteTarget.value = null; // 대상 초기화
+      showDeleteConfirmModal.value = false;
+      deleteTarget.value = null;
       if (!problemIdToDelete.value) {
         nicknameUpdateMessage.value = '삭제할 문제 ID를 찾을 수 없습니다.';
         nicknameUpdateStatus.value = 'error';
@@ -227,10 +263,11 @@ export default {
       }
 
       try {
-        await axios.delete(`/api/problems/${problemIdToDelete.value}`); // ProblemController의 API 사용
+        await axios.delete(`/api/problem/${problemIdToDelete.value}`);
         myProblems.value = myProblems.value.filter(p => p.id !== problemIdToDelete.value);
         nicknameUpdateMessage.value = '문제가 성공적으로 삭제되었습니다.';
         nicknameUpdateStatus.value = 'success';
+        await fetchMypageData(); // 삭제 후 자동 새로고침
       } catch (err) {
         console.error('문제 삭제 실패:', err);
         nicknameUpdateMessage.value = '문제 삭제에 실패했습니다. 다시 시도해주세요.';
@@ -240,10 +277,23 @@ export default {
         setTimeout(() => {
           showNicknameUpdateMessage.value = false;
         }, 3000);
-        problemIdToDelete.value = null; // 문제 ID 초기화
+        problemIdToDelete.value = null;
       }
     };
 
+    const goToProblem = (problemId) => {
+        router.push(`/problem/${problemId}`);
+    };
+
+    const editProblem = (problemId) => {
+        router.push(`/edit/${problemId}`);
+    };
+
+    const deleteProblem = (problemId) => {
+        deleteTarget.value = 'problem';
+        problemIdToDelete.value = problemId;
+        showDeleteConfirmModal.value = true;
+    };
 
     const openLoginModal = () => {
       showRegisterModal.value = false;
@@ -255,12 +305,24 @@ export default {
       showRegisterModal.value = true;
     };
 
+    const handleProfileUpdateFromModal = async (updatedData) => {
+      // Assuming updatedData contains { nickname, email }
+      userNickname.value = updatedData.nickname;
+      userEmail.value = updatedData.email;
+      // Optionally show a success message
+      nicknameUpdateMessage.value = '프로필 정보가 성공적으로 업데이트되었습니다.';
+      nicknameUpdateStatus.value = 'success';
+      showNicknameUpdateMessage.value = true;
+      setTimeout(() => { showNicknameUpdateMessage.value = false; }, 3000);
+      showEditProfileModal.value = false; // Close the modal
+    };
+
+
     onMounted(() => {
       fetchMypageData();
-      document.body.classList.add('hide-vertical-scroll');
     });
     onUnmounted(() => {
-      document.body.classList.remove('hide-vertical-scroll');
+      document.body.style.overflow = '';
     });
 
     watch(isLoggedIn, (newVal, oldVal) => {
@@ -269,6 +331,7 @@ export default {
           fetchMypageData();
         } else {
           userNickname.value = '';
+          userEmail.value = '';
           likedProblems.value = [];
           scrapedProblems.value = [];
           myProblems.value = [];
@@ -284,11 +347,13 @@ export default {
       error,
       isLoggedIn,
       userNickname,
+      userEmail,
       likedProblems,
-      scrapedProblems, 
+      scrapedProblems,
       myProblems,
       activeSection,
       showLoginModal,
+      currentUserId,
       showRegisterModal,
       openLoginModal,
       openRegisterModal,
@@ -302,18 +367,24 @@ export default {
       confirmDeleteProblem,
       cancelDelete,
       showEditProfileModal,
+      handleProfileUpdateFromModal,
+      goToProblem,
+      editProblem,
+      deleteProblem,
+      fetchMypageData // LikedScrapSection에서 좋아요/스크랩 업데이트 시 데이터 다시 불러오도록 노출
     };
   },
 };
 </script>
 
 <style>
-/* 전역 스타일: HTML 및 BODY에 적용하여 스크롤바를 없앱니다. */
+/* 전역 스타일: HTML 및 BODY에 적용하여 다른 페이지에서 스크롤이 정상 작동하도록 합니다. */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%; /* 뷰포트 높이 전체를 사용 */
     box-sizing: border-box; /* 모든 요소에 적용 (패딩/보더를 너비/높이에 포함) */
+    /* overflow: hidden; 제거 - 다른 페이지 스크롤 허용 */
 }
 
 *, *::before, *::after {
@@ -325,35 +396,65 @@ html, body {
 /* Google Fonts - Inter (or Pretendard if available via local import) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-.mypage-view {
+.mypage-view-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 20px 20px 40px 20px;
   background-color: #f7f3ff; /* 연한 보라색 배경 */
-  min-height: 100vh; /* 이 부분을 유지하면서 내부 콘텐츠가 넘치지 않게 합니다. */
   width: 100%;
   box-sizing: border-box;
   font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
-  /* overflow-y: auto;  필요시 이 부분은 개별 섹션에 적용하여 해당 섹션만 스크롤되게 할 수 있습니다. */
+  min-height: 100vh; /* 뷰포트 전체 높이를 차지 */
+  overflow-y: auto; /* **마이페이지 전체 세로 스크롤 추가** */
+  position: relative;
+  z-index: 1;
+}
+
+.mypage-view-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 4vw;
+  bottom: 9vh;
+  width: 50vw;
+  height: 50vw;
+  max-width: 700px;
+  max-height: 700px;
+  background-image: url('@/assets/mogwi-look.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: right bottom;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 컴포넌트들이 배경 위에 오도록 z-index 1 부여 */
+.mypage-layout,
+.logged-out-prompt,
+.alert-message,
+.LoginModal,
+.RegisterModal,
+.EditProfileModal,
+.DeleteAccountModal {
+  position: relative;
+  z-index: 1;
 }
 
 .mypage-layout {
   display: flex;
   width: 100%;
-  max-width: 100%;
-  background: transparent; /* 흰색 배경 제거 */
+  max-width: 1630px;
+  background: transparent;
   border-radius: 12px;
-  /* 변경: 그림자 및 테두리 제거 */
-  box-shadow: none; /* 그림자 제거 */
-  border: none; /* 테두리 제거 */
-  overflow: hidden;
-  /* min-height: 700px;  이 값을 제거하거나 `auto`로 변경하여 콘텐츠에 따라 높이 조절 */
-  height: calc(100vh - 80px); /* 뷰포트 높이에서 상하 패딩을 뺀 값으로 설정 */
-  align-items: flex-start; /* 메인 컨텐츠와 사이드바 상단 정렬 */
-  margin-left: 0;
+  box-shadow: none;
+  border: none;
+  align-items: flex-start;
+  margin-left: auto;
   margin-right: auto;
+  height: 100%;
+  margin-top: 60px;
 }
 
 @media (min-width: 1200px) {
@@ -366,21 +467,28 @@ html, body {
 
 /* Sidebar Styling */
 .sidebar {
-  flex: 0 0 250px;
-  background-color: transparent; /* 배경 제거 */
-  padding: 30px 20px;
-  border-right: 1px solid #efdfff;
+  flex: 0 0 300px;
+  background-color: transparent;
+  padding: 10px 20px 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 60px;
-  margin-left: 140px;
-  /* 높이 조정을 통해 부모와 동일하게 채우기 */
-  height: 100%;
+  margin-top: 10px;
+  margin-left: 60px;
+  height: auto;
+  position: sticky;
+  top: 40px;
+  overflow-y: visible;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Chrome, Safari, Opera 숨기기 */
+.sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 .sidebar-title {
-  /* 'MY PAGE' 영어 텍스트 제거 */
   display: none;
   font-size: 1.8rem;
   font-weight: 700;
@@ -397,6 +505,20 @@ html, body {
   flex-direction: column;
   width: 100%;
   gap: 8px;
+  padding-bottom: 40px;
+  height: 100%;
+  position: relative;
+}
+
+.sidebar-nav::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 0;
+  height: calc(100% + 400px); /* 메뉴 높이 + 매우 긴 연장 길이 */
+  border-right: 1px solid #efdfff;
+  pointer-events: none;
 }
 
 .nav-item {
@@ -463,24 +585,17 @@ html, body {
 /* Main Content Styling */
 .main-content {
   flex: 1;
-  padding: 0 40px 40px 40px;
+  padding: 0 60px 60px 24px;
   background-color: transparent;
-  margin-top: 100px;
-  height: calc(100% - 100px);
-  overflow-y: hidden !important;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Chrome, Safari, Opera 숨기기 */
-.main-content::-webkit-scrollbar {
-    display: none;
+  margin-top: 20px;
+  height: auto; /* 높이 자동 조절 */
 }
 
 .content-section {
   background: none;
   border-radius: 0;
   padding: 0;
+  margin-bottom: 40px;
 }
 
 /* General Messages */
@@ -490,66 +605,6 @@ html, body {
   margin-top: 50px;
   text-align: center;
   width: 100%;
-}
-
-/* Logged-out Prompt - 기존 디자인 유지 (모귀 캐릭터와 잘 어울림) */
-.logged-out-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  padding: 60px 40px;
-  width: 100%;
-  max-width: 600px;
-  margin-top: 80px;
-  border: 1px solid #e0d0ff;
-  height: auto; /* 높이를 콘텐츠에 맞게 조절 */
-}
-
-.mogwi-character-small {
-  width: 150px;
-  height: auto;
-  margin-bottom: 20px;
-}
-
-.logged-out-message {
-  font-size: 1.6rem;
-  color: #4a1e77;
-  margin-bottom: 30px;
-  line-height: 1.6;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-weight: 600;
-}
-
-.logged-out-message .fas {
-  font-size: 2.2rem;
-  color: #8c5dff;
-}
-
-/* 로그인 버튼 스타일도 통일된 보라색 그라데이션으로 변경 */
-.login-button {
-  background-image: linear-gradient(to right, #8a2be2 0%, #a471ff 100%);
-  color: white;
-  border: none;
-  padding: 15px 35px;
-  border-radius: 10px;
-  font-size: 1.25rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
-}
-
-.login-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6);
-  background-position: right center;
 }
 
 /* Alert Message (bottom fixed) */
@@ -671,23 +726,31 @@ html, body {
     flex-direction: column;
     max-width: 700px;
     height: auto; /* 모바일에서는 높이 자동 조절 */
+    margin-top: 0;
   }
 
   .sidebar {
     flex: none;
     width: 100%;
-    border-right: none;
+    /* border-right: none; */
     border-bottom: 1px solid #efdfff;
-    padding: 20px;
-    margin-top: 0; /* 모바일에서 마진 제거 */
-    margin-left: 0; /* 모바일에서 마진 제거 */
-    height: auto; /* 모바일에서 높이 자동 조절 */
+    padding: 10px 20px 40px 20px;
+    margin-top: 0;
+    margin-left: 0;
+    height: auto;
+    position: static;
+    overflow-y: visible;
   }
 
   .sidebar-nav {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    padding-bottom: 0;
+  }
+
+  .sidebar-nav::after {
+    display: none;
   }
 
   .nav-item {
@@ -708,7 +771,7 @@ html, body {
 
   .main-content {
     padding: 30px 20px;
-    margin-top: 0; /* 모바일에서 마진 제거 */
+    margin-top: 30px; /* 모바일에서 섹션을 조금 더 아래로 */
     height: auto; /* 모바일에서 높이 자동 조절 */
     overflow-y: visible; /* 모바일에서는 스크롤 숨기지 않음 */
   }
@@ -721,7 +784,7 @@ html, body {
 }
 
 @media (max-width: 576px) {
-  .mypage-view {
+  .mypage-view-wrapper {
     padding: 20px 10px;
   }
 
@@ -750,7 +813,48 @@ html, body {
   }
 
   .main-content {
-    padding: 20px 15px;
+    padding: 0 10px !important;
+    width: 100% !important;
+    margin-top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+
+  .content-section {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 480px;
+    float: none;
+    display: block;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: none !important;
+  }
+
+  .user-profile-section,
+  .my-problems-section,
+  .liked-scrap-section {
+    padding: 20px 10px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    height: 100%;
+    overflow-y: visible;
+  }
+
+  .tab-content {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    height: 100%;
+  }
+  .problem-list {
+    overflow-y: auto;
+    max-height: 60vh;
+    padding-bottom: 10px;
   }
 
   .page-title {
@@ -808,5 +912,91 @@ html, body {
     padding: 10px 20px;
     font-size: 0.9rem;
   }
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .user-profile-section {
+    margin-left: 128px !important;
+    width: calc(100% - 128px) !important;
+    align-items: flex-start;
+  }
+}
+
+.content-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 500px; /* 로그인 프롬프트가 잘리지 않도록 최소 높이 설정 */
+}
+
+.content-wrapper.blurred > .content-section {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.content-login-prompt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+}
+
+.prompt-mogwi-character {
+  width: 130px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.prompt-message {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a1e77;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.action-button {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+.login-button {
+  background-color: #8c5dff;
+  color: white;
+}
+.login-button:hover {
+  background-color: #794cff;
+}
+.register-button {
+  background-color: #ffffff;
+  color: #5a2e87;
+  border: 2px solid #a471ff;
+}
+.register-button:hover {
+  background-color: #f0e6ff;
 }
 </style>

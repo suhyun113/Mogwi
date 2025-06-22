@@ -143,11 +143,21 @@ export default {
 
 <style scoped>
 .study-calendar {
-  width: 100%;
-  padding: 0;
+  width: 550px;
+  min-width: 550px;
+  max-width: 550px;
+  padding: 0 0 12px 0;
   border: 2px solid #e0d0ff;
   border-radius: 12px;
   background-color: white;
+  margin-bottom: 10px;
+  margin: 0;
+}
+
+@media (min-width: 1200px) {
+  .study-calendar {
+    margin-bottom: 32px;
+  }
 }
 
 .calendar-header {
@@ -184,9 +194,10 @@ export default {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, 70px);
+  grid-auto-rows: 60px;
   gap: 5px;
-  padding: 0 15px 15px;
+  padding: 0 15px 0;
 }
 
 .day-label {
@@ -278,7 +289,12 @@ export default {
 
 @media (max-width: 768px) {
   .study-calendar {
-    padding: 0;
+    width: 100%;
+    min-width: 320px;
+    max-width: 100%;
+    height: 360px;
+    min-height: 320px;
+    max-height: 400px;
   }
   .calendar-header {
     margin-bottom: 15px;
