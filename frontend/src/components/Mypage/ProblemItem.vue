@@ -356,7 +356,7 @@ export default {
 }
 
 .status-none {
-  padding: 39px;
+  padding: 1px;
 }
 
 
