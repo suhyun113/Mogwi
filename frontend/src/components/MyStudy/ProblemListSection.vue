@@ -1,14 +1,14 @@
 <template>
+    <h2 class="problem-list-title">
+        <template v-if="isLoggedIn">
+            <span class="username-underline">{{ username }}</span>님의 학습 현황
+        </template>
+        <template v-else>
+            학습 현황
+        </template>
+    </h2>
     <div class="problem-list-section">
         <div class="section-header">
-            <h2 class="section-title">
-                <template v-if="isLoggedIn">
-                    <span class="username-underline">{{ username }}</span>님의 학습 현황
-                </template>
-                <template v-else>
-                    학습 현황
-                </template>
-            </h2>
             <div class="header-buttons">
                 <button
                     v-if="!isSelectionMode"
@@ -383,12 +383,14 @@ export default {
     margin-bottom: 0;
 }
 
-.section-title {
+.problem-list-title {
     color: #5a2e87;
     font-size: 1.8rem;
     font-weight: 600;
-    margin: 5;
-    text-align: left; /* Ensure left alignment */
+    margin-bottom: 28px;
+    margin-top: 0;
+    padding-bottom: 0;
+    text-align: left;
 }
 
 /* Add style for the username underline */
