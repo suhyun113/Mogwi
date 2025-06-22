@@ -461,6 +461,9 @@ export default {
 
 .nav-button.finish-button {
   background-color: #7a4cb8; /* 더 진한 보라색 */
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 1.2rem;
 }
 
 .nav-button.finish-button:hover {
