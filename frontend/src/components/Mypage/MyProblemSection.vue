@@ -245,7 +245,7 @@ export default {
     max-width: 180px;
     padding: 8px 16px;
     font-size: 1rem;
-    border-radius: 10px;
+    border-radius: 5px;
   }
 }
 @media (min-width: 900px) {
