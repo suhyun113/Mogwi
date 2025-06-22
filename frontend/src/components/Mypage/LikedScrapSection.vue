@@ -166,6 +166,9 @@ export default {
   padding: 0;
   box-shadow: none;
   margin-left: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .dual-column-layout {
@@ -193,11 +196,11 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 0 auto 20px auto;
   gap: 16px;
   flex-direction: row;
   flex-wrap: nowrap;
-  width: 100%;
+  width: auto;
   overflow-x: auto;
   padding: 10px 0 18px 0;
 }
@@ -211,7 +214,6 @@ export default {
   padding: 8px 16px;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: 5px;
   border: none;
   background: #ede3ff;
   color: #5a2e87;
@@ -221,6 +223,12 @@ export default {
   flex-shrink: 0;
   cursor: pointer;
   letter-spacing: 0.01em;
+  border-radius: 5px;
+  margin-right: 16px;
+}
+
+.tab-button:last-child {
+  margin-right: 0;
 }
 
 .tab-button.active {
