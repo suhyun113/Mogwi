@@ -388,7 +388,7 @@ export default {
     color: #5a2e87;
     font-size: 1.8rem;
     font-weight: 600;
-    margin-bottom: 28px;
+    margin-bottom: 40px;
     margin-top: 0;
     padding-bottom: 0;
     text-align: left;
