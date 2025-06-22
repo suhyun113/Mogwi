@@ -203,11 +203,14 @@ export default {
 }
 
 .tab-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
   min-width: 110px;
   max-width: 180px;
   align-items: center;
   padding: 8px 16px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   border-radius: 5px;
   border: none;
@@ -219,6 +222,7 @@ export default {
   flex-shrink: 0;
   cursor: pointer;
   letter-spacing: 0.01em;
+  margin-right: 10px;
 }
 
 .tab-button.active {
@@ -229,6 +233,10 @@ export default {
 .tab-button:hover:not(.active) {
   background: #d6c2f7;
   color: #5a2e87;
+}
+
+.tab-button:last-child {
+  margin-right: 0;
 }
 
 .problem-list {

@@ -191,7 +191,7 @@ export default {
   min-width: 110px;
   max-width: 180px;
   padding: 10px 18px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   border: none;
   background: #ede3ff;
@@ -245,7 +245,7 @@ export default {
     min-width: 110px;
     max-width: 180px;
     padding: 8px 16px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     border-radius: 5px;
   }
   .problem-list-title {
