@@ -222,7 +222,7 @@ export default {
   flex-shrink: 0;
   cursor: pointer;
   letter-spacing: 0.01em;
-  margin-right: 10px;
+  margin-right: -5px;
 }
 
 .tab-button.active {
@@ -267,6 +267,28 @@ export default {
   }
   .tabs, .tab-content {
     display: block;
+  }
+  .liked-scrap-section {
+    margin-left: 128px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - 128px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tabs {
+    justify-content: center !important;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+  }
+  .tab-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
 }
 @media (min-width: 900px) {

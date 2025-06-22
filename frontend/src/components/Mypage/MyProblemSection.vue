@@ -230,16 +230,27 @@ export default {
   .tabs, .tab-content {
     display: block;
   }
+  .my-problems-section {
+    margin-left: 128px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - 128px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .tabs {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: center;
+    justify-content: center !important;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+  }
+  .tab-content {
+    display: flex;
+    flex-direction: column;
     align-items: center;
     width: 100%;
-    gap: 14px;
-    overflow-x: auto;
-    padding: 8px 0 14px 0;
   }
   .tab-button {
     min-width: 110px;
