@@ -871,4 +871,11 @@ html, body {
     font-size: 0.9rem;
   }
 }
+
+@media (max-width: 900px) {
+  .main-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
 </style>

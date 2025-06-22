@@ -155,4 +155,12 @@ export default {
   /* .nickname-input { ... } */
   /* .save-nickname-button, .cancel-nickname-button { ... } */
 }
+
+@media (min-width: 900px) {
+  .user-profile-section {
+    margin-left: 40px;
+    width: calc(100% - 40px);
+    align-items: flex-start;
+  }
+}
 </style>

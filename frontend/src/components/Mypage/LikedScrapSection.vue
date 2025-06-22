@@ -298,6 +298,11 @@ export default {
   .dual-column-layout {
     display: flex;
   }
+  .liked-scrap-section {
+    margin-left: 40px;
+    width: calc(100% - 40px);
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 768px) {

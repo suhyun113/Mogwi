@@ -270,6 +270,11 @@ export default {
   .dual-column-layout {
     display: flex;
   }
+  .my-problems-section {
+    margin-left: 40px;
+    width: calc(100% - 40px);
+    align-items: flex-start;
+  }
 }
 
 .problem-list {
