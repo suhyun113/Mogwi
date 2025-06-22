@@ -92,11 +92,10 @@ export default {
 }
 
 .tag {
-  font-size: 0.9rem; /* 폰트 크기를 1rem에서 0.9rem으로 줄임 */
-  font-weight: 500;
-  padding: 6px 12px; /* 패딩을 8px 15px에서 6px 12px로 줄임 */
-  border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem;
+  font-weight: 550;
+  padding: 8px 16px;
+  border-radius: 10px;
   margin-top: 15px;
 }
 
