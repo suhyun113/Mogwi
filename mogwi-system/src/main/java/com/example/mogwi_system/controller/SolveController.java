@@ -287,7 +287,7 @@ public class SolveController {
      * POST /api/solve/start-study
      *
      * @param data 사용자 ID (userId)와 문제 ID (problemId)를 포함하는 맵
-     * @return 문제 학습 시작 결과 (problemStatus: 'new' 또는 기존 상태)
+     * @return 문제 학습 시작 결과 (problemStatus: "" 또는 기존 상태)
      */
     @PostMapping("/solve/start-study")
     @Transactional
@@ -322,25 +322,29 @@ public class SolveController {
                     .setParameter(2, problemId)
                     .getResultList();
 
-            String finalStatus = "";
+            String finalStatus;
 
             if (result.isEmpty()) {
-                // 존재하지 않으면 새로 생성
+                // 상태가 없으면 'new'로 저장하되, 응답은 ""로 (모달 표시 목적)
                 entityManager.createNativeQuery(
                                 "INSERT INTO user_problem_status (user_id, problem_id, problem_status, is_liked, is_scrapped, created_at, updated_at) " +
-                                        "VALUES (?1, ?2, '', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
+                                        "VALUES (?1, ?2, 'new', 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
                         .setParameter(1, internalUserId)
                         .setParameter(2, problemId)
                         .executeUpdate();
+
                 log.info("신규 user_problem_status 레코드 삽입 완료");
+                finalStatus = ""; // ✅ 프론트가 모달 뜨게
             } else {
-                // 이미 있으면 상태만 'new'로 업데이트
+                // 이미 있으면 상태만 'new'로 덮어쓰기
                 entityManager.createNativeQuery(
                                 "UPDATE user_problem_status SET problem_status = 'new', updated_at = CURRENT_TIMESTAMP WHERE user_id = ?1 AND problem_id = ?2")
                         .setParameter(1, internalUserId)
                         .setParameter(2, problemId)
                         .executeUpdate();
+
                 log.info("기존 레코드 상태를 'new'로 업데이트 완료");
+                finalStatus = "new"; // ✅ 프론트는 바로 페이지 이동
             }
 
             return ResponseEntity.ok(Map.of("status", "OK", "problemStatus", finalStatus));
@@ -352,4 +356,5 @@ public class SolveController {
                     .body(Map.of("status", "ERROR", "message", "서버 오류: " + e.getMessage()));
         }
     }
+
 }
