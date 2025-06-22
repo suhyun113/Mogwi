@@ -431,6 +431,7 @@ html, body {
   flex: 0 0 250px;
   background-color: transparent;
   padding: 30px 20px 40px 20px;
+  /* border-right: 1px solid #efdfff; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -439,7 +440,7 @@ html, body {
   height: auto;
   position: sticky;
   top: 40px;
-  overflow-y: auto;
+  overflow-y: visible;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -466,9 +467,20 @@ html, body {
   flex-direction: column;
   width: 100%;
   gap: 8px;
-  border-right: 1px solid #efdfff;
   padding-bottom: 40px;
   height: 100%;
+  position: relative;
+}
+
+.sidebar-nav::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 0;
+  height: calc(100% + 400px); /* 메뉴 높이 + 매우 긴 연장 길이 */
+  border-right: 1px solid #efdfff;
+  pointer-events: none;
 }
 
 .nav-item {
@@ -744,7 +756,7 @@ html, body {
   .sidebar {
     flex: none;
     width: 100%;
-    border-right: none;
+    /* border-right: none; */
     border-bottom: 1px solid #efdfff;
     padding: 20px 20px 40px 20px;
     margin-top: 0;
@@ -758,9 +770,11 @@ html, body {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    border-right: none;
-    border-bottom: 1px solid #efdfff;
     padding-bottom: 0;
+  }
+
+  .sidebar-nav::after {
+    display: none;
   }
 
   .nav-item {

@@ -37,7 +37,7 @@ export default {
   padding: 50px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   margin-bottom: 30px;
-  max-width: 1400px;
+  max-width: 100%;
   width: 100%;
   box-sizing: border-box;
   /* margin-left는 MypageView의 main-content 패딩으로 충분하므로 제거 */
@@ -50,8 +50,9 @@ export default {
 
 .profile-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .section-title {
