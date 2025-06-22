@@ -1,6 +1,7 @@
 <template>
   <section class="mypage-section my-problems-section">
-    <div class="tabs">
+    <!-- 토글 버튼: 좁은 화면에서만 보임 -->
+    <div class="tabs" v-if="!isWide">
       <button
         :class="{ 'tab-button': true, active: activeTab === 'public' }"
         @click="activeTab = 'public'"
@@ -15,7 +16,50 @@
       </button>
     </div>
 
-    <div class="tab-content">
+    <!-- 넓은 화면: 2단 컬럼 -->
+    <div v-if="isWide" class="dual-column-layout">
+      <div class="problem-list public-list">
+        <h3>공개 문제</h3>
+        <p v-if="publicProblems.length === 0" class="no-problems-message">
+          <i class="fas fa-frown"></i> 아직 공개한 문제가 없습니다.
+        </p>
+        <ProblemItem
+          v-for="problem in publicProblems"
+          :key="problem.id"
+          :problem="problem"
+          :is-authenticated="isAuthenticated"
+          :current-user-id="currentUserId"
+          :isLiked="problem.isLiked"
+          :showPublicTag="true"
+          :showCounts="true"
+          :likeCount="problem.likeCount"
+          :scrapCount="problem.scrapCount"
+          @toggle-like="onToggleLike"
+        />
+      </div>
+      <div class="problem-list private-list">
+        <h3>비공개 문제</h3>
+        <p v-if="privateProblems.length === 0" class="no-problems-message">
+          <i class="fas fa-frown"></i> 아직 비공개 문제가 없습니다.
+        </p>
+        <ProblemItem
+          v-for="problem in privateProblems"
+          :key="problem.id"
+          :problem="problem"
+          :is-authenticated="isAuthenticated"
+          :current-user-id="currentUserId"
+          :isLiked="problem.isLiked"
+          :showPublicTag="true"
+          :showCounts="true"
+          :likeCount="problem.likeCount"
+          :scrapCount="problem.scrapCount"
+          @toggle-like="onToggleLike"
+        />
+      </div>
+    </div>
+
+    <!-- 좁은 화면: 기존 토글 방식 -->
+    <div v-else class="tab-content">
       <div v-if="activeTab === 'public'" class="problem-list">
         <p v-if="publicProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 공개한 문제가 없습니다.
@@ -34,7 +78,6 @@
           @toggle-like="onToggleLike"
         />
       </div>
-
       <div v-if="activeTab === 'private'" class="problem-list">
         <p v-if="privateProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 비공개 문제가 없습니다.
@@ -58,7 +101,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import ProblemItem from './ProblemItem.vue';
 
 export default {
@@ -83,6 +126,17 @@ export default {
   emits: ['toggle-like'],
   setup(props, { emit }) {
     const activeTab = ref('public'); // 'public' or 'private'
+    const isWide = ref(window.innerWidth >= 900);
+
+    const handleResize = () => {
+      isWide.value = window.innerWidth >= 900;
+    };
+    onMounted(() => {
+      window.addEventListener('resize', handleResize);
+    });
+    onUnmounted(() => {
+      window.removeEventListener('resize', handleResize);
+    });
 
     const publicProblems = computed(() =>
       props.myProblems.filter(problem => problem.isPublic)
@@ -101,6 +155,7 @@ export default {
       publicProblems,
       privateProblems,
       onToggleLike,
+      isWide,
     };
   },
 };
@@ -117,40 +172,89 @@ export default {
 }
 
 .tabs {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   justify-content: center;
-  margin-bottom: 20px;
-  gap: 10px;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 10px 0 18px 0;
 }
 
 .tab-button {
-  background-color: #e9dffc;
-  color: #6a3d9a;
-  border: 1px solid #dcd0f0;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  display: flex;
+  display: inline-flex !important;
   align-items: center;
-  gap: 8px;
-}
-
-.tab-button:hover {
-  background-color: #dcd0f0;
+  justify-content: center;
+  min-width: 110px;
+  max-width: 180px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  background: #ede3ff;
+  color: #8a2be2;
+  margin: 0 2px;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  letter-spacing: 0.01em;
 }
 
 .tab-button.active {
-  background-color: #8c5dff;
-  color: white;
-  border-color: #8c5dff;
-  font-weight: 600;
+  background: #8a2be2;
+  color: #fff;
 }
 
-.tab-button.active:hover {
-  background-color: #7a4bb7;
+.tab-button:hover:not(.active) {
+  background: #d6c2f7;
+  color: #8a2be2;
+}
+
+.dual-column-layout {
+  display: flex;
+  gap: 32px;
+}
+.public-list, .private-list {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .dual-column-layout {
+    display: none;
+  }
+  .tabs, .tab-content {
+    display: block;
+  }
+  .tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 8px 0 14px 0;
+  }
+  .tab-button {
+    min-width: 110px;
+    max-width: 180px;
+    padding: 8px 16px;
+    font-size: 1rem;
+    border-radius: 10px;
+  }
+}
+@media (min-width: 900px) {
+  .tabs, .tab-content {
+    display: none !important;
+  }
+  .dual-column-layout {
+    display: flex;
+  }
 }
 
 .problem-list {
@@ -180,14 +284,21 @@ export default {
     padding: 20px;
   }
   .tabs {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    flex-direction: row;
     gap: 8px;
+    justify-content: center;
+    width: 100%;
+    overflow-x: auto;
+    align-items: center;
   }
   .tab-button {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-    flex-grow: 1;
+    min-width: 80px;
+    max-width: 140px;
+    width: auto;
+    white-space: nowrap;
     justify-content: center;
+    flex-shrink: 0;
   }
 }
 </style>
