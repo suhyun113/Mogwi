@@ -115,9 +115,14 @@ export default {
 }
 
 .count {
-  font-size: 1.1rem; /* 폰트 크기를 1.2rem에서 1.1rem으로 줄임 */
+  font-size: 1.15rem;
   font-weight: 700;
   color: white;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  position: relative;
+  top: 8px;
 }
 
 .count.perfect-count-color {
