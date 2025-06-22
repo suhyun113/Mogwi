@@ -143,14 +143,15 @@ export default {
 
 <style scoped>
 .study-calendar {
-  width: 480px;
-  min-width: 480px;
-  max-width: 480px;
+  width: 550px;
+  min-width: 550px;
+  max-width: 550px;
   padding: 0 0 12px 0;
   border: 2px solid #e0d0ff;
   border-radius: 12px;
   background-color: white;
   margin-bottom: 10px;
+  margin: 0;
 }
 
 @media (min-width: 1200px) {
@@ -193,7 +194,7 @@ export default {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 60px);
+  grid-template-columns: repeat(7, 70px);
   grid-auto-rows: 60px;
   gap: 5px;
   padding: 0 15px 0;
