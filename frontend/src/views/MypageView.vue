@@ -378,6 +378,7 @@ html, body {
     padding: 0;
     height: 100%; /* 뷰포트 높이 전체를 사용 */
     box-sizing: border-box; /* 모든 요소에 적용 (패딩/보더를 너비/높이에 포함) */
+    overflow-y: hidden;
 }
 
 *, *::before, *::after {
@@ -400,6 +401,7 @@ html, body {
   box-sizing: border-box;
   font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
+  overflow-y: hidden;
 }
 
 .mypage-layout {
@@ -416,6 +418,7 @@ html, body {
   align-items: flex-start; /* 메인 컨텐츠와 사이드바 상단 정렬 */
   margin-left: 0;
   margin-right: auto;
+  overflow-y: hidden;
 }
 
 @media (min-width: 1200px) {
@@ -532,6 +535,7 @@ html, body {
   overflow-y: hidden !important;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overflow-y: hidden;
 }
 
 /* Chrome, Safari, Opera 숨기기 */
