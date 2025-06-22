@@ -208,7 +208,7 @@ export default {
   justify-content: center;
   min-width: 110px;
   max-width: 180px;
-  padding: 10px 18px;
+  padding: 8px 16px;
   font-size: 1rem;
   font-weight: 600;
   border-radius: 5px;
