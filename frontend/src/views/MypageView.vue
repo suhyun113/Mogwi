@@ -878,14 +878,15 @@ html, body {
   }
 
   .content-section {
-    padding: 0;
-    margin-bottom: 40px;
+    margin: 0 auto;
     width: 100%;
-    background: none;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    height: 100%;
-    overflow-y: visible;
+    max-width: 480px;
+    float: none;
+    display: block;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: none !important;
   }
 
   .user-profile-section,
