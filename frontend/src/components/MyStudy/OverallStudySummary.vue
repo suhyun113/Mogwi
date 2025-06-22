@@ -1,30 +1,18 @@
 <template>
+    <h2 class="overall-summary-title">
+        <template v-if="isLoggedIn">
+            <span class="username-underline">{{ username }}</span>님의 전체 학습 현황
+        </template>
+        <template v-else>
+            전체 학습 현황
+        </template>
+    </h2>
     <section class="overall-summary-section">
-        <h2 class="section-title">
-            <template v-if="isLoggedIn">
-                <span class="username-underline">{{ username }}</span>님의 전체 학습 현황
-            </template>
-            <template v-else>
-                전체 학습 현황
-            </template>
-        </h2>
-        <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-stats">
-            <div class="stat-item perfect">
-                <span class="label">완벽한 기억:</span>
-                <span class="value">{{ overallPerfectCount }}개</span>
-            </div>
-            <div class="stat-item vague">
-                <span class="label">희미한 기억:</span>
-                <span class="value">{{ overallVagueCount }}개</span>
-            </div>
-            <div class="stat-item forgotten">
-                <span class="label">사라진 기억:</span>
-                <span class="value">{{ overallForgottenCount }}개</span>
-            </div>
-            <div class="stat-item total">
-                <span class="label">총 학습 카드:</span>
-                <span class="value">{{ overallTotalCards }}개</span>
-            </div>
+        <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-tags">
+            <div class="summary-tag perfect">완벽한 기억 {{ overallPerfectCount }}개</div>
+            <div class="summary-tag vague">희미한 기억 {{ overallVagueCount }}개</div>
+            <div class="summary-tag forgotten">사라진 기억 {{ overallForgottenCount }}개</div>
+            <div class="summary-tag total">총 학습 카드 {{ overallTotalCards }}개</div>
         </div>
         <div v-else-if="isLoggedIn && overallTotalCards === 0" class="no-study-data-message">
             <font-awesome-icon :icon="['fas', 'book-open']" class="no-data-icon" />
@@ -127,17 +115,19 @@ export default {
     border-radius: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    margin-bottom: 40px;
-    border: 1px solid #e0d0ff; /* Subtle border */
+    margin-top: 0;
+    margin-bottom: 32px;
+    border: 2.5px solid #e0d0ff; /* Thicker border */
 }
 
-.overall-summary-section h2.section-title {
+.overall-summary-title {
     color: #5a2e87;
     font-size: 1.8rem;
     font-weight: 600;
-    margin-bottom: 25px;
-    padding-bottom: 10px;
-    text-align: left; /* Changed from center to left */
+    margin-bottom: 18px;
+    margin-top: 0;
+    padding-bottom: 0;
+    text-align: left;
 }
 
 /* Add style for the username underline */
@@ -148,44 +138,43 @@ export default {
     text-decoration-thickness: 2px; /* Optional: Make underline thicker */
 }
 
-
-.summary-stats {
+.summary-tags {
     display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    margin-bottom: 25px;
-    gap: 15px;
-}
-
-.stat-item {
-    display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 16px;
     align-items: center;
-    padding: 10px 15px;
-    border-radius: 10px;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.summary-tag {
     min-width: 120px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
     text-align: center;
+    box-shadow: none;
+    margin: 0;
+    letter-spacing: -0.5px;
 }
-
-.stat-item .label {
-    font-size: 0.95rem;
-    color: #777;
-    margin-bottom: 5px;
-    font-weight: 500;
+.summary-tag.perfect {
+    background: #e6f7ea;
+    color: #43a047;
 }
-
-.stat-item .value {
-    font-size: 1.5rem;
-    font-weight: bold;
+.summary-tag.vague {
+    background: #fffde7;
+    color: #ffc107;
 }
-
-.stat-item.perfect .value { color: #28a745; }
-.stat-item.vague .value { color: #ffc107; }
-.stat-item.forgotten .value { color: #dc3545; }
-.stat-item.total .value { color: #5a2e87; }
-
+.summary-tag.forgotten {
+    background: #fff0f0;
+    color: #f44336;
+}
+.summary-tag.total {
+    background: #f3eaff;
+    color: #6a1b9a;
+}
 
 .progress-bar-container {
     width: 100%;
@@ -271,5 +260,18 @@ export default {
     font-weight: 500;
     margin-left: auto;
     margin-right: auto;
+}
+
+@media (max-width: 600px) {
+    .summary-tags {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .summary-tag {
+        min-width: 90px;
+        padding: 10px 8px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
 }
 </style>

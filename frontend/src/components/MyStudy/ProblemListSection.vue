@@ -373,7 +373,7 @@ export default {
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
-    border: 1px solid #e0d0ff; /* Subtle border */
+    border: 2.5px solid #e0d0ff; /* Thicker border to match OverallStudySummary */
 }
 
 .section-header {
