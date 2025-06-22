@@ -24,6 +24,8 @@
           v-for="problem in publicProblems"
           :key="problem.id"
           :problem="problem"
+          :is-authenticated="isAuthenticated"
+          :current-user-id="currentUserId"
           :isLiked="problem.isLiked"
           :showPublicTag="true"
           :showCounts="true"
@@ -41,6 +43,8 @@
           v-for="problem in privateProblems"
           :key="problem.id"
           :problem="problem"
+          :is-authenticated="isAuthenticated"
+          :current-user-id="currentUserId"
           :isLiked="problem.isLiked"
           :showPublicTag="true"
           :showCounts="true"
@@ -66,6 +70,14 @@ export default {
     myProblems: {
       type: Array,
       default: () => [],
+    },
+    isAuthenticated: {
+      type: Boolean,
+      default: false,
+    },
+    currentUserId: {
+      type: [String, Number],
+      default: null,
     },
   },
   emits: ['toggle-like'],

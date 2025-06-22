@@ -136,7 +136,7 @@ export default {
             newVal.author_name ||
             newVal.username ||
             '알 수 없음',
-          authorId: newVal.authorId || newVal.author_id || null
+          authorId: newVal.authorId?.toString() || newVal.author_id?.toString() || null
         };
         // problem 객체 변경 시 콘솔 로그 출력
         this.logEditButtonConditions();
