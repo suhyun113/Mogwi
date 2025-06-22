@@ -50,40 +50,50 @@ export default {
 
 .banner-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 0px;
   width: 100%;
-  height: 100%; /* 부모 높이를 채우도록 추가 */
+  height: 100%;
   max-width: 900px;
   position: relative;
 }
 
 .banner-text {
-  flex-basis: 60%; /* 텍스트가 차지할 공간 */
-  text-align: left;
-  z-index: 1; /* 캐릭터 이미지 위로 오도록 */
+  text-align: center;
+  z-index: 1;
+  margin: 50px;
+  padding: 0;
+  flex-basis: auto;
+  margin-bottom: 0;
+}
+
+.banner-text h2,
+.banner-text p {
+  margin-bottom: 0;
 }
 
 .banner-text h2 {
-  font-size: 2.8rem;
+  font-size: 2.3rem;
   font-weight: 800;
-  margin-bottom: 10px;
   line-height: 1.2;
 }
 
 .banner-text p {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 500;
-  margin: 0;
 }
 
 .banner-character {
-  flex-basis: 40%;
+  display: block;
+  margin: 0;
+  padding: 0;
   height: auto;
-  max-height: 400px; /* 이미지 최대 높이를 조정 */
+  max-height: 320px;
   object-fit: contain;
-  margin-right: -50px;
   z-index: 0;
+  flex-basis: auto;
+  width: auto;
 }
 
 @media (max-width: 768px) {
@@ -93,23 +103,29 @@ export default {
   }
   .banner-content {
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0px;
     text-align: center;
   }
   .banner-text {
-    flex-basis: auto;
-    margin-bottom: 10px;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 0;
     text-align: center;
+    flex-basis: auto;
   }
-  .banner-text h2 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-  }
+  .banner-text h2,
   .banner-text p {
-    font-size: 1.1rem;
+    margin-bottom: 0;
   }
   .banner-character {
-    max-height: 200px; /* 모바일 이미지 최대 높이 조정 */
-    margin-right: 0;
+    max-height: 150px;
+    margin: 0;
+    padding: 0;
+    display: block;
+    flex-basis: auto;
+    width: auto;
   }
 }
 </style>
