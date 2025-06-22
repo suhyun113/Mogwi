@@ -149,10 +149,10 @@ export default {
 }
 
 .summary-tag {
-    min-width: 120px;
-    padding: 12px 18px;
+    min-width: 80px;
+    padding: 9px 15px;
     border-radius: 10px;
-    font-size: 1.15rem;
+    font-size: 0.98rem;
     font-weight: 700;
     text-align: center;
     box-shadow: none;
@@ -268,9 +268,9 @@ export default {
         gap: 12px;
     }
     .summary-tag {
-        min-width: 90px;
-        padding: 10px 8px;
-        font-size: 1rem;
+        min-width: 60px;
+        padding: 5px 6px;
+        font-size: 0.92rem;
         border-radius: 10px;
     }
 }
