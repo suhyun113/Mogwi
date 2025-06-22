@@ -457,6 +457,27 @@ export default {
   .banner-mogwi-character {
     width: 180px;
   }
+
+  .calendar-and-detail-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding-top: 0;
+  }
+
+  .daily-detail-wrapper {
+    height: auto;
+    min-height: unset;
+    max-height: unset;
+    width: 100%;
+    max-width: 550px;
+    min-width: unset;
+    flex: none;
+  }
+
+  .calendar-wrapper {
+    height: auto;
+  }
 }
 
 @media (max-width: 768px) {
