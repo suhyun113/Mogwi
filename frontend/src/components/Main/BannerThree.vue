@@ -103,7 +103,8 @@ export default {
 @media (max-width: 768px) {
   .banner-card {
     padding: 15px;
-    height: 300px;
+    height: 100vw;
+    min-height: 220px;
   }
   .banner-content {
     flex-direction: column;

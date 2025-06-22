@@ -99,7 +99,8 @@ export default {
 @media (max-width: 768px) {
   .banner-card {
     padding: 15px;
-    height: 300px; /* 모바일 높이 설정 */
+    height: 100vw;
+    min-height: 220px;
   }
   .banner-content {
     flex-direction: column;
