@@ -433,8 +433,11 @@ export default {
     }
 }
 .highlight-count {
-    color: #a471ff;
+    color: #ff7e5f !important;
     font-weight: 900;
-    font-size: 1.08em;
+}
+:deep(.speech-bubble .highlight-count) {
+    color:rgb(127, 58, 245) !important;
+    font-weight: 900;
 }
 </style>
