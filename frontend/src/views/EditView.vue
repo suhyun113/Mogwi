@@ -398,14 +398,14 @@ export default {
 
 .edit-container {
   background: white;
-  border-radius: 0;
+  border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   padding: 40px;
   width: 100%;
   max-width: 800px;
   margin-bottom: 20px;
   margin-top: 20px;
-  border: 1px solid #eee;
+  border: 1.5px solid #e0d0ff;
 }
 
 .loading-message, .error-message {
