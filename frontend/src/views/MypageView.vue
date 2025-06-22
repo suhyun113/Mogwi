@@ -439,15 +439,15 @@ html, body {
 .mypage-layout {
   display: flex;
   width: 100%;
-  max-width: 100%;
+  max-width: 1630px;
   background: transparent;
   border-radius: 12px;
   box-shadow: none;
   border: none;
   align-items: flex-start;
-  margin-left: 0;
+  margin-left: auto;
   margin-right: auto;
-  height: 100%; /* 부모 높이 채우기 */
+  height: 100%;
 }
 
 @media (min-width: 1200px) {
@@ -460,15 +460,14 @@ html, body {
 
 /* Sidebar Styling */
 .sidebar {
-  flex: 0 0 250px;
+  flex: 0 0 300px;
   background-color: transparent;
   padding: 30px 20px 40px 20px;
-  /* border-right: 1px solid #efdfff; */
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 60px;
-  margin-left: 140px;
+  margin-left: 60px;
   height: auto;
   position: sticky;
   top: 40px;
@@ -579,7 +578,7 @@ html, body {
 /* Main Content Styling */
 .main-content {
   flex: 1;
-  padding: 0 40px 40px 40px;
+  padding: 0 60px 60px 24px;
   background-color: transparent;
   margin-top: 100px;
   /* 뷰포트 높이 기준으로 정확히 계산하여 넘치지 않도록 함 */
