@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19314112-8a1b-4ac5-9c47-7f4f57948c2e" name="변경" comment="Feat (frontend): 메인 뷰 검색창 고정">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/views/EditView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/EditView.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/MogwiSystemApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/java/com/example/mogwi_system/MogwiSystemApplication.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/mogwi-system/src/main/resources/application.properties" afterDir="false" />
@@ -197,7 +198,7 @@
       <workItem from="1750136781809" duration="850000" />
       <workItem from="1750349630313" duration="1196000" />
       <workItem from="1750413632992" duration="34623000" />
-      <workItem from="1750507798561" duration="29468000" />
+      <workItem from="1750507798561" duration="30814000" />
     </task>
     <task id="LOCAL-00001" summary="Feat (backend): 로그인 api 구현">
       <option name="closed" value="true" />

@@ -267,16 +267,16 @@ export default {
           author_id: currentUserId.value, // Ensure author_id is sent for validation
           description: problem.value.description,
           is_public: problem.value.is_public ? 1 : 0,
-          categories: problem.value.categories, // Send category IDs
+          categories: [...problem.value.categories], // Proxy → Array 변환!
           cards: problem.value.cards.map(card => ({
-            // If card.id is null/undefined for new cards, backend should handle it (e.g., auto-increment)
-            // If it's an existing card, sending its ID allows backend to update it
-            id: card.id, // Send existing card IDs for update or null for new cards
+            id: card.id,
             question: card.question,
             answer: card.answer,
             image_url: card.image_url || null
           }))
         };
+
+        console.log('문제 수정 요청 payload:', payload);
 
         const response = await axios.put(`/api/problem/${problemId.value}`, payload);
 
