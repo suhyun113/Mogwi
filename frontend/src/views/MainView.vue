@@ -273,7 +273,7 @@ export default {
   width: 100%;
   max-width: 900px; /* main-inner와 동일한 최대 너비 */
   text-align: center; /* 텍스트 가운데 정렬 */
-  margin-top: 60px; 
+  margin-top: 22px;
   color: #555; /* 부드러운 회색 톤 */
   font-size: 1.25rem; /* 적당히 눈에 띄는 크기 */
   font-weight: 500;
@@ -292,7 +292,7 @@ export default {
   z-index: 999;
   background-color: transparent;
   padding: 12px 0;
-  margin-top: 60px;
+  margin-top: 38px;
   margin-bottom: 10px;
   width: 100%;
   box-shadow: none;
