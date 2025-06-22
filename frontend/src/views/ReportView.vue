@@ -560,8 +560,13 @@ export default {
   color: white;
   box-sizing: border-box;
   text-align: center;
-  height: 450px; /* 고정 높이 설정 */
   border-radius: 8px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 480px;
+  min-height: 480px;
+  max-height: 480px;
 }
 
 .section-title-daily-detail {
@@ -708,9 +713,12 @@ export default {
     min-width: unset;
     padding: 20px; /* 모바일 패딩 조정 */
   }
-  /* 모바일에서 DailyStudyDetail 섹션의 높이 고정 해제 */
   .daily-detail-wrapper {
-    min-height: unset;
+    width: 480px;
+    min-width: 320px;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
   .mogwi-daily-detail-character,
   .mogwi-daily-detail-character img {
@@ -770,8 +778,14 @@ export default {
     gap: 20px;
   }
   .daily-detail-wrapper {
-    padding: 20px; /* 모바일에서 다시 패딩 적용 */
-    min-height: 400px; /* 모바일에서의 최소 높이 조정 */
+    width: 100%;
+    min-width: 220px;
+    max-width: 100%;
+    height: 320px;
+    min-height: 220px;
+    max-height: 400px;
+    margin-left: auto;
+    margin-right: auto;
   }
   .section-title-daily-detail {
     font-size: 1.2rem;
@@ -800,6 +814,11 @@ export default {
 @media (min-width: 1200px) {
   .calendar-section {
     padding-bottom: 80px;
+  }
+  .daily-detail-wrapper {
+    height: 480px;
+    min-height: 480px;
+    max-height: 480px;
   }
 }
 </style>
