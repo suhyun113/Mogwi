@@ -313,10 +313,10 @@ export default {
 
     onMounted(() => {
       fetchMypageData();
-      document.body.classList.add('hide-vertical-scroll');
+      document.body.style.overflow = 'hidden';
     });
     onUnmounted(() => {
-      document.body.classList.remove('hide-vertical-scroll');
+      document.body.style.overflow = '';
     });
 
     watch(isLoggedIn, (newVal, oldVal) => {
@@ -372,12 +372,13 @@ export default {
 </script>
 
 <style>
-/* 전역 스타일: HTML 및 BODY에 적용하여 스크롤바를 없앱니다. */
+/* 전역 스타일: HTML 및 BODY에 적용하여 다른 페이지에서 스크롤이 정상 작동하도록 합니다. */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%; /* 뷰포트 높이 전체를 사용 */
     box-sizing: border-box; /* 모든 요소에 적용 (패딩/보더를 너비/높이에 포함) */
+    /* overflow: hidden; 제거 - 다른 페이지 스크롤 허용 */
 }
 
 *, *::before, *::after {
@@ -395,28 +396,26 @@ html, body {
   align-items: center;
   padding: 40px 20px;
   background-color: #f7f3ff; /* 연한 보라색 배경 */
-  min-height: 100vh; /* 이 부분을 유지하면서 내부 콘텐츠가 넘치지 않게 합니다. */
   width: 100%;
   box-sizing: border-box;
   font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
-  overflow-y: hidden;
+  height: 100vh; /* 뷰포트 전체 높이를 차지 */
+  overflow-y: hidden; /* **마이페이지 전체 세로 스크롤 제거** */
 }
 
 .mypage-layout {
   display: flex;
   width: 100%;
   max-width: 100%;
-  background: transparent; /* 흰색 배경 제거 */
+  background: transparent;
   border-radius: 12px;
-  /* 변경: 그림자 및 테두리 제거 */
-  box-shadow: none; /* 그림자 제거 */
-  border: none; /* 테두리 제거 */
-  overflow: hidden;
-  height: calc(100vh - 80px); /* 뷰포트 높이에서 상하 패딩을 뺀 값으로 설정 */
-  align-items: flex-start; /* 메인 컨텐츠와 사이드바 상단 정렬 */
+  box-shadow: none;
+  border: none;
+  align-items: flex-start;
   margin-left: 0;
   margin-right: auto;
+  height: 100%; /* 부모 높이 채우기 */
 }
 
 @media (min-width: 1200px) {
@@ -430,20 +429,27 @@ html, body {
 /* Sidebar Styling */
 .sidebar {
   flex: 0 0 250px;
-  background-color: transparent; /* 배경 제거 */
-  padding: 30px 20px;
-  border-right: 1px solid #efdfff;
+  background-color: transparent;
+  padding: 30px 20px 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 60px;
   margin-left: 140px;
-  /* 높이 조정을 통해 부모와 동일하게 채우기 */
-  height: 100%;
+  height: auto;
+  position: sticky;
+  top: 40px;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Chrome, Safari, Opera 숨기기 */
+.sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 .sidebar-title {
-  /* 'MY PAGE' 영어 텍스트 제거 */
   display: none;
   font-size: 1.8rem;
   font-weight: 700;
@@ -460,6 +466,9 @@ html, body {
   flex-direction: column;
   width: 100%;
   gap: 8px;
+  border-right: 1px solid #efdfff;
+  padding-bottom: 40px;
+  height: 100%;
 }
 
 .nav-item {
@@ -529,15 +538,9 @@ html, body {
   padding: 0 40px 40px 40px;
   background-color: transparent;
   margin-top: 100px;
-  height: calc(100% - 100px);
-  overflow-y: auto !important;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Chrome, Safari, Opera 숨기기 */
-.main-content::-webkit-scrollbar {
-    display: none;
+  /* 뷰포트 높이 기준으로 정확히 계산하여 넘치지 않도록 함 */
+  height: calc(100vh - 40px - 100px); /* mypage-view-wrapper의 상하 패딩 (40px) 및 main-content의 상단 마진 (100px) 고려 */
+  /* overflow-y: auto 제거로 내부 스크롤도 제거 */
 }
 
 .content-section {
@@ -570,7 +573,9 @@ html, body {
   max-width: 600px;
   margin-top: 80px;
   border: 1px solid #e0d0ff;
-  height: auto; /* 높이를 콘텐츠에 맞게 조절 */
+  /* logged-out-prompt가 뷰포트를 넘어가지 않도록 최대 높이 설정 */
+  max-height: calc(100vh - 40px - 80px); /* mypage-view-wrapper 패딩 및 상단 마진 고려 */
+  overflow-y: auto; /* 내부 콘텐츠가 넘칠 경우 스크롤 허용 */
 }
 
 .mogwi-character-small {
@@ -741,16 +746,21 @@ html, body {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #efdfff;
-    padding: 20px;
-    margin-top: 0; /* 모바일에서 마진 제거 */
-    margin-left: 0; /* 모바일에서 마진 제거 */
-    height: auto; /* 모바일에서 높이 자동 조절 */
+    padding: 20px 20px 40px 20px;
+    margin-top: 0;
+    margin-left: 0;
+    height: auto;
+    position: static;
+    overflow-y: visible;
   }
 
   .sidebar-nav {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    border-right: none;
+    border-bottom: 1px solid #efdfff;
+    padding-bottom: 0;
   }
 
   .nav-item {
