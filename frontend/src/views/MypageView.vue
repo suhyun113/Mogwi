@@ -54,7 +54,7 @@
             :myProblems="myProblems"
             @go-to-problem="goToProblem"
             @edit-problem="editProblem"
-            @delete-problem="deleteProblem"
+            @delete-problem="fetchMypageData"
             :isAuthenticated="isLoggedIn"
             :currentUserId="currentUserId"
           />
@@ -261,6 +261,7 @@ export default {
         myProblems.value = myProblems.value.filter(p => p.id !== problemIdToDelete.value);
         nicknameUpdateMessage.value = '문제가 성공적으로 삭제되었습니다.';
         nicknameUpdateStatus.value = 'success';
+        await fetchMypageData(); // 삭제 후 자동 새로고침
       } catch (err) {
         console.error('문제 삭제 실패:', err);
         nicknameUpdateMessage.value = '문제 삭제에 실패했습니다. 다시 시도해주세요.';
