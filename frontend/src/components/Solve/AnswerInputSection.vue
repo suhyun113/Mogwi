@@ -66,14 +66,14 @@ export default {
 .answer-input {
   flex-grow: 1;
   padding: 10px;
-  border: 2px solid #ddd;
+  border: 2px solid #e0d0ff;
   border-radius: 10px; /* 래디어스 값 통일 */
   font-size: 1rem;
 }
 
 .answer-input:focus {
   outline: none;
-  border-color: #7a4cb8; /* 포커스 시 진한 보라색 테두리 */
+  border-color: #a471ff; /* 포커스 시 진한 보라색 테두리 */
 }
 
 .answer-input:disabled {
@@ -141,7 +141,7 @@ export default {
 
 .correct-answer-card {
   background: #fff;
-  border: 1.2px solid #e0d0ff;
+  border: 2px solid #e0d0ff;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(164, 113, 255, 0.06);
   padding: 9px 13px;
