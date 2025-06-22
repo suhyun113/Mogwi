@@ -70,7 +70,7 @@ public class ProblemController {
      */
     @GetMapping("/api/problem/detail")
     public ResponseEntity<List<Map<String, Object>>> getUserStudyProblemsDetail(
-            @RequestParam String currentUserId,
+            @RequestParam(required = false) String currentUserId,
             @RequestParam(required = false, defaultValue = "false") boolean onlyLiked,
             @RequestParam(required = false, defaultValue = "false") boolean onlyScrapped,
             @RequestParam(required = false, defaultValue = "false") boolean onlyMine,
@@ -81,13 +81,13 @@ public class ProblemController {
                 currentUserId, onlyLiked, onlyScrapped, onlyMine, onlyPublic);
 
         Long internalUserId = null;
+
+        // currentUserId가 null 이어도 onlyPublic이면 허용
         if (currentUserId != null && !currentUserId.trim().isEmpty()) {
             try {
                 internalUserId = getInternalUserId(currentUserId);
             } catch (NoResultException e) {
-                // 사용자가 존재하지 않지만, onlyPublic 옵션으로 조회할 수 있으므로 404 대신 빈 목록 반환 고려
-                if (!onlyPublic) { // onlyPublic이 false인 경우에만 404를 반환하거나 다른 처리를 할 수 있습니다.
-                    log.warn("User not found for userId: {}", currentUserId);
+                if (!onlyPublic) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
                 }
             } catch (Exception e) {
@@ -95,11 +95,10 @@ public class ProblemController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
             }
         } else if (!onlyPublic && (onlyLiked || onlyScrapped || onlyMine)) {
-            // currentUserId가 없는데, 사용자 관련 필터가 요청된 경우 (onlyPublic이 아니면)
+            // 로그아웃 상태인데 좋아요/스크랩/내 문제 요청 시 에러
             log.warn("currentUserId is required for liked, scrapped, or mine filters when onlyPublic is false.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ArrayList<>());
         }
-
 
         try {
             StringBuilder sql = new StringBuilder(
@@ -115,24 +114,17 @@ public class ProblemController {
                             "JOIN users u ON p.author_id = u.id "
             );
 
-            List<String> joinConditions = new ArrayList<>();
-            List<Object> parameters = new ArrayList<>();
-
-            // onlyPublic 요청이 아니거나, currentUserId가 제공된 경우에만 user_problem_status 및 user_card_status 조인
-            if (!onlyPublic || internalUserId != null) {
-                sql.append("LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ? ");
-                sql.append("LEFT JOIN user_card_status ucs ON p.id = ucs.problem_id AND ucs.user_id = ? ");
-                if (internalUserId != null) {
-                    parameters.add(internalUserId); // ups.user_id = ?1
-                    parameters.add(internalUserId); // ucs.user_id = ?2
-                } else {
-                    // currentUserId가 없으면 유저 관련 조인은 의미가 없으므로 null을 바인딩 (실제 사용될 일은 드뭅니다)
-                    parameters.add(null);
-                    parameters.add(null);
-                }
+            if (internalUserId != null) {
+                sql.append("LEFT JOIN user_problem_status ups ON ups.problem_id = p.id AND ups.user_id = ").append(internalUserId).append(" ");
+                sql.append("LEFT JOIN user_card_status ucs ON ucs.problem_id = p.id AND ucs.user_id = ").append(internalUserId).append(" ");
+            } else {
+                // 로그아웃 상태에서도 JOIN은 해야 집계가 돌아감 → 가짜 ID로 걸면 안 됨, 그냥 JOIN 없이 null 값 처리되게 해야 함
+                sql.append("LEFT JOIN user_problem_status ups ON 1=0 "); // 강제로 항상 null
+                sql.append("LEFT JOIN user_card_status ucs ON 1=0 ");    // 강제로 항상 null
             }
 
-
+            List<String> joinConditions = new ArrayList<>();
+            List<Object> parameters = new ArrayList<>();
             List<String> whereConditions = new ArrayList<>();
 
             if (onlyPublic) {
@@ -172,13 +164,6 @@ public class ProblemController {
 
             // onlyMine 조건이 추가된 경우 internalUserId 바인딩 (parameters 리스트에 이미 추가되지 않은 경우)
             if (onlyMine && internalUserId != null && !parameters.contains(internalUserId)) {
-                // 이 부분은 위에서 parameters.add(internalUserId)로 이미 처리되었을 가능성이 높습니다.
-                // 쿼리 파라미터 인덱스 관리에 주의해야 합니다.
-                // 간단하게 ?1, ?2 대신 명명된 파라미터 (:userId)를 사용하는 것이 더 안전합니다.
-                // 지금은 positional parameter를 사용했으므로, 이 부분을 주의 깊게 재검토해야 합니다.
-                // 현재 쿼리에서 internalUserId는 항상 첫 번째, 두 번째 파라미터로 바인딩됩니다.
-                // onlyMine 조건은 p.author_id = internalUserId 이어야 하므로, 이 부분의 파라미터 관리가 필요합니다.
-                // 가장 안전한 방법은 모든 파라미터를 미리 리스트에 추가하고, SQL을 만들 때 인덱스를 정확히 맞추는 것입니다.
             }
 
             List<Object[]> problemResults = query.getResultList();
