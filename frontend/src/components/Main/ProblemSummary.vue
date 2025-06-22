@@ -58,7 +58,7 @@
       </div>
 
       <div class="meta-right-group">
-        <div class="study-card-summary" v-if="localProblem.studyStatus !== 'new'">
+        <div class="study-card-summary" v-if="isAuthenticated && localProblem.studyStatus !== 'new'">
             <span class="perfect-count" :title="`${localProblem.perfectCount}개 - 완벽한 기억`">{{ localProblem.perfectCount }}</span> /
             <span class="vague-count" :title="`${localProblem.vagueCount}개 - 희미한 기억`">{{ localProblem.vagueCount }}</span> /
             <span class="forgotten-count" :title="`${localProblem.forgottenCount}개 - 사라진 기억`">{{ localProblem.forgottenCount }}</span>
