@@ -289,12 +289,10 @@ export default {
     flex-direction: column;
     align-items: center;
     padding: 40px 20px;
-    background-color: #fdf8f4;
+    background-color: #f7f3ff;
     height: 100vh;
     width: 100vw;
-    position: fixed;
-    top: 0;
-    left: 0;
+    position: relative;
     overflow: hidden;
     font-family: 'Pretendard', sans-serif;
 }

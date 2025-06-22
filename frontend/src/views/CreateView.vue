@@ -381,11 +381,13 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
-  background-color: #fdf8f4;
+  background-color: #f7f3ff;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
 .create-container {

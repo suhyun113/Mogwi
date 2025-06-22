@@ -290,17 +290,13 @@ export default {
   flex-direction: column;
   align-items: center;
   padding-top: 0;
-  background-color: #fdf8f4;
+  background-color: #f7f3ff;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
   font-family: 'Pretendard', sans-serif;
+  position: relative;
   overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 /* Report Banner Styles */
