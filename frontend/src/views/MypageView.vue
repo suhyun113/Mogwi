@@ -610,68 +610,6 @@ html, body {
   width: 100%;
 }
 
-/* Logged-out Prompt - 기존 디자인 유지 (모귀 캐릭터와 잘 어울림) */
-.logged-out-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  padding: 60px 40px;
-  width: 100%;
-  max-width: 600px;
-  margin-top: 80px;
-  border: 1px solid #e0d0ff;
-  /* logged-out-prompt가 뷰포트를 넘어가지 않도록 최대 높이 설정 */
-  max-height: calc(100vh - 40px - 80px); /* mypage-view-wrapper 패딩 및 상단 마진 고려 */
-  overflow-y: auto; /* 내부 콘텐츠가 넘칠 경우 스크롤 허용 */
-}
-
-.mogwi-character-small {
-  width: 150px;
-  height: auto;
-  margin-bottom: 20px;
-}
-
-.logged-out-message {
-  font-size: 1.6rem;
-  color: #4a1e77;
-  margin-bottom: 30px;
-  line-height: 1.6;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-weight: 600;
-}
-
-.logged-out-message .fas {
-  font-size: 2.2rem;
-  color: #8c5dff;
-}
-
-/* 로그인 버튼 스타일도 통일된 보라색 그라데이션으로 변경 */
-.login-button {
-  background-image: linear-gradient(to right, #8a2be2 0%, #a471ff 100%);
-  color: white;
-  border: none;
-  padding: 15px 35px;
-  border-radius: 10px;
-  font-size: 1.25rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
-}
-
-.login-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6);
-  background-position: right center;
-}
-
 /* Alert Message (bottom fixed) */
 .alert-message {
   position: fixed;
