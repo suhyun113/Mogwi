@@ -139,7 +139,7 @@ export default {
           params.currentUserId = currentUserId.value;
         }
         const response = await axios.get('/api/problem/detail', { params });
-        problems.value = response.data.sort((a, b) => a.id - b.id);
+        problems.value = response.data.sort((a, b) => b.id - a.id);
       } catch (error) {
         console.error('문제 불러오기 실패:', error)
       }
