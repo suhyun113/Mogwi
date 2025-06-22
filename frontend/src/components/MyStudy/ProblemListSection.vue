@@ -368,7 +368,7 @@ export default {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 30px 30px 50px 30px; /* 하단 패딩 50px로 증가 */
+    padding: 20px 30px 50px 30px; /* 상단 패딩을 20px로 줄임 */
     margin-top: -20px;
     width: 100%;
     max-width: 800px;
@@ -378,9 +378,10 @@ export default {
 
 .section-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-bottom: 0;
+    margin-top: -10px;
 }
 
 .problem-list-title {
