@@ -72,7 +72,7 @@ export default {
       if (this.isProcessing) return;  // 중복 실행 방지
       this.isProcessing = true;
 
-      console.log('🌕학습 시작 버튼 클릭됨');
+      console.log('🌕 학습 시작 버튼 클릭됨');
 
       try {
         const problemId = this.problem.id;
@@ -81,20 +81,27 @@ export default {
           problemId: problemId
         });
 
-        const receivedStatus = response.data.problemStatus || '';
-        this.problemStatus = receivedStatus;
-        console.log('API 응답 데이터 (start-study problemStatus):', receivedStatus);
+        const receivedStatus = response.data.problemStatus;
 
-        if (receivedStatus === '') {
+        // 응답 값이 정확히 문자열인지 확인하고 정규화
+        const normalizedStatus = typeof receivedStatus === 'string'
+          ? receivedStatus.trim()
+          : String(receivedStatus || '');
+
+        this.problemStatus = normalizedStatus;
+
+        console.log('🧪 start-study 응답:', receivedStatus, '| normalized:', normalizedStatus);
+
+        if (normalizedStatus === '') {
           this.showStudyStartModal = true;
-          console.log('problemStatus가 ""이므로 StudyStartModal 표시.');
+          console.log('✅ problemStatus가 ""이므로 StudyStartModal 표시됨.');
         } else {
-          console.log(`problemStatus가 "${receivedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
+          console.log(`➡️ problemStatus가 "${normalizedStatus}"이므로 바로 문제 풀이 페이지로 이동.`);
           this.router.push(`/study/${problemId}/solve`);
         }
 
       } catch (error) {
-        console.error('문제 학습 시작 처리 중 예외 발생:', error);
+        console.error('❌ 문제 학습 시작 처리 중 예외 발생:', error);
         alert('문제 학습을 시작할 수 없습니다. 서버 오류 또는 네트워크 문제일 수 있습니다.');
       } finally {
         this.isProcessing = false;
