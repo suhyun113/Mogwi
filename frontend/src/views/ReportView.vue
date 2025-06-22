@@ -610,6 +610,7 @@ export default {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding-bottom: 100px;
 }
 
 .calendar-and-detail-wrapper {
@@ -628,7 +629,6 @@ export default {
   padding: 20px;
   box-sizing: border-box;
   margin-top: -20px;
-  padding-bottom: 0;
 }
 
 .daily-detail-wrapper {
