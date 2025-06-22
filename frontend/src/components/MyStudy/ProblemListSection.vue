@@ -505,7 +505,7 @@ export default {
 .problem-list-tabs {
     display: flex;
     justify-content: center;
-    margin: -10px 0 20px 0;
+    margin: 5px 0 20px 0;
     gap: 15px;
 }
 
