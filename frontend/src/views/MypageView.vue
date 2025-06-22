@@ -238,7 +238,6 @@ export default {
       } catch (err) {
         console.error('회원 탈퇴 실패:', err);
 
-        // ✅ 실패 메시지는 alert 대신 toast 또는 아래 방식 유지
         nicknameUpdateMessage.value = '회원 탈퇴 중 오류가 발생했습니다. 다시 시도해주세요.';
         nicknameUpdateStatus.value = 'error';
         showNicknameUpdateMessage.value = true;
@@ -280,7 +279,7 @@ export default {
     };
 
     const editProblem = (problemId) => {
-        router.push(`/problem/edit/${problemId}`);
+        router.push(`/edit/${problemId}`);
     };
 
     const deleteProblem = (problemId) => {
