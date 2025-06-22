@@ -145,7 +145,7 @@ export default {
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 24px;
+    margin-bottom: 30px !important;
 }
 
 .summary-tag {
@@ -155,7 +155,7 @@ export default {
     font-size: 0.98rem;
     font-weight: 700;
     text-align: center;
-    box-shadow: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     margin: 0;
     letter-spacing: -0.5px;
 }
@@ -183,7 +183,8 @@ export default {
     border-radius: 15px;
     overflow: hidden;
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 0px;
+    margin-top: 22px !important;
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -213,6 +214,7 @@ export default {
     font-size: 0.9rem;
     color: #555;
     margin-top: 10px;
+    margin-bottom: -10px;
 }
 .progress-labels .label {
     font-weight: 600;
