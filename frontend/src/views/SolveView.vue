@@ -208,6 +208,7 @@ export default {
       if (submittedAnswer === correct) {
         isCorrectAnswer.value = true;
         currentProblemCard.value.cardStatus = 'perfect'; // 항상 perfect로
+        showAnswer.value = true; // 정답이면 바로 정답을 보여줌
       } else {
         isCorrectAnswer.value = false;
         currentProblemCard.value.cardStatus = 'forgotten'; // 항상 forgotten으로
