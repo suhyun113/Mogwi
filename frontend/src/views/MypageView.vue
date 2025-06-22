@@ -320,7 +320,6 @@ export default {
 
     onMounted(() => {
       fetchMypageData();
-      document.body.style.overflow = 'hidden';
     });
     onUnmounted(() => {
       document.body.style.overflow = '';
@@ -407,8 +406,8 @@ html, body {
   box-sizing: border-box;
   font-family: 'Inter', 'Pretendard', sans-serif;
   color: #333;
-  height: 100vh; /* 뷰포트 전체 높이를 차지 */
-  overflow-y: hidden; /* **마이페이지 전체 세로 스크롤 제거** */
+  min-height: 100vh; /* 뷰포트 전체 높이를 차지 */
+  overflow-y: auto; /* **마이페이지 전체 세로 스크롤 추가** */
   position: relative;
   z-index: 1;
 }
@@ -589,9 +588,7 @@ html, body {
   padding: 0 60px 60px 24px;
   background-color: transparent;
   margin-top: 20px;
-  /* 뷰포트 높이 기준으로 정확히 계산하여 넘치지 않도록 함 */
-  height: calc(100vh - 20px - 20px); /* mypage-view-wrapper의 상하 패딩 (20px) 및 main-content의 상단 마진 (20px) 고려 */
-  overflow-y: auto 제거로 내부 스크롤도 제거 */
+  height: auto; /* 높이 자동 조절 */
 }
 
 .content-section {
