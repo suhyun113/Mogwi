@@ -10,8 +10,8 @@
     <section class="overall-summary-section">
         <div class="summary-visual-row">
             <div class="mogwi-bubble-group">
-                <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character-img" />
-                <div class="speech-bubble">전체 기억은 {{ overallTotalCards }}개에요!</div>
+                <img :src="mogwiImg" alt="모귀 캐릭터" class="mogwi-character-img" />
+                <div class="speech-bubble" v-html="speechText"></div>
             </div>
             <div class="summary-main-content">
                 <div v-if="isLoggedIn && overallTotalCards > 0" class="summary-tags">
@@ -73,6 +73,8 @@
 
 <script>
 import { computed } from 'vue';
+import mogwiHeart from '@/assets/mogwi-heart.png';
+import mogwiSad from '@/assets/mogwi-sad.png';
 
 export default {
     name: 'OverallStudySummary',
@@ -113,10 +115,21 @@ export default {
             props.overallTotalCards > 0 ? ((props.overallForgottenCount / props.overallTotalCards) * 100).toFixed(1) : 0
         );
 
+        // 기준: 20개 이상이면 긍정, 미만이면 동기부여
+        const isGood = computed(() => props.overallTotalCards >= 20);
+        const mogwiImg = computed(() => isGood.value ? mogwiHeart : mogwiSad);
+        const speechText = computed(() =>
+            isGood.value
+                ? `총 <span class='highlight-count'>${props.overallTotalCards}개</span>나 학습했어요!<br> 멋져요!`
+                : `총 <span class='highlight-count'>${props.overallTotalCards}개</span>만 학습했어요...<br> 새 학습을 시작해봐요!`
+        );
+
         return {
             overallPerfectPercentage,
             overallVaguePercentage,
             overallForgottenPercentage,
+            mogwiImg,
+            speechText,
         };
     }
 };
@@ -345,7 +358,7 @@ export default {
     margin-left: 18px;
 }
 .mogwi-character-img {
-    width: 70px;
+    width: 90px;
     height: auto;
     margin-top: 8px;
     margin-bottom: 0;
@@ -356,7 +369,7 @@ export default {
     background: #f3eaff;
     color: #5a2e87;
     border-radius: 18px;
-    padding: 20px 28px;
+    padding: 10px 18px;
     font-size: 1rem;
     font-weight: 600;
     box-shadow: 0 2px 8px 0 rgba(164,113,255,0.08);
@@ -418,5 +431,10 @@ export default {
     .mogwi-bubble-group {
         display: none;
     }
+}
+.highlight-count {
+    color: #a471ff;
+    font-weight: 900;
+    font-size: 1.08em;
 }
 </style>
