@@ -227,7 +227,7 @@ export default {
 
         if (response.data.status === 'OK') {
           alert('문제가 성공적으로 생성되었습니다!');
-          router.push('mystudy');
+          router.push('/');
         } else {
           submitError.value = response.data.message || '문제 생성에 실패했습니다.';
         }
