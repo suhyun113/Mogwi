@@ -877,5 +877,10 @@ html, body {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
+  .user-profile-section {
+    margin-left: 128px !important;
+    width: calc(100% - 128px) !important;
+    align-items: flex-start;
+  }
 }
 </style>
