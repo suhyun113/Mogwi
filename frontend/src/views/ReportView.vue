@@ -79,7 +79,7 @@ import LoginModal from '@/components/Login/LoginModal.vue';
 import RegisterModal from '@/components/Register/RegisterModal.vue';
 
 import mogwiLook from '@/assets/mogwi-look.png';
-import mogwiSleep from '@/assets/mogwi-sleep.png';
+import mogwiSleep from '@/assets/mogwi-sad.png';
 
 export default {
   name: 'ReportView',
