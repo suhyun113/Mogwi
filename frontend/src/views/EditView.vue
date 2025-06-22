@@ -128,12 +128,16 @@ export default {
 
         problem.value.title = fetchedProblem.title;
         problem.value.description = fetchedProblem.description || '';
-        problem.value.is_public = fetchedProblem.is_public === 1; // Convert 0/1 to boolean
-        // Map category objects to their IDs for ProblemForm's selectedTags prop
-        problem.value.categories = fetchedProblem.categories.map(cat => cat.id);
+        problem.value.is_public = fetchedProblem.isPublic ?? (fetchedProblem.is_public === 1);
+        
+        // Find category IDs by matching tag_name with the allCategories list
+        const fetchedCategoryNames = (fetchedProblem.categories || []).map(c => c.tag_name);
+        problem.value.categories = allCategories.value
+          .filter(category => fetchedCategoryNames.includes(category.tag_name))
+          .map(category => category.id);
 
         // Assign existing cards and ensure unique IDs for them (for v-for key)
-        problem.value.cards = fetchedProblem.cards.map(card => ({
+        problem.value.cards = (fetchedProblem.cards || []).map(card => ({
             id: card.id, // Use actual card ID if available, otherwise generate
             question: card.question,
             answer: card.answer,
