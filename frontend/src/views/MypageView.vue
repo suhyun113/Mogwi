@@ -1,15 +1,9 @@
 <template>
   <div class="mypage-view-wrapper">
-    <div v-if="loading" class="loading-message">사용자 정보를 불러오는 중입니다...</div>
+    <div v-if="loading && isLoggedIn" class="loading-message">사용자 정보를 불러오는 중입니다...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
-    <div v-else-if="!isLoggedIn" class="logged-out-prompt">
-      <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character-small" />
-      <p class="logged-out-message">
-        <i class="fas fa-lock"></i> 마이페이지는 로그인 후 이용 가능합니다.
-      </p>
-      <button @click="showLoginModal = true" class="login-button">로그인</button>
-    </div>
-    <div v-else class="mypage-layout">
+    
+    <div class="mypage-layout">
       <aside class="sidebar">
         <h2 class="sidebar-title" style="display: none;">MY PAGE</h2>
         <nav class="sidebar-nav">
@@ -22,7 +16,7 @@
           <a href="#" :class="{ 'nav-item': true, 'active': activeSection === 'my-problems' }" @click.prevent="activeSection = 'my-problems'">
             <i class="fas fa-folder-open"></i> 내가 만든 문제
           </a>
-          <a href="#" class="nav-item nav-item-danger" @click.prevent="handleDeleteAccount">
+          <a v-if="isLoggedIn" href="#" class="nav-item nav-item-danger" @click.prevent="handleDeleteAccount">
             <i class="fas fa-user-times"></i> 회원 탈퇴
           </a>
         </nav>
@@ -33,32 +27,44 @@
           <UserProfile
             :nickname="userNickname"
             :userEmail="userEmail"
+            :isLoggedIn="isLoggedIn"
             @edit-info="showEditProfileModal = true"
           />
         </section>
 
-        <section v-else-if="activeSection === 'liked-scrapped'" class="content-section">
-          <LikedScrapSection
-            :likedProblems="likedProblems"
-            :scrapedProblems="scrapedProblems"
-            @go-to-problem="goToProblem"
-            :isAuthenticated="isLoggedIn"
-            :currentUserId="currentUserId"
-            @update-like="fetchMypageData"
-            @update-scrap="fetchMypageData"
-          />
-        </section>
+        <div v-else class="content-wrapper" :class="{ blurred: !isLoggedIn }">
+          <section v-if="activeSection === 'liked-scrapped'" class="content-section">
+            <LikedScrapSection
+              :likedProblems="likedProblems"
+              :scrapedProblems="scrapedProblems"
+              @go-to-problem="goToProblem"
+              :isAuthenticated="isLoggedIn"
+              :currentUserId="currentUserId"
+              @update-like="fetchMypageData"
+              @update-scrap="fetchMypageData"
+            />
+          </section>
 
-        <section v-else-if="activeSection === 'my-problems'" class="content-section">
-          <MyProblemSection
-            :myProblems="myProblems"
-            @go-to-problem="goToProblem"
-            @edit-problem="editProblem"
-            @delete-problem="fetchMypageData"
-            :isAuthenticated="isLoggedIn"
-            :currentUserId="currentUserId"
-          />
-        </section>
+          <section v-else-if="activeSection === 'my-problems'" class="content-section">
+            <MyProblemSection
+              :myProblems="myProblems"
+              @go-to-problem="goToProblem"
+              @edit-problem="editProblem"
+              @delete-problem="fetchMypageData"
+              :isAuthenticated="isLoggedIn"
+              :currentUserId="currentUserId"
+            />
+          </section>
+
+          <div v-if="!isLoggedIn" class="content-login-prompt">
+            <img src="@/assets/mogwi-confused.png" alt="모귀 캐릭터" class="prompt-mogwi-character" />
+            <p class="prompt-message">로그인하시면<br>이용할 수 있는 기능이에요!</p>
+            <div class="prompt-actions">
+              <button @click="openLoginModal" class="action-button login-button">로그인</button>
+              <button @click="openRegisterModal" class="action-button register-button">회원가입</button>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
 
@@ -404,6 +410,7 @@ html, body {
   height: 100vh; /* 뷰포트 전체 높이를 차지 */
   overflow-y: hidden; /* **마이페이지 전체 세로 스크롤 제거** */
   position: relative;
+  z-index: 1;
 }
 
 .mypage-view-wrapper::after {
@@ -448,7 +455,7 @@ html, body {
   margin-left: auto;
   margin-right: auto;
   height: 100%;
-  margin-top: 0;
+  margin-top: 60px;
 }
 
 @media (min-width: 1200px) {
@@ -456,7 +463,6 @@ html, body {
     justify-content: flex-start;
     margin-left: 0;
     margin-right: auto;
-    margin-top: 0;
   }
 }
 
@@ -582,10 +588,10 @@ html, body {
   flex: 1;
   padding: 0 60px 60px 24px;
   background-color: transparent;
-  margin-top: 60px;
+  margin-top: 20px;
   /* 뷰포트 높이 기준으로 정확히 계산하여 넘치지 않도록 함 */
-  height: calc(100vh - 20px - 60px); /* mypage-view-wrapper의 상하 패딩 (20px) 및 main-content의 상단 마진 (60px) 고려 */
-  /* overflow-y: auto 제거로 내부 스크롤도 제거 */
+  height: calc(100vh - 20px - 20px); /* mypage-view-wrapper의 상하 패딩 (20px) 및 main-content의 상단 마진 (20px) 고려 */
+  overflow-y: auto 제거로 내부 스크롤도 제거 */
 }
 
 .content-section {
@@ -983,5 +989,79 @@ html, body {
     width: calc(100% - 128px) !important;
     align-items: flex-start;
   }
+}
+
+.content-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.content-wrapper.blurred > .content-section {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.content-login-prompt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+}
+
+.prompt-mogwi-character {
+  width: 130px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.prompt-message {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a1e77;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.action-button {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+.login-button {
+  background-color: #8c5dff;
+  color: white;
+}
+.login-button:hover {
+  background-color: #794cff;
+}
+.register-button {
+  background-color: #ffffff;
+  color: #5a2e87;
+  border: 2px solid #a471ff;
+}
+.register-button:hover {
+  background-color: #f0e6ff;
 }
 </style>

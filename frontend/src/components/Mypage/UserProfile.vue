@@ -1,8 +1,9 @@
 <template>
   <section class="mypage-section user-profile-section">
     <div class="profile-header">
-      <h2 class="section-title">{{ nickname }} 님 안녕하세요.</h2>
-      <button @click="$emit('edit-info')" class="edit-info-button">
+      <h2 v-if="isLoggedIn" class="section-title">{{ nickname }} 님 안녕하세요.</h2>
+      <h2 v-else class="section-title">마이페이지에 오신 것을 환영합니다.</h2>
+      <button v-if="isLoggedIn" @click="$emit('edit-info')" class="edit-info-button">
         <img src="@/assets/icons/edit.png" alt="수정" class="edit-icon" /> 수정
       </button>
     </div>
@@ -18,6 +19,10 @@ export default {
   props: {
     nickname: {
       type: String,
+      required: true,
+    },
+    isLoggedIn: {
+      type: Boolean,
       required: true,
     },
   },
