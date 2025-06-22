@@ -150,6 +150,13 @@ export default {
   border: 2px solid #e0d0ff;
   border-radius: 12px;
   background-color: white;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 1200px) {
+  .study-calendar {
+    margin-bottom: 32px;
+  }
 }
 
 .calendar-header {

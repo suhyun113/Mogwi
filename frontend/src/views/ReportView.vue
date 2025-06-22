@@ -796,4 +796,10 @@ export default {
     font-size: 1rem;
   }
 }
+
+@media (min-width: 1200px) {
+  .calendar-section {
+    padding-bottom: 80px;
+  }
+}
 </style>
