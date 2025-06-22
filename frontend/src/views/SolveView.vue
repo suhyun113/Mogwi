@@ -347,15 +347,12 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  background-color: #fdf8f4;
-  overflow: hidden; /* 스크롤바 생성 방지 */
-  padding: 20px; /* 전체 뷰에 패딩 유지 */
-  box-sizing: border-box; /* 패딩을 포함한 너비/높이 계산 */
+  background-color: #f7f3ff;
+  position: relative;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .loading, .no-problems {

@@ -171,18 +171,14 @@ export default {
 </script>
 
 <style scoped>
-/* (스타일은 변경 없음) */
 .study-view {
   display: flex;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  background-color: #fdf8f4;
-  overflow: hidden;
+  background-color: #f7f3ff;
+  position: relative;
 }
 .loading {
   color: #9ca3af;
