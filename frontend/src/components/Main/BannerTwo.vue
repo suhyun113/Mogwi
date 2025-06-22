@@ -122,12 +122,6 @@ export default {
   .banner-text p {
     margin-bottom: 0;
   }
-  .banner-text h2 {
-    font-size: 1.3rem;
-  }
-  .banner-text p {
-    font-size: 0.95rem;
-  }
   .banner-character {
     max-height: 130px;
     top: 10px;

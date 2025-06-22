@@ -119,26 +119,14 @@ export default {
     margin-bottom: 0;
     text-align: center;
     flex-basis: auto;
-    top: 10px;
   }
   .banner-text h2,
   .banner-text p {
     margin-bottom: 0;
   }
-  .banner-text h2 {
-    font-size: 1.3rem;
-  }
-  .banner-text p {
-    font-size: 0.95rem;
-  }
   .banner-character {
-    max-height: 100px;
-    top: 10px;
+    max-height: 150px;
     margin: 0;
-    padding: 0;
-    display: block;
-    flex-basis: auto;
-    width: auto;
   }
 }
 </style>
