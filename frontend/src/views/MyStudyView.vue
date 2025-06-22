@@ -1,6 +1,6 @@
 <template>
   <div class="mystudy">
-    <template v-if="isLoggedIn">
+    <div class="content-wrapper" :class="{ blurred: !isLoggedIn }">
       <OverallStudySummary
         :overallPerfectCount="overallPerfectCount"
         :overallVagueCount="overallVagueCount"
@@ -11,8 +11,8 @@
         class="overall-summary-placement"
       />
 
-      <div v-if="loading" class="loading-message">데이터를 불러오는 중입니다...</div>
-      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-if="loading && isLoggedIn" class="loading-message">데이터를 불러오는 중입니다...</div>
+      <div v-else-if="error && isLoggedIn" class="error-message">{{ error }}</div>
 
       <ProblemListSection
         :ongoingProblems="ongoingProblems"
@@ -24,19 +24,18 @@
         @auth-required="handleAuthRequired"
         @refresh-problems="fetchMyStudyData"
       />
-    </template>
+    </div>
 
-    <div v-else class="logged-out-state">
-      <img src="@/assets/mogwi-character.png" alt="모귀 캐릭터" class="mogwi-character" />
-      <p class="logged-out-message">
-        나만의 학습 현황을 확인하고 싶으신가요?<br>
-        로그인하고 나만의 학습 공간을 만들어보세요!
-      </p>
-      <div class="logged-out-actions">
-        <button @click="goToLogin" class="action-button login-button">로그인</button>
-        <button @click="goToRegister" class="action-button register-button">회원가입</button>
+    <div v-if="!isLoggedIn" class="login-overlay">
+      <div class="overlay-content">
+        <img src="@/assets/mogwi-look.png" alt="모귀 캐릭터" class="overlay-mogwi" />
+        <h2 class="overlay-title">로그인하고 나만의 학습 공간을 확인해보세요!</h2>
+        <p class="overlay-description">학습 현황 분석, 문제 기록, 복습 등 모든 기능을 사용할 수 있어요.</p>
+        <div class="overlay-actions">
+          <button @click="goToLogin" class="action-button login-button">로그인</button>
+          <button @click="goToRegister" class="action-button register-button">회원가입</button>
+        </div>
       </div>
-      <p class="logged-out-hint">비회원도 문제 풀이는 가능하지만, 학습 기록은 저장되지 않아요.</p>
     </div>
 
     <LoginModal
@@ -288,6 +287,7 @@ export default {
 
 <style scoped>
 .mystudy {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -298,6 +298,72 @@ export default {
   font-family: 'Pretendard', sans-serif;
   box-sizing: border-box;
   overflow-x: hidden;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  transition: filter 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.content-wrapper.blurred {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+  transform: scale(1.01);
+}
+
+.login-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.overlay-content {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  border-radius: 10px;
+  padding: 25px 35px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.overlay-mogwi {
+  width: 120px;
+  margin-bottom: 20px;
+}
+
+.overlay-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #4a1e77;
+  margin-bottom: 12px;
+}
+
+.overlay-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 25px;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 20px;
 }
 
 :deep(html), :deep(body) {
@@ -335,125 +401,34 @@ export default {
   text-align: center;
 }
 
-.logged-out-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 800px;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  padding: 100px 30px;
-  margin-top: 200px;
-  box-sizing: border-box;
-  text-align: center;
-  border: 1px solid #d0c0ee;
-  transition: all 0.3s ease-in-out;
-}
-
-.logged-out-state:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-}
-
-.mogwi-character {
-  width: 180px;
-  height: auto;
-  margin-bottom: 5px;
-  animation: bounceIn 1s ease-out;
-}
-
-@keyframes bounceIn {
-  0%, 20%, 40%, 60%, 80%, 100% {
-    transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
-  }
-  0% {
-    opacity: 0;
-    transform: scale3d(0.3, 0.3, 0.3);
-  }
-  20% {
-    transform: scale3d(1.1, 1.1, 1.1);
-  }
-  40% {
-    transform: scale3d(0.9, 0.9, 0.9);
-  }
-  60% {
-    opacity: 1;
-    transform: scale3d(1.03, 1.03, 1.03);
-  }
-  80% {
-    transform: scale3d(0.97, 0.97, 0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: scale3d(1, 1, 1);
-  }
-}
-
-.logged-out-message {
-  font-size: 1.6rem;
-  color: #4a1e77;
-  margin-bottom: 10px;
-  font-weight: 700;
-  line-height: 1.5;
-  text-align: center;
-  max-width: 600px;
-}
-
-.logged-out-hint {
-  font-size: 1rem;
-  color: #777;
-  margin-top: 5px;
-  line-height: 1.4;
-  border-top: 1px dashed #eee;
-  padding-top: 10px;
-  width: 80%;
-}
-
-.logged-out-actions {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 5px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
 .action-button {
-  padding: 15px 35px;
-  font-size: 1.2rem;
+  padding: 8px 20px;
+  font-size: 0.9rem;
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
-  min-width: 180px;
+  min-width: 120px;
 }
 
 .login-button {
-  background-image: linear-gradient(to right, #a471ff 0%, #8c5dff 100%);
+  background-color: #8c5dff;
   color: white;
-  box-shadow: 0 8px 20px rgba(164, 113, 255, 0.4);
 }
 
 .login-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(164, 113, 255, 0.6);
-  background-position: right center;
+  background-color: #794cff;
 }
 
 .register-button {
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   color: #5a2e87;
   border: 2px solid #a471ff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .register-button:hover {
-  background-color: #e8e8e8;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  background-color: #f0e6ff;
 }
 
 @media (max-width: 768px) {
