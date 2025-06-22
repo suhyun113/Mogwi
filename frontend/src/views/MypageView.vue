@@ -409,8 +409,8 @@ html, body {
 .mypage-view-wrapper::after {
   content: '';
   position: absolute;
-  right: 2vw;
-  bottom: 6vh;
+  right: 4vw;
+  bottom: 9vh;
   width: 50vw;
   height: 50vw;
   max-width: 700px;
