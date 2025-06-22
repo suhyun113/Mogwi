@@ -320,20 +320,24 @@ export default {
   display: flex;
   align-items: baseline;
   gap: 12px;
+  min-width: 0;
+  width: 100%;
 }
 .problem-title {
   font-size: 18px;
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
-  max-width: 100%;
-  flex-grow: 1;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
 }
 .author {
   font-size: 13px;
   color: #888;
   white-space: nowrap;
   flex-shrink: 0;
+  /* margin-left: 12px; // gap으로 대체 가능 */
 }
 
 .study-status {
