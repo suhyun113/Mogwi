@@ -1,7 +1,7 @@
 <template>
   <div :class="[itemClass, { selected: isSelected }]" @click="handleItemClick">
     <div class="title-row">
-      <div class="title-left">
+      <div class="title-author-group">
         <h3 class="problem-title">{{ localProblem.title }}</h3>
         <span class="author">작성자: {{ localProblem.authorName }}</span>
       </div>
@@ -310,18 +310,17 @@ export default {
 }
 .title-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.title-left {
-  display: flex;
-  align-items: baseline;
   gap: 12px;
+  margin-bottom: 8px;
+  justify-content: space-between;
+}
+.title-author-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
-  width: 100%;
+  flex-shrink: 1;
 }
 .problem-title {
   font-size: 18px;
@@ -329,17 +328,16 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: 1;
+  flex: none;
   min-width: 0;
 }
 .author {
   font-size: 13px;
   color: #888;
   white-space: nowrap;
+  margin-left: 4px;
   flex-shrink: 0;
-  /* margin-left: 12px; // gap으로 대체 가능 */
 }
-
 .study-status {
   font-size: 13px;
   font-weight: bold;
@@ -347,6 +345,7 @@ export default {
   border-radius: 5px;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .status-new {
@@ -497,16 +496,27 @@ export default {
 
 @media (max-width: 576px) {
   .title-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    justify-content: space-between;
+  }
+  .title-author-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    flex-shrink: 1;
   }
   .problem-title {
     max-width: 100%;
   }
+  .author {
+    margin-left: 2px;
+  }
   .study-status {
     align-self: flex-end;
-    margin-top: 4px;
+    margin-top: 0;
   }
   .category-row {
     flex-direction: column;
