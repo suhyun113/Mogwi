@@ -403,6 +403,10 @@ export default {
   .banner-mogwi-character {
     width: 150px;
   }
+  .mogwi-daily-detail-character,
+  .mogwi-daily-detail-character img {
+    width: 110px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -570,19 +574,19 @@ export default {
 
 .mogwi-daily-detail-character {
   width: 120px;
-  height: 160px; /* 컨테이너 크기 고정 */
+  height: 160px;
   filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
   margin-bottom: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* 이미지가 컨테이너를 벗어나지 않도록 */
+  overflow: hidden;
 }
 
 .mogwi-daily-detail-character img {
-  width: 120px; /* 내부 이미지 크기 증가 */
+  width: 120px;
   height: auto;
-  object-fit: contain; /* 이미지 비율 유지 */
+  object-fit: contain;
 }
 
 /* DailyStudyDetail 컴포넌트 내부의 스타일을 조절해야 할 수 있습니다.
@@ -705,6 +709,10 @@ export default {
   .daily-detail-wrapper {
     min-height: unset;
   }
+  .mogwi-daily-detail-character,
+  .mogwi-daily-detail-character img {
+    width: 150px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -765,8 +773,9 @@ export default {
   .section-title-daily-detail {
     font-size: 1.2rem;
   }
-  .mogwi-daily-detail-character {
-    width: 80px;
+  .mogwi-daily-detail-character,
+  .mogwi-daily-detail-character img {
+    width: 110px;
   }
   .calendar-and-detail-wrapper {
     min-height: 400px;

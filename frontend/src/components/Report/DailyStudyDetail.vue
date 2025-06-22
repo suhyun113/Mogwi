@@ -62,16 +62,16 @@ export default {
   width: 100%;
   height: 100%;
   flex-grow: 1;
-  gap: 10px;
-  padding-top: 15px; /* 10px에서 15px로 증가 */
+  gap: 4px;
+  padding-top: 15px;
 }
 
 .selected-date-display {
   font-size: 1.3rem;
   font-weight: 600;
   color: white;
-  margin-bottom: 5px;
-  margin-top: 10px; /* 0에서 10px로 변경하여 더 아래로 내림 */
+  margin-bottom: 0;
+  margin-top: 10px;
 }
 
 .study-summary-tags {
