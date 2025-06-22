@@ -194,7 +194,7 @@ export default {
   font-weight: 600;
   border: none;
   background: #ede3ff;
-  color: #8a2be2;
+  color: #5a2e87;
   margin: 0 2px;
   transition: background 0.18s, color 0.18s;
   white-space: nowrap;
@@ -204,13 +204,13 @@ export default {
 }
 
 .tab-button.active {
-  background: #8a2be2;
+  background: #5a2e87;
   color: #fff;
 }
 
 .tab-button:hover:not(.active) {
   background: #d6c2f7;
-  color: #8a2be2;
+  color: #5a2e87;
 }
 
 .dual-column-layout {
@@ -261,6 +261,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  color: #5a2e87;
 }
 
 .no-problems-message {
