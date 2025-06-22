@@ -190,6 +190,7 @@ export default {
   justify-content: center;
   align-items: center;
   position: relative;
+  margin-bottom: 0px;
 }
 
 canvas {

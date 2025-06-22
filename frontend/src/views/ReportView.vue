@@ -628,6 +628,7 @@ export default {
   border-radius: 12px;
   padding: 20px;
   box-sizing: border-box;
+  margin-bottom: 40px;
 }
 
 /* Logged out prompt styles */
