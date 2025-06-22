@@ -142,4 +142,16 @@ export default {
   text-align: center;
   margin-top: 5px; /* 상단 마진 추가 */
 }
+
+@media (min-width: 1200px) {
+  .study-summary-tags {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .study-summary-tags {
+    margin-bottom: 18px;
+  }
+}
 </style>
