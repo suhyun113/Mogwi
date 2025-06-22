@@ -143,7 +143,12 @@ export default {
 
 <style scoped>
 .study-calendar {
-  width: 100%;
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
+  height: 420px;
+  min-height: 420px;
+  max-height: 420px;
   padding: 0;
   border: 2px solid #e0d0ff;
   border-radius: 12px;
@@ -278,7 +283,12 @@ export default {
 
 @media (max-width: 768px) {
   .study-calendar {
-    padding: 0;
+    width: 100%;
+    min-width: 320px;
+    max-width: 100%;
+    height: 360px;
+    min-height: 320px;
+    max-height: 400px;
   }
   .calendar-header {
     margin-bottom: 15px;
