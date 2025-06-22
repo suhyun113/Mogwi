@@ -208,17 +208,34 @@ export default {
       if (selectedProblems.value.length === 0) return;
       if (!confirm(`선택된 문제 ${selectedProblems.value.length}개의 문제를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) return;
       deleting.value = true;
+      const failedDeletes = [];
       try {
         for (const id of selectedProblems.value) {
-          await axios.delete(`/api/problem/${id}`);
+          try {
+            await axios.delete(`/api/problem/${id}/${props.currentUserId}`);
+            // 성공: emit로 부모에게 삭제 알림(데이터 새로고침)
+            // (myProblems.value에서 직접 제거는 부모에서 처리)
+          } catch (err) {
+            let msg = '문제 삭제에 실패했습니다.';
+            if (err.response?.status === 401) {
+              msg = '로그인이 필요합니다.';
+            } else if (err.response?.status === 403) {
+              msg = '작성자만 문제를 삭제할 수 있습니다.';
+            } else if (err.response?.status === 404) {
+              msg = '해당 문제를 찾을 수 없습니다.';
+            }
+            failedDeletes.push({ id, msg });
+          }
         }
         // 삭제 후 선택 해제 및 모드 종료
         selectedProblems.value = [];
         isSelectionMode.value = false;
-        // emit으로 부모에게 삭제 알림(데이터 새로고침)
         emit('delete-problem');
-      } catch (e) {
-        alert('문제 삭제 중 오류가 발생했습니다.');
+        if (failedDeletes.length > 0) {
+          alert(failedDeletes.map(f => `문제 ID ${f.id}: ${f.msg}`).join('\n'));
+        } else {
+          alert('문제가 성공적으로 삭제되었습니다.');
+        }
       } finally {
         deleting.value = false;
       }
