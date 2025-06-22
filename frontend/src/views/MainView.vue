@@ -126,13 +126,19 @@ export default {
 
     const fetchProblems = async () => {
       try {
-        const response = await axios.get('/api/problem/detail?onlyPublic=true', {
-          params: {
-            query: query.value,
-            category: selectedCategory.value,
-            currentUserId: currentUserId.value
-          }
-        })
+        // 로그인 여부에 따라 파라미터 분기
+        const params = {
+          onlyPublic: true,
+          query: query.value,
+        };
+        if (selectedCategory.value && selectedCategory.value !== '#전체') {
+          params.category = selectedCategory.value;
+        }
+        // 로그인 상태일 때만 currentUserId 파라미터를 추가
+        if (isAuthenticated.value && currentUserId.value) {
+          params.currentUserId = currentUserId.value;
+        }
+        const response = await axios.get('/api/problem/detail', { params });
         problems.value = response.data.sort((a, b) => a.id - b.id);
       } catch (error) {
         console.error('문제 불러오기 실패:', error)
