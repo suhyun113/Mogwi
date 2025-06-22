@@ -345,9 +345,7 @@ export default {
     font-size: 18px;
     font-weight: bold;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 70%;
+    max-width: 100%;
 }
 .author {
     font-size: 13px;
