@@ -49,7 +49,7 @@ const onLogout = () => {
     created_at: null
   });
   localStorage.clear(); // 모든 localStorage 데이터를 비웁니다.
-  router.push('/');
+  window.location.replace('/'); // 로그아웃 후 새로고침과 동시에 메인으로 이동
 }
 </script>
 
