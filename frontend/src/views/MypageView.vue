@@ -560,6 +560,7 @@ html, body {
   background: none;
   border-radius: 0;
   padding: 0;
+  margin-bottom: 40px;
 }
 
 /* General Messages */
