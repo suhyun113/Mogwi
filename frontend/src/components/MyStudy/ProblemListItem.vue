@@ -305,13 +305,15 @@ export default {
     box-sizing: border-box;
     margin-bottom: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    /* Remove transition for hover effect */
+    /* transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; */
 }
 
-.problem-list-item:hover:not(.selectable) {
+/* Remove hover effect for normal state */
+/* .problem-list-item:hover:not(.selectable) {
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
+} */
 
 .problem-list-item.selectable {
     cursor: pointer;
@@ -321,6 +323,11 @@ export default {
 .problem-list-item.selected {
     border: 2px solid #e03c3c;
     box-shadow: 0 0 0 3px rgba(224, 60, 60, 0.3);
+}
+
+/* Prevent pointer cursor for normal (non-selectable) state */
+.problem-list-item {
+    cursor: default;
 }
 
 .problem-list-item h3 {
@@ -453,7 +460,7 @@ export default {
 }
 .edit-btn:hover:not(:disabled) {
     background-color: #ffe066;
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); */
 }
 .edit-btn:disabled, .solve-btn:disabled {
     opacity: 0.6;
@@ -467,7 +474,7 @@ export default {
 }
 .solve-btn:hover:not(:disabled) {
     background-color: #854fe6;
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); */
 }
 
 .study-card-summary {
