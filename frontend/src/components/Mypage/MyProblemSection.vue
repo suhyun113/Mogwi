@@ -19,7 +19,7 @@
     <!-- 넓은 화면: 2단 컬럼 -->
     <div v-if="isWide" class="dual-column-layout">
       <div class="problem-list public-list">
-        <h3>공개 문제</h3>
+        <div class="problem-list-title"><h3>공개 문제</h3></div>
         <p v-if="publicProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 공개한 문제가 없습니다.
         </p>
@@ -38,7 +38,7 @@
         />
       </div>
       <div class="problem-list private-list">
-        <h3>비공개 문제</h3>
+        <div class="problem-list-title"><h3>비공개 문제</h3></div>
         <p v-if="privateProblems.length === 0" class="no-problems-message">
           <i class="fas fa-frown"></i> 아직 비공개 문제가 없습니다.
         </p>
@@ -181,6 +181,7 @@ export default {
   gap: 16px;
   overflow-x: auto;
   padding: 10px 0 18px 0;
+  margin-bottom: 20px;
 }
 
 .tab-button {
@@ -247,6 +248,9 @@ export default {
     font-size: 1rem;
     border-radius: 5px;
   }
+  .problem-list-title {
+    display: none;
+  }
 }
 @media (min-width: 900px) {
   .tabs, .tab-content {
@@ -301,5 +305,22 @@ export default {
     justify-content: center;
     flex-shrink: 0;
   }
+}
+
+.problem-list-title {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0 14px 0;
+  border-bottom: 1.5px solid #ede3ff;
+  margin-bottom: 18px;
+}
+.problem-list-title h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #5a2e87;
+  margin: 0;
+  letter-spacing: 0.01em;
 }
 </style>
